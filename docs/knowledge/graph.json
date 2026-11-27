@@ -12599,7 +12599,12 @@
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/agents/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/agents/**, src/app/(frontend)/oauth/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
