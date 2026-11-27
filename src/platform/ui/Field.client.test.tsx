@@ -7,6 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { Field } from './Field.client'
 import { expectAccessible } from './testing/expectAccessible'
+import { TOUCH_TARGET } from './touchTarget'
 
 // jsdom lacks the pointer-capture and scrolling APIs Radix Select calls when it opens, and the
 // ResizeObserver Radix Checkbox uses inside a form
@@ -208,6 +209,16 @@ describe('Field.Checkbox', () => {
       screen.getByRole('checkbox', { name: 'Keep me posted' }).getAttribute('aria-checked'),
     ).toBe('true')
     expect((container.firstElementChild as HTMLElement).className).toContain('flex-row')
+  })
+
+  it('uses the shared touch target, which a browser measures in e2e/touchTargets.spec.ts', () => {
+    render(
+      <Field label="Keep me posted">
+        <Field.Checkbox />
+      </Field>,
+    )
+
+    expect(screen.getByRole('checkbox').className).toContain(TOUCH_TARGET)
   })
 })
 
