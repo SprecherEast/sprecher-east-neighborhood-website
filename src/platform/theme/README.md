@@ -1,69 +1,48 @@
 ---
 name: 'Theme'
 type: platform-area
-summary: 'tokens, light and dark mode, theme options, decorations.'
+summary: 'tokens, light and dark, theme options.'
 aliases: ['design tokens', 'dark mode']
 relationships: []
 ---
 
 # Theme
 
-How the site's look is themed: where each colour and size token is named and valued, how a
-visitor's light or dark choice reaches the page, and how a theme adds a decoration. The rules
-are in [`nextjs-tailwind.md`](../../../docs/guidelines/nextjs-tailwind.md); no content type or
-route is involved, so the generated reference has nothing on it.
+How the site's look is themed: where each colour and size token is named and valued, how a visitor's light or dark choice reaches the page, and how a theme adds a decoration. No content type or route is involved (a theme is chosen at build, not in the CMS), so the generated reference has nothing on it. Rules: [`nextjs-tailwind.md`](../../../docs/guidelines/nextjs-tailwind.md).
 
 ## How the pieces link
 
-- A token is named in `tokens.ts`, valued in `src/themes/<name>/theme.css` (a light block and a dark block), and mapped to Tailwind classes in `tailwind.css` (`--color-primary: var(--primary)` gives `bg-primary`).
-- `themes.test.ts` checks every folder in `src/themes/` sets every token, reading the CSS with `themeFile.ts`.
-- Each name in `registry.ts` has a folder in `src/themes/`; `registry.test.ts` checks the two lists match.
-- The body font, Poppins, is defined once in `fonts.ts` (a Next.js font definitions file, `next/font/local`) over the files kept in `fonts/` next to it, with the font's own licence (SIL OFL 1.1, `fonts/OFL.txt`); the files are Poppins' latin and latin-ext subsets as Fontsource 5.3.0 packages them, unchanged. Two definitions: `poppins` (latin, preloaded) and `poppinsLatinExt` (not preloaded, with Fontsource's `unicode-range`, so a page without letters such as Ł, ő, Š, ă or đ never fetches it). The root layout imports both, and their CSS variables `--font-poppins` and `--font-poppins-ext` are the ones `font-sans` reads, latin-ext first, because `--font-poppins` carries next/font's Arial fallback and a letter the latin file lacks would otherwise fall to Arial (its `unicode-range` leaves out latin letters and the space, so latin text and its line metrics are unchanged) (`fonts.test.ts`, and lint forbids `next/font` imports anywhere else, #1447). Devanagari is left out on purpose: the site is in the Latin script, and a page in another script gets its system font for the whole script. Every surface reads that one definition: the site, and the component showcase, which is built by Vite, not Next.js, so `.storybook/fonts.css` declares the same faces, families and ranges over the same files (`.storybook/fonts.test.ts` fails when its list stops matching `fonts.ts`, an extra face included) and the developer site serves what that build copies; `ops/developer-site-check.sh` refuses a showcase that lacks one of them (#1459). `THEME_MODES` in `theme.ts` is the one list of modes (light, dark): `Theme`, `themeIsValid` and the showcase's Mode switch all read it.
-- `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
-- What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
-- The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.
-- The photo behind a post's or an event's title band is faded by two numbers in `tokens.ts`, `BAND_PHOTO_ALPHA` and `BAND_SCRIM_ALPHA` (the photo, then a `--surface` scrim over it). `themes.test.ts` checks the title's colour on the band over a black photo and over a white photo, in light and dark, so the title passes WCAG AA over any photo whatever its tones, and `BandBackdrop.test.tsx` checks the component writes the same numbers as its classes (#1024).
-- The glass panel's own darkening layer is `GLASS_SCRIM_ALPHA` in `tokens.ts` (a `--scrim` layer under the glass, with `GLASS_SHEEN_ALPHA` for the faint sheen over it and no flat white layer, which turned the panel gray). `GlassPanel.test.tsx` checks its `--on-image` text, full strength and at 90%, over a very bright photo (`#d0d0d0`), a mid gray and black, in light and dark; a pure white photo is not guaranteed, so the glass can be clearer (#1278, #1292, #1301).
-- The home hero's two helpers are Tailwind utilities in `tailwind.css` (#1304): `hero-geometry` makes the hero a size container and works the photo's height and the horizon out of its width, its photo's ratio and the upload's focal point (`--hero-aspect`, `--hero-focal-y`) and the `--hero-*` sizes in `globals.css`; `hero-fade` is the eased page-colour gradient the photo fades into, along a smoothstep curve with no start or stop edge. `heroFade.test.ts` checks the curve, that only page tokens are used, and the geometry's variables.
-- Accent colour as text is `accent-strong` (the plain accent is too light to read as text): orange text that passes on the page, a panel and a card in both modes, checked in `tokens.ts` like the other strong tones (#1118). The whole-bill tab uses it for the City's increase.
-- Work that is open is green (`success`, `success-strong`) and work that is done is purple (`done`, `done-strong`), checked like the `info` tone: text on its tint and on the page, in both modes (`tokens.ts`, #946).
-- The breakdown chart has its own seven-step ramp, `chart-ramp-1` (biggest) to `chart-ramp-7`, orange to green to gray, outside the 3:1 pairs because the pale steps cannot pass on a light page: each mark has the thin `chart-ramp-edge` outline and its amount written as text (#866).
-- Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`. A chart can ask for the warm set, orange and gray: a theme sets `chart-warm-1` to `chart-warm-6`, they pass the same contrast pairs, and inside a chart with `data-chart-palette="warm"` the names `chart-1` to `chart-6` mean those (`tailwind.css`, #856).
+- **One token, three files:** a token is named in `tokens.ts`, valued in `src/themes/<name>/theme.css` (a light block and a dark block), and mapped to Tailwind classes in `tailwind.css` (`--color-primary: var(--primary)` gives `bg-primary`); `themes.test.ts` checks every theme folder sets every token (`themeFile.ts` reads the CSS).
+- **The active theme:** each name in `registry.ts` has a folder in `src/themes/`; `ACTIVE_THEME` is the one the site shows and `src/app/(frontend)/globals.css` imports its `theme.css` (`registry.test.ts` checks they agree). What tokens cannot express is a theme option with defaults in `options.ts` (decision 0012).
+- **Fonts:** Poppins is defined once in `fonts.ts` (`next/font/local`) over the files in `fonts/` (SIL OFL 1.1), latin preloaded and latin-ext loaded only when a page needs a letter the first lacks; the Storybook showcase declares the same faces (`.storybook/fonts.css`, kept equal by `.storybook/fonts.test.ts`).
+- **Chart colours:** `chart-1` to `chart-6`, a warm set (`chart-warm-1` to `-6`, used inside `data-chart-palette="warm"`) and a seven-step ramp for breakdowns (`chart-ramp-1` to `-7`); the [charts](../ui/chart/README.md) draw with them.
+- **Used by:** the [UI kit](../ui/README.md); rich-text colours (`tailwind.config.mjs`) are token variables too, so a theme recolours posts ([rich text](../richtext/README.md)).
+- **Libraries doing real work:** Tailwind CSS (tokens map to its classes), `next/font`.
 
 ## Behaviors and events
 
-- A token marked `both` in `tokens.ts` must be set in light and in dark; one marked `base` (`diagram-marker`, `radius`, `type-fine`, `type-list-row`) is set once. `type-fine` is the finest text size, `text-fine`: the small uppercase labels of the metadata bar (#1002). `type-list-row` is the label size of a row nested in a list, `text-list-row`, in `em` so it follows the list's own size: a little larger than the list's rows (the whole bill's breakdown row, #1163). Dark inherits any light token it leaves out (`themeFile.ts`).
-- `InitTheme.tsx` is a blocking script in `<head>` of the root layout. Before first paint it sets `data-theme` on `<html>` to the stored choice (`light` or `dark`), else to the system's dark preference, else to `defaultTheme` (`theme.ts`).
-- `ThemeProvider.client.tsx` wraps the page (`Providers.tsx`). On mount it reads the stored choice, else the system preference, and sets `data-theme` again: a 404 is served without the layout's `<head>`, so the script never ran there (#413). With no stored choice it follows later changes of the system preference.
-- `setTheme(null)` ("Auto") removes the stored choice; `setTheme('light' | 'dark')` stores it. The storage key is `themeLocalStorageKey` in `theme.ts`.
-- `ThemeSelector.client.tsx` (Auto, Light, Dark) works but is rendered nowhere, so visitors can't choose; dark mode follows the device (`docs/ui/evidence.md`).
-- `ThemeDecoration.tsx` is rendered once in the root layout. It draws the active theme's `decoration` option, or nothing; the default theme has none. The layer is hidden from assistive technology, takes no clicks and is faint (`decorations.css`).
-- A decoration's movement stops within 5 seconds and doesn't start when the visitor asks for reduced motion (`decorations.css`, #409).
-- The chart reveal and bar-grow effects (`chart-reveal`, `chart-reveal-x` in `tailwind.css`) run only on screen, with motion allowed and scroll-driven animation supported; otherwise charts draw finished. `chart-fill-x` grows bars the same way over one second when they are drawn, after a 500 ms wait for the row to finish expanding, for a row that opens in place (#1163, #1170); `disclosure-expand` (in `expand.css`, imported by `globals.css`) makes a native `<details>` expand and fold over 500 ms with the browser's `::details-content` (on screen, motion allowed; a browser without it opens at once), `EXPAND_MS` in `motion.client.ts` is that length and a test holds the two equal, and `html[data-expanding]` (set by `holdScrollAnchor` while it moves) switches scroll anchoring off so the page does not scroll with the growth; each later opening restarts it in place, without drawing the chart anew (#1165), on screen and with motion allowed only; `FILL_MS` in `useReplayProgress.client.ts` is that length, and a test holds the two equal. `nav-menu-slide` (in `tailwind.css`) slides a header submenu open over a short distance, on screen with motion allowed only (#1237). `print-exact` keeps chart marks and legend swatches coloured in print. `tab-quiet` and `tab-selected` (in `tabs.css`, imported by `globals.css`) are the two looks of a tab button, defined once; the same file's rules show the tab a link names, and give its button the selected look, from the browser's `:target` before any script runs, and stop once the tabs' script has chosen the tab (`data-tabs-ready`), only while scripting runs (#1309).
-- `total-pulse` (`tailwind.css`, #1051, #1095) flashes a soft accent once and fades it over 1 second, long enough that a neighbor sees which total changed (#1351), only when motion is allowed; `TOTAL_PULSE_MS` in `ShareBill.tsx` is that length for code that waits it out, and `ShareBill.test.tsx` holds the two equal (#1163). The flash is a layer of its own behind the total's text (a `::before` below the row's content), so it never covers the figures; with reduced motion the total just changes.
-- `toast-motion` (`tailwind.css`, #1377) slides a toast up a little as it fades in and down as it fades out (300 ms; Radix keeps it on screen until the exit ends), only when motion is allowed; with reduced motion it just appears and goes.
-- Rich-text colours (the [rich-text note](../richtext/README.md)) come from `tailwind.config.mjs` and are all token variables, so a theme recolours posts without touching it; none are inverted for dark, which follows `data-theme`, not the device.
-- Components use token classes only: lint rejects raw palette classes and hex or rgb values in classes (`eslint.theme.config.mjs`).
+- **`InitTheme.tsx`** is a blocking script in `<head>` that sets `data-theme` on `<html>` before first paint: the stored choice, else the system's dark preference, else `defaultTheme` (`theme.ts`). `ThemeProvider.client.tsx` repeats this on mount, because a 404 is served without the layout's `<head>` (#413), and follows later system changes while nothing is stored; `setTheme(null)` means Auto.
+- **`ThemeSelector.client.tsx`** (Auto, Light, Dark) works but is rendered nowhere, so dark mode follows the device (`docs/ui/evidence.md`).
+- **`ThemeDecoration.tsx`** is rendered once in the root layout and draws the active theme's `decoration` option, or nothing (the default has none); its layer is hidden from assistive technology, takes no clicks and its movement stops within 5 seconds and does not start under reduced motion (`decorations.css`, #409).
+- **Effects run only when motion is allowed:** `chart-reveal`, `chart-fill-x`, `disclosure-expand` (`expand.css`; its 500 ms is `EXPAND_MS` in `src/platform/ui/motion.client.ts`, held equal by a test), `total-pulse` (`TOTAL_PULSE_MS` in `ShareBill.tsx`, held equal by `ShareBill.test.tsx`) and `toast-motion`; otherwise things just appear or change (`tailwind.css`).
+- **The home hero** has two utilities: `hero-geometry` works the photo's height and horizon out of its width, its ratio and the focal point, and `hero-fade` is the eased fade into the page colour (`tailwind.css`, #1304; `heroFade.test.ts`).
 
 ## Shared pieces it uses
 
-- `Field` from `src/platform/ui/` for the selector ([UI kit note](../ui/README.md)). The layout (`src/app/(frontend)/layout.tsx`) joins `InitTheme`, `Providers` and `ThemeDecoration`.
+- `Field` from the [UI kit](../ui/README.md) for the selector. The layout (`src/app/(frontend)/layout.tsx`) joins `InitTheme`, `Providers` and `ThemeDecoration`.
 
 ## Rules and the tests that protect them
 
-- Every theme sets every token, and the default theme exists: `themes.test.ts`.
-- Text pairs pass WCAG AA (4.5:1), chart marks and control borders 3:1, in both modes, including tinted and scrim backgrounds: `themes.test.ts`; primary-strong text on a card is one of them (#1135).
-- Theme folders and the registry match; the default theme is undecorated: `registry.test.ts`.
-- A theme that sets no options gets every default, and defaults are never mutated: `options.test.ts`.
-- The stored or system theme is set on `<html>` when nothing else did: `ThemeProvider.client.test.tsx`.
-- A decoration is absent by default and hidden from assistive technology: `ThemeDecoration.test.tsx`.
-- Chart effects are screen-only: `chartReveal.test.ts`; print keeps colours: `chartPrint.test.ts`.
-- Rich-text colours are theme tokens and cover every colour the typography plugin reads: `prose.test.ts`.
-- No raw colours in classes: `eslint.theme.config.mjs`.
+- **Every theme sets every token,** in light and dark when the token is marked `both` (`diagram-marker`, `radius`, `type-fine` and `type-list-row` are `base`, set once); dark inherits a light token it leaves out (`tokens.ts`, `themeFile.ts`; `themes.test.ts`).
+- **Contrast is checked in both modes:** text pairs 4.5:1, chart marks and control borders 3:1, tinted and scrim backgrounds included; the pale breakdown steps sit outside the 3:1 pairs and carry a thin outline and their amount as text (`CHART_PAIRS` in `tokens.ts`, #659, #866; `themes.test.ts`).
+- **Tones:** `info` is blue, work that is open is green (`success`), done is purple (`done`), each with a `-strong` text colour; orange text is `accent-strong`, since the plain accent is too light to read (`tokens.ts`, #818, #946, #1118; `themes.test.ts`).
+- **Text over a photo stays readable:** a title band's photo is faded by `BAND_PHOTO_ALPHA` and `BAND_SCRIM_ALPHA` and the glass panel is darkened by `GLASS_SCRIM_ALPHA`, so the title passes WCAG AA over a black or a white photo and glass text over a bright gray (#1024, #1278; `themes.test.ts`, `src/platform/ui/GlassPanel.test.tsx`).
+- **No raw colours in classes:** lint rejects raw palette classes and hex or rgb values (`eslint.theme.config.mjs`). A theme that sets no options gets every default (`options.test.ts`); the default theme is undecorated (`registry.test.ts`, `ThemeDecoration.test.tsx`).
+- The stored or system theme is set on `<html>` when nothing else did (`ThemeProvider.client.test.tsx`); chart effects are screen-only and print keeps colours (`chartReveal.test.ts`, `chartPrint.test.ts`); rich-text colours cover every colour the typography plugin reads (`prose.test.ts`).
 
 ## Boundaries
 
-- Imports no module; everything here is shared by modules through `src/platform/`. `ThemeProvider` and `ThemeSelector` are client components, `InitTheme` and `ThemeDecoration` are not.
+- Imports no module; modules share it through `src/platform/`. `ThemeProvider` and `ThemeSelector` are client components, `InitTheme` and `ThemeDecoration` are not.
 
 ## Decisions
 

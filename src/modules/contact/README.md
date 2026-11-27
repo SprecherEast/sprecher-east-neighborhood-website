@@ -1,7 +1,7 @@
 ---
 name: 'Contact'
 type: module
-summary: 'form checks, emails held until the sender confirms, retention.'
+summary: 'form checks, held emails, retention.'
 aliases: ['forms', 'form submissions']
 relationships: [{ 'type': 'depends-on', 'target': 'src/modules/verification/README.md' }]
 ---
@@ -18,29 +18,19 @@ What happens when a neighbor sends a form on the site: the checks it passes, why
 
 ## How the pieces link
 
-- `senderEmail` is the value of the form's first `email` field that holds one plain address, trimmed and lowercase, else empty; `emailConfirmed` is the verification confirmer's answer for it. Both are overwritten on every create, and `heldEmails` is cleared, so a visitor can't set them (`domain/senderEmail.ts`, `cms/senderEmail.ts`).
-- The emails the form builder made are left in the request context (`HELD_EMAILS`) by `guardFormEmails`, then stored in `heldEmails` by the next hook, `requestSenderConfirmation`, which knows the submission's id (`cms/heldEmails.ts`, `cms/senderEmail.ts`).
-- When the sender clicks the link, verification calls `markSubmissionsConfirmed`, which sends each message's held emails once and then sets `emailConfirmed`; joined in `src/payload.config.ts` (`onConfirmed`), tested in `src/payload.config.confirmation.test.ts`.
+- **In the CMS:** the `forms` and `form-submissions` collections and the `formBlock` block (a page-builder block that points at a form); the form builder plugin (`@payloadcms/plugin-form-builder`) does the real work and this module adds the hooks. Not in the CMS: the limits and the confirm step.
+- **[Verification](../verification/README.md):** `src/payload.config.ts` hands this module the confirmer and takes out the `markSubmissionsConfirmed` listener (`onConfirmed`) and the `keepSendersWithMessages` keeper; both modules take their periods from `src/platform/lib/retention.ts`.
 - `guardFormEmails` matches each formatted email to the form's own `emails` setting by position (`cms/guardFormEmails.ts`).
-- A Reply-To built from `{{...}}` is kept only when it is one plain address, otherwise it falls back to From; a From built from submitted data is blanked, so the default sender is used (`domain/formEmails.ts`).
-- `retentionHold` can't be set on create, and `retentionHoldReason` is required while it is on (`cms/retentionHold.ts`).
-- `keepSendersWithMessages` is handed to the verification retention task, so a confirmed address stays while one of its messages is kept; both modules take their periods from `src/platform/lib/retention.ts` (`src/payload.config.ts`).
 - A form field's `width` of 50 or less shares a row from 640 px, otherwise it is full width (`ui/FormBuilderField.client.tsx`).
 
 ## Behaviors and events
 
-- A submission runs in this order, cheapest first (`cms/formBuilder.ts`): size, then rate limit, then robot check, then the sender lookup, then the plugin's email step (`guardFormEmails`), then `requestSenderConfirmation`, then `acknowledgeConfirmedSender`. The plugin's email step runs right after the save, before our two after-save hooks (`@payloadcms/plugin-form-builder`).
-- Size: over 50 rows, or a name, value or total over its limit, is refused with 413; rows that aren't text, number or true/false are refused with 400. This applies to everyone, staff included (`cms/limitSubmissionSize.ts`, `domain/submissionSize.ts`).
-- Rate limit: 5 submissions an hour per connection, then 429, counted in memory (one PM2 process); with no known IP it doesn't apply (`cms/rateLimits.ts`, `domain/rateLimits.ts`).
-- Robot check: a missing or wrong token is refused with 400, the reason only goes to the log; it is off while Turnstile keys are not set (a production deploy refuses to go out without them unless the owner sets the visible opt-out, `ALLOW_NO_ROBOT_CHECK`; see the security guideline). Admins and editors skip the rate limit and the robot check, not the size check (`cms/verifyHumanSubmission.ts`).
-- Emails whose to, cc or bcc comes from the submission are dropped, so only staff-configured recipients get mail. An email with no matching setting is dropped too (`domain/formEmails.ts`).
-- Emails then pass a site-wide cap of 30 an hour, counted on emails sent; past it they are dropped, the submission is still stored, and one warning is logged an hour (`cms/rateLimits.ts` `capFormEmails`).
-- A message reaches the team only once its sender confirms: unconfirmed means held, confirmed before or a form with no email field means sent at once, and a form that asks for an email but got no valid one sends nothing (`domain/senderEmail.ts` `toEmailDelivery`). Sent emails end with a "Sender's email: confirmed." line (`cms/heldEmails.ts`).
-- A sender confirmed before gets a fixed "we received your message" email instead of the welcome email; a first-time sender gets verification's welcome email after the click, so nobody gets both. It counts toward the cap, and a failed send is logged, never thrown (`cms/acknowledgeSender.ts`, `domain/acknowledgment.ts`).
-- Held emails are cleared before they are sent, so a repeated click sends nothing twice; one message that fails doesn't stop the others (`cms/heldEmails.ts`).
-- Retention, hourly (`cms/retention.ts`, `domain/retention.ts`): never a message on hold; a message that waits for a click (it has an address, or its form asks for one) goes 48 hours after it was sent; any other goes 12 months after its sender's last message, and one without an address 12 months after it was sent. The delete is one statement that checks hold and confirmation again, so a hold or a click made meanwhile keeps the message.
-- Forms are public to read, so visitors can fill them in; the `emails` setting stays staff-only. Anyone may create a submission, only admins read, change or delete one (`cms/formBuilder.ts`).
-- The page never shows the server's message: it maps the status to a fixed text, and a form that asks for an email adds a "check your email" note, the same for every sender (`ui/submitErrorMessage.ts`, `ui/confirmEmailNote.ts`).
+- **A submission runs cheapest check first** (`cms/formBuilder.ts`): size, rate limit, robot check, sender lookup, the plugin's email step (`guardFormEmails`), then `requestSenderConfirmation` and `acknowledgeConfirmedSender`. The plugin's email step runs right after the save, before our two after-save hooks (`@payloadcms/plugin-form-builder`).
+- **Emails wait for the sender.** `guardFormEmails` leaves the form builder's emails in the request context; `requestSenderConfirmation` stores them in `heldEmails`; when the link is clicked verification calls `markSubmissionsConfirmed`, which sends them (`cms/heldEmails.ts`, `cms/senderEmail.ts`).
+- **A sender confirmed before** gets a fixed "we received your message" email; a first-time sender gets verification's welcome email after the click, so nobody gets both; it counts toward the hourly email cap, and a failed send is logged, never thrown (`cms/acknowledgeSender.ts`).
+- **Retention runs hourly** (`cms/retention.ts`, `domain/retention.ts`): see the rule below; the job is in the [jobs reference](../../../docs/reference/jobs.md).
+- **Access:** forms are public to read, the `emails` setting stays staff-only; anyone may create a submission, only admins read, change or delete one (`cms/formBuilder.ts`).
+- **The page never shows the server's message:** it maps the status to a fixed text, and a form that asks for an email adds the same "check your email" note for every sender (`ui/submitErrorMessage.ts`, `ui/confirmEmailNote.ts`).
 
 ## Shared pieces it uses
 
@@ -49,11 +39,14 @@ What happens when a neighbor sends a form on the site: the checks it passes, why
 
 ## Rules and the tests that protect them
 
-- Each hook does what is above: `cms/*.test.ts`; the order and the fields it adds: `cms/formBuilder.test.ts`.
-- A held message goes only to the form's configured recipient, once: `cms/deliveryToRecipient.test.ts`.
-- Email, rate, size, acknowledgment and retention rules: `domain/*.test.ts`.
-- The form's fields, errors and note: `ui/FormBlock.client.test.tsx`, `ui/formSchema.test.ts`, `ui/submitErrorMessage.test.ts`, `ui/confirmEmailNote.test.ts`.
-- The contact form gets the real confirmer and its listener: `src/payload.config.confirmation.test.ts`.
+- **Size:** over 50 rows, or a name, value or total over its limit, is refused with 413; rows that are not text, number or true/false get 400. Staff are held to it too (`cms/limitSubmissionSize.ts`, `domain/submissionSize.ts`; `domain/submissionSize.test.ts`).
+- **Rate:** 5 submissions an hour per connection, then 429, counted in memory (one process); with no known IP it does not apply. Emails also pass a site-wide cap of 30 an hour; past it they are dropped, the submission is kept and one warning an hour is logged (`cms/rateLimits.ts`, `domain/rateLimits.ts`; `cms/rateLimits.test.ts`).
+- **Robot check:** a missing or wrong token is refused with 400 and only the log says why. It is off while Turnstile keys are unset (a production deploy refuses to go out without them unless `ALLOW_NO_ROBOT_CHECK` is set). Admins and editors skip the rate limit and the robot check, not the size check (`cms/verifyHumanSubmission.ts`; `cms/verifyHumanSubmission.test.ts`).
+- **Only staff-chosen recipients get mail:** an email whose to, cc or bcc comes from the submission is dropped, so is one with no matching setting; a Reply-To is kept only as one plain address, and a From built from submitted data is blanked (`domain/formEmails.ts`; `domain/formEmails.test.ts`, `cms/deliveryToRecipient.test.ts`).
+- **A message reaches the team only after its sender confirms:** unconfirmed is held; confirmed before, or a form with no email field, is sent at once; a form that asks for an email but got no valid one sends nothing. Each sent email ends with a "Sender's email: confirmed." line, held emails are cleared before sending, so a repeated click sends nothing twice and one failure stops no other (`domain/senderEmail.ts` `toEmailDelivery`, `cms/heldEmails.ts`; `domain/senderEmail.test.ts`, `cms/deliveryToRecipient.test.ts`).
+- **The sender's fields cannot be forged:** `senderEmail` is the first plain address in the form, `emailConfirmed` is the confirmer's answer; both are overwritten on every create and `heldEmails` is cleared (`cms/senderEmail.ts`; `cms/senderEmail.test.ts`).
+- **Retention:** never a message on hold (`retentionHold` cannot be set on create and needs a reason, `cms/retentionHold.ts`). A message waiting for a click goes 48 hours after it was sent; any other 12 months after its sender's last message, or after it was sent when it has no address. The delete re-checks hold and confirmation, so a hold or a click meanwhile keeps the message; a kept message also keeps its confirmed address (`keepSendersWithMessages`) (`domain/retention.test.ts`, `cms/retention.test.ts`).
+- The order and the fields the hooks add: `cms/formBuilder.test.ts`; the form's fields, errors and note: `ui/FormBlock.client.test.tsx`, `ui/formSchema.test.ts`; the real confirmer and listener: `src/payload.config.confirmation.test.ts`.
 
 ## Boundaries
 

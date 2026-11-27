@@ -1,15 +1,40 @@
 [
-  { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
+  {
+    "note": "src/modules/events/README.md",
+    "paths": ["src/modules/events/**", "src/app/(frontend)/events/**"]
+  },
   { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
   { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
-  { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
-  { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
+  {
+    "note": "src/modules/verification/README.md",
+    "paths": ["src/modules/verification/**", "src/app/(frontend)/confirm-email/**"]
+  },
+  {
+    "note": "src/modules/directory/README.md",
+    "paths": [
+      "src/modules/directory/**",
+      "src/app/(frontend)/faq/**",
+      "src/app/(frontend)/resources/**"
+    ]
+  },
   { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
   {
     "note": "src/modules/roadmap/README.md",
     "paths": ["src/modules/roadmap/**", "src/app/(frontend)/roadmap/**"]
   },
-  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
+  {
+    "note": "src/modules/accounts/README.md",
+    "paths": [
+      "src/modules/accounts/**",
+      "src/app/(frontend)/account/**",
+      "src/app/(frontend)/auth/**",
+      "src/app/(frontend)/forgot-password/**",
+      "src/app/(frontend)/login/**",
+      "src/app/(frontend)/reset-password/**",
+      "src/app/(frontend)/sign-up/**",
+      "src/app/(frontend)/verify-account/**"
+    ]
+  },
   {
     "note": "src/modules/site/navigation/README.md",
     "paths": [
@@ -84,47 +109,28 @@
       "src/modules/site/use-cases/getPageBySlug.ts",
       "src/modules/site/index.ts",
       "src/modules/site/server.ts",
-      "src/modules/site/cms.ts"
+      "src/modules/site/cms.ts",
+      "src/app/(frontend)/[slug]/**",
+      "src/modules/site/domain/heroGeometry.ts",
+      "src/modules/site/ui/blockStyles.ts",
+      "src/modules/site/ui/columnSpan.ts"
     ]
   },
   {
     "note": "src/platform/payload/README.md",
+    "paths": ["src/platform/payload/**"],
+    "exclude": ["src/platform/payload/previewCopy/**"]
+  },
+  { "note": "src/platform/lib/README.md", "paths": ["src/platform/lib/**"] },
+  {
+    "note": "src/platform/service/README.md",
     "paths": [
-      "src/platform/payload/**",
-      "src/platform/lib/chart/breakdown.ts",
-      "src/platform/lib/chart/scale.ts",
-      "src/platform/lib/chart/spec.ts",
-      "src/platform/lib/billShare.ts",
-      "src/platform/lib/clientIp.ts",
-      "src/platform/lib/cn.ts",
-      "src/platform/lib/cursor.ts",
-      "src/platform/lib/emailLayout.ts",
-      "src/platform/lib/focalPoint.ts",
-      "src/platform/lib/formatDateTime.ts",
-      "src/platform/lib/formatDuration.ts",
-      "src/platform/lib/getMediaUrl.ts",
-      "src/platform/lib/index.ts",
-      "src/platform/lib/linkAddress.ts",
-      "src/platform/lib/mediaLicenses.ts",
-      "src/platform/lib/money.ts",
-      "src/platform/lib/paging.ts",
-      "src/platform/lib/reviewQueue.ts",
-      "src/platform/lib/roles.ts",
-      "src/platform/lib/slidingWindow.ts",
-      "src/platform/lib/timezone.ts",
-      "src/platform/lib/sha256.ts",
-      "src/platform/lib/emailAddress.ts",
-      "src/platform/lib/googleMapsEmbed.ts",
-      "src/platform/lib/retention.ts",
-      "src/platform/lib/linkLifetimes.ts",
-      "src/platform/lib/messages/**",
-      "src/platform/seo/**",
+      "src/platform/service/**",
       "src/platform/email/**",
       "src/platform/turnstile/**",
       "src/platform/analytics/**",
-      "src/platform/service/**"
-    ],
-    "exclude": ["src/platform/payload/previewCopy/**"]
+      "src/platform/seo/**"
+    ]
   },
   {
     "note": "src/platform/payload/previewCopy/README.md",
@@ -132,10 +138,53 @@
   },
   {
     "note": "src/platform/richtext/README.md",
-    "paths": ["src/platform/richtext/**"]
+    "paths": ["src/platform/richtext/**"],
+    "exclude": [
+      "src/platform/richtext/editorial/Bill*",
+      "src/platform/richtext/editorial/bill*",
+      "src/platform/richtext/editorial/cityTax*",
+      "src/platform/richtext/editorial/rateBlend*",
+      "src/platform/richtext/editorial/RatesPanel*",
+      "src/platform/richtext/editorial/RoughEstimator*",
+      "src/platform/richtext/editorial/BreakdownRow*",
+      "src/platform/richtext/editorial/PanelHeader*",
+      "src/platform/richtext/editorial/useBill*",
+      "src/platform/richtext/editorial/useBreakdownAutoOpen*"
+    ]
+  },
+  {
+    "note": "src/platform/richtext/editorial/README.md",
+    "paths": [
+      "src/platform/richtext/editorial/Bill*",
+      "src/platform/richtext/editorial/bill*",
+      "src/platform/richtext/editorial/cityTax*",
+      "src/platform/richtext/editorial/rateBlend*",
+      "src/platform/richtext/editorial/RatesPanel*",
+      "src/platform/richtext/editorial/RoughEstimator*",
+      "src/platform/richtext/editorial/BreakdownRow*",
+      "src/platform/richtext/editorial/PanelHeader*",
+      "src/platform/richtext/editorial/useBill*",
+      "src/platform/richtext/editorial/useBreakdownAutoOpen*"
+    ]
   },
   {
     "note": "src/modules/news/README.md",
-    "paths": ["src/modules/news/**"]
-  }
+    "paths": ["src/modules/news/**", "src/app/(frontend)/posts/**", "src/app/(frontend)/search/**"]
+  },
+  {
+    "note": "src/app/README.md",
+    "paths": [
+      "src/app/*.ts",
+      "src/app/*.tsx",
+      "src/app/(frontend)/*.tsx",
+      "src/app/(frontend)/api/**",
+      "src/app/(frontend)/next/**",
+      "src/environment.d.ts",
+      "src/payload.config.ts",
+      "src/proxy.ts"
+    ]
+  },
+  { "note": "src/app/(payload)/README.md", "paths": ["src/app/(payload)/**"] },
+  { "note": "src/app/(frontend)/dev/README.md", "paths": ["src/app/(frontend)/dev/**"] },
+  { "note": "src/endpoints/seed/README.md", "paths": ["src/endpoints/seed/**"] }
 ]

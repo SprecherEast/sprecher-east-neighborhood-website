@@ -1,7 +1,7 @@
 ---
 name: 'News'
 type: module
-summary: 'posts, bylines, sources, search, the category tree, "top issues".'
+summary: 'posts, bylines, search, categories, top issues.'
 aliases: ['posts', 'categories']
 relationships: []
 ---
@@ -16,28 +16,22 @@ Listing, post page, search page and the blocks' components are in the generated 
 
 ## How the pieces link
 
+- **In the CMS:** `posts` (drafts, scheduled publish, review-queue fields, `backdrop`), the `categories` tree shared with events, the `search` index and the "top issues" and archive blocks. **Libraries doing real work:** Payload's search and nested-docs plugins; Lexical for the text ([rich text](../../platform/richtext/README.md)).
 - `authors` (users, private) becomes `populatedAuthors` (names only) on every read, copied past access control and left out when an author is missing (`cms/populateAuthors.ts`); the byline joins them "Ana, Ben and Cy" (`domain/authors.ts`).
-- `publishedAt` is set to now when a post is published without one (field hook in `cms/posts.ts`).
 - A card's summary is the post's search-engine description, its picture the share image, both from `meta` (`domain/types.ts`, `data/mappers.ts`).
 - `sourceName` and `sourceUrl` become the card's plain-text source and the page's link. The link is kept only when absolute http(s); a link without a name is named by its host; with neither there is no source (`data/mappers.ts`, #483).
 - A search entry copies the title (falling back from the search-engine title), slug, description, image, categories (with titles), the source, and an event's `cancelled` (`cms/searchFields.ts`, `cms/searchSync.ts`). The plugin indexes posts and events, chosen in `src/payload.config.ts`.
-- `relatedPosts` can't name the post itself (`filterOptions` in `cms/posts.ts`); "You May Also Like" leaves out the post and its related posts (`domain/related.ts`).
 - Categories form a tree: the nested-docs plugin adds `parent` and `breadcrumbs` (`src/payload.config.ts`). Events use the same tree (`src/modules/events/cms/events.ts`). `defaultImage` is the image an agent's suggestion gets, from the nearest category up the parents (`cms/categories.ts`; rule in `src/modules/agents/domain/suggestion.ts`).
 
 ## Behaviors and events
 
-- The listing is published posts, newest first, 12 a page; numbered pages serve visitors without JavaScript, and "Load more" asks for what follows the last post by cursor, so a removed post skips nothing (`data/queries.ts`, decision 0014). Its action refuses an invalid cursor (`actions.ts`).
-- Saving a published post, unpublishing one, or deleting one refreshes its page, `/posts`, the numbered pages, `/`, every CMS page and the posts sitemap tag; saving a draft refreshes nothing (`cms/revalidatePost.ts`, #484).
-- Posts created by agents or non-staff are stored as `suggested` drafts (`holdSuggestions` in `cms/posts.ts`, `suggestibleContentAccess`).
-- Search matches title, slug and search-engine title or description; spaces around a query don't matter, and an empty query lists every entry, at most 12 (`data/filters.ts`, `data/queries.ts`, `domain/search.ts`). The box follows typing after a 200 ms pause; Enter searches at once (`ui/SearchBox.client.tsx`).
-- A search result links to the post's or the event's own page, and an entry without a slug is dropped (`data/mappers.ts`).
-- The archive block (home page "Recent News") lists the newest posts, optionally in some categories (default 3), or the posts the editor picked, leaving out those the reader may not see (`use-cases/findArchivePosts.ts`).
-- "Top issues": one to five items, title up to 80 and summary up to 200 characters (`TOP_ISSUES_LIMITS` in `domain/topIssues.ts`), most important first, with the day it was last reviewed, shown as "Updated" when set. An item without a title, or whose link is unreadable by the visitor or unsafe (not http(s) or a path on this site), is left out; with none left nothing is drawn (`data/mappers.ts`, `ui/TopIssuesBlock.tsx`).
-- The post page emits schema.org `Article`, naming the original source with `isBasedOn` (`ui/postJsonLd.ts`).
-- The post page heads with a plain title band and its category, shows its author and published date, and nothing else, in the metadata bar at the top of the article column, right-aligned in small type on one line with a long author name cut by an ellipsis and the date in its compact form (`postByline`, #1002, #1055), and shows the post's `heroImage` whole as the first thing in the article column (never cropped behind the title); a post with no picture shows none and leaves no gap. The card, search result and share image are unchanged (`ui/postHeader.tsx`, `src/platform/ui/FeaturedImage.tsx`, `posts/[slug]/page.tsx`, #1013).
-- A post can carry a title band photo, `backdrop`: up to three crops (phone, tablet, desktop), each an upload an editor picks in the post's Content tab, with the upload's focal point as the fine adjustment. It shows faded and grayed behind the title and category, edge to edge, and adds no height. A size with no crop uses the nearest one set; none set is the plain band, unchanged. It is separate from `heroImage`, which stays the article picture, and from the share image (`cms/posts.ts`, `ui/postHeader.tsx`, `src/platform/payload/bandBackdrop.ts`, `src/platform/ui/BandBackdrop.tsx`, #1024).
-- The post's text keeps the reading width unless it holds key facts, fact tabs or an outcome fork, which fill the column (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, used by `posts/[slug]/page.tsx`, #774).
-- Both the nested-docs plugin and GraphQL are kept. The site's pages use neither: no page or query reads `breadcrumbs`, and the site makes no GraphQL calls. GraphQL is available for any collection or global, under each one's own access rules; only the account verify mutation is refused (`src/payload.config.ts`, `src/modules/accounts/cms/verifyFromSiteOnly.ts`). What GraphQL is for hasn't been decided yet.
+- **A save refreshes the right pages:** saving a published post, unpublishing one or deleting one refreshes its page, `/posts`, the numbered pages, `/`, every CMS page and the posts sitemap tag; saving a draft refreshes nothing (`cms/revalidatePost.ts`, #484).
+- **`publishedAt` is set to now** when a post is published without one (`cms/posts.ts`).
+- **Posts created by agents or non-staff are `suggested` drafts** (`holdSuggestions` in `cms/posts.ts`, `suggestibleContentAccess`).
+- **The archive block** (home page "Recent News") lists the newest posts (3 when the editor leaves the limit empty), optionally in some categories, or the posts the editor picked, leaving out those the reader may not see (`use-cases/findArchivePosts.ts`).
+- **The post page** has a plain title band and category, an author-and-date metadata bar, and the post's `heroImage` whole as the first thing in the article column (a post with no picture shows none and no gap); it emits schema.org `Article`, naming the original source with `isBasedOn` (`ui/postHeader.tsx`, `ui/postJsonLd.ts`, #1002, #1013, #1055). A post can carry a title band photo, `backdrop` (phone, tablet and desktop crops), separate from `heroImage` and the share image (`cms/posts.ts`, `src/platform/payload/bandBackdrop.ts`, #1024).
+- **Search matches** title, slug and search-engine title or description; spaces around a query do not matter and an empty query lists every entry, at most 12; the box follows typing after a 200 ms pause (`data/filters.ts`, `domain/search.ts`, `ui/SearchBox.client.tsx`).
+- **GraphQL and nested-docs stay on** but nothing on the site reads `breadcrumbs` or makes a GraphQL call; GraphQL is open to any collection under its own access rules and only the account verify mutation is refused. What it is for is undecided (`src/payload.config.ts`).
 
 ## Shared pieces it uses
 
@@ -48,13 +42,14 @@ Listing, post page, search page and the blocks' components are in the generated 
 
 ## Rules and the tests that protect them
 
-- Refreshing names only routes that exist: `cms/revalidatePost.test.ts`.
-- Search copies and sources: `cms/searchSync.test.ts`, `data/mappers.test.ts`, `data/mappers.source.test.ts`, `data/queries.source.test.ts`.
-- Cursor paging and filters: `data/queries.keyset.test.ts`, `data/filters.test.ts`, `actions.test.ts`.
-- Byline, related posts, search query: `domain/authors.test.ts`, `domain/related.test.ts`, `domain/search.test.ts`.
-- "Top issues" mapping and drawing: `data/mappers.topIssues.test.ts`, `ui/TopIssuesBlock.test.tsx`.
-- Cards, header, search box, structured data: `ui/PostCard.test.tsx`, `ui/postHeader.test.tsx`, `ui/SearchBox.client.test.tsx`, `ui/postJsonLd.test.ts`.
-- Suggestions are held: `src/payload.config.reviewQueue.test.ts`. Posts moved onto the shared categories: `src/payload.config.sharedCategoriesMigration.test.ts`.
+- **The listing is published posts, newest first, 12 a page.** Numbered pages serve visitors without JavaScript; "Load more" asks for what follows the last post by cursor, so a removed post skips nothing, and its action refuses an invalid cursor (`data/queries.ts`, `actions.ts`, decision 0014; `data/queries.keyset.test.ts`, `data/filters.test.ts`, `actions.test.ts`).
+- **An author's account stays private:** `authors` becomes `populatedAuthors` (names only) on every read, copied past access control and left out when an author is missing; the byline joins them "Ana, Ben and Cy" (`cms/populateAuthors.ts`, `domain/authors.ts`; `domain/authors.test.ts`).
+- **A card's source is plain:** `sourceName` and `sourceUrl` become a text source and the page's link; the link is kept only when absolute http(s), a link without a name is named by its host, and with neither there is no source (`data/mappers.ts`, #483; `data/mappers.source.test.ts`, `data/queries.source.test.ts`).
+- **A search entry copies** the title (falling back from the search-engine title), slug, description, image, categories with titles, the source and an event's `cancelled`; an entry without a slug is dropped from results (`cms/searchFields.ts`, `cms/searchSync.ts`, `data/mappers.ts`; `cms/searchSync.test.ts`, `data/mappers.test.ts`).
+- **"You may also like" never lists the post itself:** `relatedPosts` cannot name it and the block leaves out the post and its related posts (`cms/posts.ts`, `domain/related.ts`; `domain/related.test.ts`).
+- **"Top issues" shows one to five items,** title up to 80 and summary up to 200 characters, most important first with the day it was last reviewed; an item with no title, or whose link the visitor cannot read or is unsafe (not http(s) or a path on this site), is left out, and with none left nothing is drawn (`domain/topIssues.ts`, `data/mappers.ts`, `ui/TopIssuesBlock.tsx`; `data/mappers.topIssues.test.ts`, `ui/TopIssuesBlock.test.tsx`).
+- **Categories form one tree shared with events:** the nested-docs plugin adds `parent` and `breadcrumbs`; `defaultImage` is the image an agent's suggestion gets, from the nearest category up the parents (`cms/categories.ts`, `src/modules/agents/domain/suggestion.ts`).
+- **Text keeps the reading width** unless the post holds key facts, fact tabs or an outcome fork (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774). Refreshing names only routes that exist (`cms/revalidatePost.test.ts`); suggestions are held (`src/payload.config.reviewQueue.test.ts`); posts sit on the shared categories (`src/payload.config.sharedCategoriesMigration.test.ts`); cards and header: `ui/PostCard.test.tsx`, `ui/postHeader.test.tsx`, `ui/SearchBox.client.test.tsx`, `ui/postJsonLd.test.ts`.
 
 ## Boundaries
 
