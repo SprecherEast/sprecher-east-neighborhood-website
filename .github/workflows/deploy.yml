@@ -3,7 +3,7 @@ name: Deploy to VPS
 # Builds the site in GitHub Actions and ships the build to the VPS, which only migrates, switches
 # and checks (#245; steps in ops/README.md). CI calls this workflow once its "Type-check & Build"
 # job has passed on a push to main; it can also be run by hand on main to redeploy.
-# The deploy secrets (VPS_*, UMAMI_ADMIN_PASSWORD) are secrets of the `production` environment, which
+# The deploy secrets (VPS_*, UMAMI_ADMIN_PASSWORD, OFFSITE_BACKUP_RCLONE_CONF) are secrets of the `production` environment, which
 # only runs from `main`, so a workflow on any other branch can't read them (#1071). The jobs that read
 # them, Preflight and Deploy, name it; Build release names none and reads no secret.
 on:
@@ -135,7 +135,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [preflight, build]
-    environment: production # reads the VPS_* and UMAMI_ADMIN_PASSWORD secrets
+    environment: production # reads the VPS_*, UMAMI_ADMIN_PASSWORD and OFFSITE_BACKUP_RCLONE_CONF secrets
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
@@ -206,6 +206,22 @@ jobs:
           # command line or file; empty while the secret isn't set, and the script then does nothing.
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
           printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
+
+      # The off-site backup (#1332, ops/offsite-backup.md): installs the weekly job once the owner's public key is in the
+      # repository and the Drive credential is set, then shows the state of the copies in Drive as warning annotations
+      # (age of the newest copy, how the last run went). It never fails the deploy: a stale or failed backup must not
+      # stall merges. Like the Umami password, the credential goes over the SSH session's stdin, never into a command
+      # line, file or log; an empty secret removes the stored credential and the job.
+      - name: Set up the off-site backup (#1332)
+        if: steps.order.outputs.skip != 'true'
+        timeout-minutes: 15 # shorter than the job's 20, so a hung Drive call cannot cancel the port and HTTPS checks after it
+        env:
+          RELEASE: ${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
+          OFFSITE_BACKUP_RCLONE_CONF: ${{ secrets.OFFSITE_BACKUP_RCLONE_CONF }}
+        run: |
+          [[ "$RELEASE" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo "::error::bad release name '$RELEASE'"; exit 1; }
+          # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
+          printf '%s' "$OFFSITE_BACKUP_RCLONE_CONF" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/install-offsite-backup.sh --config-stdin"
 
       - name: Check that the app, Umami and preview ports are closed to the internet (#118, #948, #1073)
         # Also after a failed deploy step: the outside view is what tells a failure apart (#338).

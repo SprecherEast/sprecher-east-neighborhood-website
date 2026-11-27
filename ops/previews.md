@@ -93,7 +93,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   line only when the host guards and the isolation check pass; its log says which.
 - **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
   preview deploy and fails the deploy (before: nothing starts, and a preview already running under that number is taken down; after: the preview is taken down) when the account can open production's
-  settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin
+  settings, database, media, backups, Umami files, the off-site backup's credential folder and log, PM2 logs or Caddy's storage, or connect to Caddy's admin
   endpoint on localhost. `preview-host-guards.sh` makes that so: production's folders closed to "others",
   the account in `cron.deny` and `at.deny`, and an owner-match firewall rule on the admin port. An upload
   is also limited by what it unpacks to (`PREVIEW_UNPACK_MAX_BYTES`, 3 GiB). Details, the unix socket
