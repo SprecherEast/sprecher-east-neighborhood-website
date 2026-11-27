@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import { SMALL_TEXT } from '@/platform/ui/Text'
@@ -30,5 +33,16 @@ describe('the sizes every chart and data display of bars shares (#1503)', () => 
   it('shows the drawing 1:1 at the thumbnail width, so its units are the page’s pixels', () => {
     expect(CHART_SMALL_WIDTH).toContain('--chart-small-width')
     expect(VIEW_WIDTH).toBe(20 * 16)
+  })
+
+  it('never draws wider than the thumbnail, stacked or beside the text, so a unit stays a pixel', () => {
+    const css = readFileSync(join(process.cwd(), 'src/app/(frontend)/globals.css'), 'utf8')
+    const rem = (name: string): number => {
+      const value = new RegExp(`${name}:\\s*([^;]+);`).exec(css)?.[1].trim() ?? ''
+      const alias = /^var\((--[\w-]+)\)$/.exec(value)
+      return alias ? rem(alias[1]) : Number.parseFloat(value)
+    }
+    expect(rem('--chart-small-width') * 16).toBe(VIEW_WIDTH)
+    expect(rem('--chart-stack-width')).toBe(rem('--chart-small-width'))
   })
 })
