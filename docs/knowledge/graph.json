@@ -2666,6 +2666,19 @@
       "links": []
     },
     {
+      "id": "business-rule:src/platform/ui/README.md#10",
+      "type": "business-rule",
+      "name": "**Toasts sit under the sticky header in the page** and above…",
+      "summary": "**Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.",
+      "path": "src/platform/ui/Toast.client.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/ui/Toast.client.test.tsx"]
+    },
+    {
       "id": "business-rule:src/platform/ui/README.md#2",
       "type": "business-rule",
       "name": "**A `Disclosure` a reader opens is scrolled into view** just far…",
@@ -2754,6 +2767,19 @@
     {
       "id": "business-rule:src/platform/ui/README.md#8",
       "type": "business-rule",
+      "name": "**`Switch` is a native switch button, not a styled box:** Radix's…",
+      "summary": "**`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px target, the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).",
+      "path": "src/platform/ui/Switch.client.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/ui/Switch.client.test.tsx"]
+    },
+    {
+      "id": "business-rule:src/platform/ui/README.md#9",
+      "type": "business-rule",
       "name": "**`Button` with `loading` ignores clicks but stays focusable;**…",
       "summary": "**`Button` with `loading` ignores clicks but stays focusable;** `ProgressBar` needs a `label` and clamps its value (`Button.tsx`, `ProgressBar.tsx`, #939); `Alert` announces itself unless `live={false}` (`Alert.tsx`).",
       "path": "src/platform/ui/README.md",
@@ -2763,19 +2789,6 @@
       "facts": [],
       "watchOuts": [],
       "links": []
-    },
-    {
-      "id": "business-rule:src/platform/ui/README.md#9",
-      "type": "business-rule",
-      "name": "**Toasts sit under the sticky header in the page** and above…",
-      "summary": "**Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.",
-      "path": "src/platform/ui/Toast.client.test.tsx",
-      "module": "platform-area:ui",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/platform/ui/Toast.client.test.tsx"]
     },
     {
       "id": "business-rule:src/platform/ui/chart/README.md#1",
@@ -10499,6 +10512,19 @@
       "links": []
     },
     {
+      "id": "library:@radix-ui/react-switch",
+      "type": "library",
+      "name": "@radix-ui/react-switch",
+      "summary": "",
+      "path": "package.json",
+      "module": "group:libraries",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Version", "value": "1.4.1" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
       "id": "library:@radix-ui/react-tabs",
       "type": "library",
       "name": "@radix-ui/react-tabs",
@@ -15452,7 +15478,7 @@
           "name": "layout",
           "type": "\"inline\" | \"bar\" | \"stacked\"",
           "required": false,
-          "detail": "Defaults to `inline` for a checkbox and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it",
+          "detail": "Defaults to `inline` for a checkbox or switch and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it",
           "notes": ["variant"]
         },
         {
@@ -15495,7 +15521,7 @@
       "facts": [
         {
           "label": "Parts",
-          "value": "Field.Input, Field.Money, Field.TextArea, Field.Select, Field.Checkbox"
+          "value": "Field.Input, Field.Money, Field.TextArea, Field.Select, Field.Checkbox, Field.Switch"
         }
       ],
       "watchOuts": [],
@@ -15653,6 +15679,19 @@
         { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
       ],
       "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:FieldSwitch",
+      "type": "shared-component",
+      "name": "FieldSwitch",
+      "summary": "An on or off switch for a form; place it inside a `Field`, which then lays out inline with the label after the switch. With react-hook-form, render it through a `Controller` (`checked`, `onCheckedChange`).",
+      "path": "src/platform/ui/FieldSwitch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Props from its element", "value": "292" }],
       "watchOuts": [],
       "links": []
     },
@@ -17536,6 +17575,47 @@
         { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
       ],
       "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:Switch",
+      "type": "shared-component",
+      "name": "Switch",
+      "summary": "An on or off switch with its label beside it; pressing the label works too. For a setting that takes effect at once (a light or dark choice). A choice saved with a form goes in a `Field` (`Field.Switch`), which adds a hint and an error. Controlled (`checked`, `onCheckedChange`) or left to itself (`defaultChecked`); `name` and `value` take part in a form.",
+      "path": "src/platform/ui/Switch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "label",
+          "type": "ReactNode",
+          "required": true,
+          "detail": "What the switch turns on or off, in words; it is the switch's name for screen readers",
+          "notes": []
+        },
+        {
+          "name": "hideLabel",
+          "type": "boolean",
+          "required": false,
+          "detail": "Keeps the label for screen readers only, where the context names the switch visually",
+          "notes": []
+        }
+      ],
+      "facts": [{ "label": "Props from its element", "value": "293" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:SwitchControl",
+      "type": "shared-component",
+      "name": "SwitchControl",
+      "summary": "The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears \"on\" or \"off\". The track is 24 px tall; the after: area makes the target 44 px (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.",
+      "path": "src/platform/ui/Switch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Props from its element", "value": "293" }],
       "watchOuts": [],
       "links": []
     },
@@ -20137,7 +20217,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 47,
+      "count": 48,
       "via": []
     },
     {
@@ -20281,7 +20361,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 144,
+      "count": 145,
       "via": []
     },
     {
@@ -20361,7 +20441,7 @@
       "to": "shared-component:Button",
       "type": "uses",
       "layer": "ui",
-      "count": 10,
+      "count": 11,
       "via": []
     },
     {
@@ -20751,6 +20831,14 @@
     {
       "from": "feature:app",
       "to": "shared-component:SidebarCTA",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "shared-component:Switch",
       "type": "uses",
       "layer": "ui",
       "count": 1,
@@ -22151,6 +22239,14 @@
     {
       "from": "group:libraries",
       "to": "library:@radix-ui/react-select",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "group:libraries",
+      "to": "library:@radix-ui/react-switch",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -29782,6 +29878,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "business-rule:src/platform/ui/README.md#10",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "business-rule:src/platform/ui/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -29926,6 +30030,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "library:@radix-ui/react-switch",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "library:@radix-ui/react-tabs",
       "type": "uses",
       "layer": "libraries",
@@ -30001,7 +30113,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 87,
+      "count": 88,
       "via": []
     },
     {
@@ -30041,7 +30153,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 101,
+      "count": 102,
       "via": []
     },
     {
@@ -30350,6 +30462,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "shared-component:FieldSwitch",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "shared-component:FieldTextArea",
       "type": "contains",
       "layer": "structure",
@@ -30599,6 +30719,22 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:SliceName",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:Switch",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:SwitchControl",
       "type": "contains",
       "layer": "structure",
       "count": 1,

@@ -17,7 +17,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 - **Media:** `Media` picks `VideoMedia` for a video mime type, else `ImageMedia`; upload paths stay relative so Next optimizes them as local images, with the image's `updatedAt` as cache key (`Media.tsx`, `ImageMedia.client.tsx`, `src/platform/lib/getMediaUrl.ts`). A picture that must stay cropped keeps its subject in view through the upload's focal point (`atFocalPoint`, `src/platform/lib/focalPoint.ts`, #1013); cards never pass it.
 - **Article pages:** a post's or event's page heads with a plain `PageHeader` band (optionally over a title photo, `BandBackdrop`, #1024), a `MetaBar` and a whole, uncropped `FeaturedImage` placed by `ArticlePage` (`PageHeader.tsx`, `MetaBar.tsx`, `FeaturedImage.tsx`, `ArticlePage.tsx`, #1013, #1055).
 - **Forms:** a `Field` hands its one control its id, `aria-describedby` and `aria-invalid` through one context, and a control outside a `Field` throws (`fieldContext.ts`); `Field.Money` writes the whole-dollar rule in [shared helpers](../lib/README.md) (`FieldMoney.client.tsx`).
-- **Libraries doing real work:** Radix (dialog, popover, tabs, select, checkbox, toast), `class-variance-authority` for variants, `react-hook-form` for forms, `lucide-react` for icons.
+- **Libraries doing real work:** Radix (dialog, popover, tabs, select, checkbox, switch, toast), `class-variance-authority` for variants, `react-hook-form` for forms, `lucide-react` for icons.
 - **Charts** and the data displays built like them have their own note: [Charts and data displays](chart/README.md). Theme tokens: [theme](../theme/README.md).
 
 ### The showcase
@@ -48,6 +48,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 - **The "On this page" menu needs at least 3 sections** and highlights the last heading above a reading line (`onThisPage.ts`, `OnThisPage.client.tsx`; `OnThisPage.client.test.tsx`).
 - **Text on a photo stays readable:** `GlassPanel` is the one frosted-glass look and keeps 4.5:1 text over a very bright photo; a title band photo is dimmed so its title meets WCAG AA (`GlassPanel.tsx`, `BandBackdrop.tsx`, #1278, #1024; `GlassPanel.test.tsx`).
 - **A brand mark is never altered:** `BrandLogo` draws a provider's logo exactly as supplied, takes no class, and is the one place literal logo colours are allowed (`BrandLogo.tsx`, #1365; `BrandLogo.test.tsx`).
+- **`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px target, the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).
 - **`Button` with `loading` ignores clicks but stays focusable;** `ProgressBar` needs a `label` and clamps its value (`Button.tsx`, `ProgressBar.tsx`, #939); `Alert` announces itself unless `live={false}` (`Alert.tsx`).
 - **Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.
 
