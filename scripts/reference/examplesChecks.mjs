@@ -64,7 +64,25 @@ const FORBIDDEN = new Set([
   'require',
   'eval',
   'Function',
+  'Image',
+  'open',
+  'requestAnimationFrame',
+  'requestIdleCallback',
+  'cancelAnimationFrame',
 ])
+// Markup that loads or runs something, or injects it: a static page has no use for any of it
+const ELEMENTS_FORBIDDEN = new Set([
+  'script',
+  'iframe',
+  'object',
+  'embed',
+  'link',
+  'meta',
+  'base',
+  'form',
+])
+const INJECTION = 'dangerouslySetInnerHTML'
+const SCRIPT_URL = /^\s*javascript:/i
 
 /** The value of a literal in the source: text, number, boolean, list or object of those. */
 export function literal(node) {
@@ -145,19 +163,16 @@ export function kitAllowed(specifier, isKitFile) {
 }
 
 /**
- * Whether a relative import reaches a component file in the same folder, or the format's own file.
- * A target in the kit must also be on the safe list (`isKitFile`): the examples files sit in the
- * kit's folder, so a relative path is as much a way to `AdminBar` or `Media` as an alias is.
+ * Whether a relative import reaches a file in the same folder that is on the safe list
+ * (`isKitFile`), or the format's own file. The safe list is the only list: an examples file sits
+ * beside its component, so a relative path is as much a way to `AdminBar` or `RichText` as an
+ * alias is, in the kit's folder and in rich text's alike.
  */
-export function relativeAllowed(specifier, file, isComponentFile, isKitFile) {
+export function relativeAllowed(specifier, file, isKitFile) {
   const folder = path.posix.dirname(file)
   const target = path.posix.normalize(path.posix.join(folder, specifier))
   if (path.posix.dirname(target) !== folder) return false
-  if (target === 'src/platform/ui/example') return true
-  return (
-    isComponentFile(`${target}.tsx`) &&
-    (!target.startsWith('src/platform/ui/') || isKitFile(`${target}.tsx`))
-  )
+  return target === 'src/platform/ui/example' || isKitFile(`${target}.tsx`)
 }
 
 /** The line of a node, counted from 1. */
@@ -186,6 +201,19 @@ export function checkNode(node, sourceFile, fail, owner) {
   if (ts.isMetaProperty(node)) fail(`${owner}import.meta is not allowed ${at}`)
   if (ts.isIdentifier(node) && FORBIDDEN.has(node.text) && !isNameOnly(node)) {
     fail(`${owner}references ${node.text} ${at}`)
+  }
+  const tag = ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node) ? node.tagName : null
+  if (tag && ts.isIdentifier(tag) && ELEMENTS_FORBIDDEN.has(tag.text)) {
+    fail(`${owner}uses <${tag.text}>, which loads or runs something ${at}`)
+  }
+  if (ts.isIdentifier(node) && node.text === INJECTION) {
+    fail(`${owner}uses ${INJECTION} ${at}`)
+  }
+  if (ts.isStringLiteralLike(node) && SCRIPT_URL.test(node.text)) {
+    fail(`${owner}has a javascript: address ${at}`)
+  }
+  if (ts.isTemplateExpression(node) && SCRIPT_URL.test(node.head.text)) {
+    fail(`${owner}has a javascript: address ${at}`)
   }
   // Every way to a constructor or the prototype is a way to the Function constructor, so none is allowed
   const hidden = ts.isIdentifier(node) || ts.isStringLiteralLike(node) ? node.text : ''

@@ -118,6 +118,31 @@ describe('safeKitFiles: the kit files an example may import', () => {
     }
   })
 
+  it('drops a file that reaches process or the server some other way', () => {
+    for (const code of [
+      'export const a = globalThis.process.env',
+      "export const a = globalThis['process']",
+      'export const a = window.process',
+      'export const a = import.meta.env',
+      "export const a = module.require('fs')",
+      'export const a = import(name)',
+      'export const a = require(name)',
+      "import { x } from 'next/dist/server/web/spec-extension/cookies'",
+    ]) {
+      const repo = { [`${UI}/A.tsx`]: code, [`${UI}/B.tsx`]: '' }
+      expect([...safe(repo)], code).toEqual([`${UI}/B.tsx`])
+    }
+  })
+
+  it('drops a file it cannot read', () => {
+    const list = safeKitFiles({
+      files: [`${UI}/A.tsx`],
+      readFile: () => undefined,
+      resolve: () => null,
+    })
+    expect([...list]).toEqual([])
+  })
+
   it('does not mind a type-only import or a property called process', () => {
     const repo = {
       [`${UI}/A.tsx`]:

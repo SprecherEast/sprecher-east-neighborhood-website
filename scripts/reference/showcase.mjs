@@ -11,7 +11,7 @@ import { generatedNotice } from '../content-types/render.mjs'
 import { examplesFilesFor, readExamples } from './examplesReader.mjs'
 
 /** The examples of each component file: read from its server and client examples files. */
-function readFileExamples({ all, readFile, isComponentFile, isKitFile }) {
+function readFileExamples({ all, readFile, isKitFile }) {
   const byFile = new Map()
   for (const file of new Set(all.map(({ component }) => component.file))) {
     const names = all
@@ -23,7 +23,7 @@ function readFileExamples({ all, readFile, isComponentFile, isKitFile }) {
     for (const { file: examplesFile } of examplesFilesFor(file)) {
       const text = readFile(examplesFile)
       if (text === undefined) continue
-      for (const example of readExamples(text, examplesFile, { isComponentFile, isKitFile })) {
+      for (const example of readExamples(text, examplesFile, { isKitFile })) {
         const named = [example.of ?? primary].flat()
         for (const name of named) {
           if (!names.includes(name)) {
@@ -64,7 +64,6 @@ export function buildShowcaseIndex({ groups, users, readFile, exampleFiles, kitF
   const byFile = readFileExamples({
     all,
     readFile,
-    isComponentFile: (file) => componentFiles.has(file),
     isKitFile: (file) => kitFiles.has(file),
   })
 

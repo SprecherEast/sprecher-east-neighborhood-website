@@ -94,7 +94,6 @@ describe('readExamples: what an example may import', () => {
     // With every file counted as safe, only the shape of the specifier can refuse these
     const everything = (line) => () =>
       readWith(`${line}\n${IMPORTS}${withBody('render: () => null')}`, FILE, {
-        isComponentFile: () => true,
         isKitFile: () => true,
       })
     for (const line of [

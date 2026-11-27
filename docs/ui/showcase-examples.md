@@ -31,22 +31,25 @@ defineExample({ purpose, render, settings?, of? })` with `defineExample` from `.
   keys a `Record` by the prop's type, so a new variant fails the type-check until it is listed. A
   shared constant (`EXAMPLE_ROW`) lives in `example.ts`.
 - **What an examples file may do** (the generator fails it otherwise; a static export draws it, with
-  no CMS, secret or network): import only `react`, `lucide-react`, `./example`, the component files
-  in its own folder and the kit components on the safe list (`@/platform/ui/<name>`, one plain name
+  no CMS, secret or network): import only `react`, `lucide-react`, `./example` and the kit components on the safe list, by `@/platform/ui/<name>` or by a relative path to a file in its own folder (one plain name
   or folder path per step: a `.` or `..` step, `testing/`, a test, a story or an examples file is
-  refused). The safe list holds for a relative import too (`./Media`, `./AdminBar.client`): an
-  examples file sits in the kit's folder, so a component off the list cannot be reached either way,
-  and so cannot have examples until a reviewed change puts it on the list (#1539 for rich text). The safe list is computed, not written: the reference's component files under the kit,
+  refused). The safe list is the only list, in every folder (`./Media`, `./AdminBar.client` and,
+  beside rich text, `./RichText` are refused): a component off it cannot be reached by either path,
+  and so cannot have examples until a reviewed change puts it on the list (#1539 for rich text).
+  The safe list is computed, not written: the reference's component files under the kit,
   minus every one whose imports, followed all the way down, reach `payload` or a `@payloadcms/`
   package, `server-only`, a Node built-in (`fs`, `node:…`), a server folder (`modules`, `app`, `endpoints`,
-  `platform/payload`, `platform/service`) or `process` (`scripts/reference/kitFiles.mjs`); today that drops
+  `platform/payload`, `platform/service`) or `process`, `globalThis.process`, `import.meta`, `module` or an import whose path is not a literal
+  (`scripts/reference/kitFiles.mjs`); today that drops
   `AdminBar`, `LivePreviewListener`, `Breadcrumbs`, `Media` and the others that reach the URL
   helpers. No dynamic `import()`, `require`, `import x = require` or `import.meta`; no reference to
   the environment, machine, network, page or timers (`process`, `global`, `module`, `exports`,
   `Buffer`, `__dirname`, `Reflect`, `Proxy`, `Worker`, `Deno`, `Bun`, `fetch`, `WebSocket`,
-  `window`, `document`, `location`, `localStorage`, `setTimeout` and the like; the full list is
+  `window`, `document`, `location`, `localStorage`, `setTimeout`, `requestAnimationFrame`, `open`,
+  `Image` (use the `ImageIcon` name for the icon) and the like; the full list is
   `FORBIDDEN` in `scripts/reference/examplesChecks.mjs`) and no way to `constructor` or `__proto__`,
-  anywhere in the file; every export a `defineExample`, with only the entries above, valid settings
+  anywhere in the file; no `<script>`, `<iframe>`, `<object>`, `<embed>`, `<link>`, `<meta>`,
+  `<base>` or `<form>`, no `dangerouslySetInnerHTML` and no `javascript:` address; every export a `defineExample`, with only the entries above, valid settings
   and a file with no syntax error. Anything else is refused by default; widening a list (for
   example the kit files, for rich text examples, #1539) is a reviewed change. The lint rules for
   pages (the kit, not raw tags; theme tokens only) apply too.
@@ -57,7 +60,9 @@ defineExample({ purpose, render, settings?, of? })` with `defineExample` from `.
   write what it misses: a name or key built from pieces (`'con' + 'structor'`, a template), a route
   through `Object.getPrototypeOf` and property descriptors to the `Function` constructor, and
   anything a safe-listed kit file or package does, since packages are trusted unread except the
-  server ones listed above. Review of the examples file stays the control.
+  server ones listed above; and the kit list sees only the shapes named above, so a kit file that
+  reaches the environment another way (a computed key, `next/dist` internals other than `server`)
+  would stay on it. Review of the examples file stays the control.
 - **The index** (`docs/reference/showcase-index.json`, `npm run docs:generate`, checked by
   `docs:check` in `Knowledge sync`) holds, for every shared component: its group, description,
   props (with the values of each variant), parts, the files that use it with their count, and its

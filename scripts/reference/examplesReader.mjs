@@ -20,7 +20,6 @@ import {
   literal,
   relativeAllowed,
 } from './examplesChecks.mjs'
-import { isComponentSourceFile } from './sourceProgram.mjs'
 
 export { exampleAnchor, examplesFilesFor, exampleTitle } from './exampleNames.mjs'
 
@@ -139,18 +138,14 @@ function readExample(statement, declaration, sourceFile, fail, helpers) {
 /**
  * The examples of one file, in file order, with the file's `kind`: `client` for `*.examples.client.tsx`
  * (which starts with `'use client'`), `server` otherwise. `file` is the path under the repository.
- * `isComponentFile` says which paths are component files, the only relative imports allowed;
- * `isKitFile` says which kit files may be imported by `@/platform/ui/…` (`kitFiles.mjs`; none by default).
+ * `isKitFile` is the safe list (`kitFiles.mjs`; empty by default): the only kit files an example may
+ * import, by `@/platform/ui/…` or by a relative path.
  * Every export must be `defineExample({ purpose, render, settings?, of? })`; anything else fails.
  * @param {string} text
  * @param {string} file
- * @param {{ isComponentFile?: (file: string) => boolean, isKitFile?: (file: string) => boolean }} [policy]
+ * @param {{ isKitFile?: (file: string) => boolean }} [policy]
  */
-export function readExamples(
-  text,
-  file,
-  { isComponentFile = isComponentSourceFile, isKitFile = () => false } = {},
-) {
+export function readExamples(text, file, { isKitFile = () => false } = {}) {
   const fail = (message) => {
     throw new Error(`${file}: ${message}`)
   }
@@ -195,7 +190,7 @@ export function readExamples(
         PACKAGES_ALLOWED.has(specifier) ||
         FORMAT.has(specifier) ||
         kitAllowed(specifier, isKitFile) ||
-        (specifier.startsWith('./') && relativeAllowed(specifier, file, isComponentFile, isKitFile))
+        (specifier.startsWith('./') && relativeAllowed(specifier, file, isKitFile))
       if (!allowed) {
         fail(
           `imports ${specifier}; an examples file may import only react, lucide-react, the kit components on the safe list (@/platform/ui/<name>) and the component files beside it`,

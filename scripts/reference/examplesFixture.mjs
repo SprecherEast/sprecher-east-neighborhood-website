@@ -1,9 +1,8 @@
-/** What the tests of the examples reader share: a made-up kit with one folder and three component files. */
+/** What the tests of the examples reader share: a made-up kit of component files. */
 import { readExamples as readWith } from './examplesReader.mjs'
 
-// A relative import may reach only a component file of this made-up kit
-// `AdminBar.client` and `Media` are component files that are not safe (`kitFiles.mjs` drops them), and
-// `chart/BarTrack` is one in another folder
+// The made-up kit: `AdminBar.client` and `Media` are component files that are not safe (`kitFiles.mjs`
+// drops them), and `chart/BarTrack` is one in another folder
 const COMPONENTS = [
   'Thing',
   'Tabs.client',
@@ -16,7 +15,6 @@ const COMPONENTS = [
 const KIT_FILES = COMPONENTS.filter((f) => !/AdminBar|Media/.test(f))
 export const readExamples = (text, file) =>
   readWith(text, file, {
-    isComponentFile: (f) => COMPONENTS.includes(f),
     isKitFile: (f) => KIT_FILES.includes(f),
   })
 

@@ -41,6 +41,11 @@ describe('readExamples: other ways to the environment, the machine or the page',
       'importScripts',
       'postMessage',
       'BroadcastChannel',
+      'Image',
+      'open',
+      'requestAnimationFrame',
+      'requestIdleCallback',
+      'cancelAnimationFrame',
     ]
     for (const name of names) {
       expect(() => inRender(`const x = ${name}`), name).toThrow(
@@ -54,6 +59,31 @@ describe('readExamples: other ways to the environment, the machine or the page',
     for (const use of ["module.require('fs')", "new Worker('x')", 'localStorage.getItem("a")']) {
       expect(() => inRender(use), use).toThrow(/references (module|Worker|localStorage)/)
     }
+  })
+
+  it('refuses markup that loads or runs something, and what can inject it', () => {
+    for (const tag of ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form']) {
+      expect(() => inRender(`return <${tag} />`), tag).toThrow(new RegExp(`A: uses <${tag}>`))
+      expect(() => inRender(`return <${tag}>x</${tag}>`), `${tag} open`).toThrow(/uses </)
+    }
+    for (const use of [
+      "return <div dangerouslySetInnerHTML={{ __html: 'x' }} />",
+      "return <Thing {...{ dangerouslySetInnerHTML: { __html: 'x' } }} />",
+      'return <a href="javascript:alert(1)">x</a>',
+      "const h = 'javascript:void(0)'",
+      "const h = ' JavaScript:void(0)'",
+      'const h = `javascript:${1}`',
+    ]) {
+      expect(() => inRender(use), use).toThrow(/A: (uses|passes|has) /)
+    }
+  })
+
+  it('accepts the elements and strings an example really draws', () => {
+    expect(() =>
+      inRender(
+        'const a = \'a javascript: note\'; return <div><span>x</span><a href="/news">y</a></div>',
+      ),
+    ).not.toThrow()
   })
 
   it('does not mind a property that only has the name', () => {
