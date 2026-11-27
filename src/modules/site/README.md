@@ -1,7 +1,7 @@
 ---
 name: 'Site pages'
 type: module
-summary: 'CMS pages and blocks.'
+summary: 'CMS pages, blocks and layout (header: Site navigation).'
 aliases: ['pages', 'page builder', 'hero']
 relationships: []
 ---
@@ -47,7 +47,7 @@ How CMS pages are drawn: the hero, each page-builder block, and what a save refr
 - **In a `cards` block, halves sit two to a row, a full card takes its own row and any other mix sits in thirds;** `cards` and `stats` sit on a surface band, the other layouts on the plain page (`ui/ContentBlock.tsx`; `ui/ContentBlock.test.tsx`).
 - **A column's link button sits at the start, at the end or beside the text** (`linkAlign`: `start`, `end`, `beside`; beside floats it right under the opening heading with the text wrapping around it, and on a phone it falls under the text) (`cms/contentBlock.ts`, `ui/ContentBlock.tsx`, #961; `cms/contentBlock.test.ts`).
 - **A share bar draws only when its four percents are all set and add up to 100** (`shareBar` in `data/mappers.ts`, `ui/ContentBlock.tsx`, #1266).
-- **A section is a 12-column row** whose items have their own width, alignment, vertical position and phone order, all set in Admin; reading and tab order follow the listed order from `lg` up (`cms/sectionBlock.ts`, `ui/SectionBlock.tsx`, `ui/columnSpan.ts`, #884).
+- **A section is a 12-column row** whose items have their own width, alignment, vertical position and phone order, all set in Admin (the options are the selects in `cms/sectionBlock.ts`, typed in `domain/blocks.ts`); reading and tab order follow the listed order from `lg` up (`cms/sectionBlock.ts`, `ui/SectionBlock.tsx`, `ui/columnSpan.ts`, #884).
 - **Only a Google map embed address is stored or drawn:** a pasted iframe is cut to its `src`, and the address is checked again when mapped and drawn (`cms/mapBlock.ts`, `src/platform/lib/googleMapsEmbed.ts`; `cms/mapBlock.test.ts`, `data/mapBlockMapper.test.ts`, `ui/MapBlock.test.tsx`).
 - **A save or delete refreshes the right routes and tags** (`cms/revalidatePage.test.ts`, `cms/pages.test.ts`); blocks draw in order and unknown types are skipped (`ui/RenderBlocks.test.tsx`); the backdrop is an image or none (`use-cases/getPageBySlug.test.ts`).
 
@@ -61,6 +61,6 @@ How CMS pages are drawn: the hero, each page-builder block, and what a save refr
 
 ## Known gaps
 
-- The archive's `limit` defaults to 10 in the editor, but news uses 3 when it is empty or zero (`findArchivePosts.ts`).
+- The archive's `limit` starts at 10 in the editor (`cms/archiveBlock.ts`), but news uses 3 when it is empty or zero (`DEFAULT_LIMIT` in `findArchivePosts.ts`).
 - Changing the slug of a published page does not name the old path; only the refresh of every CMS page covers it (`cms/revalidatePage.ts`).
 - `domain/hero.ts` says the title is the first heading for every look; only the high hero splits it.

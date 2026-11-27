@@ -16,7 +16,7 @@ paths:
 ---
 name: 'Charts and data displays'
 type: feature
-summary: 'charts, heat map, bill.'
+summary: 'charts, heat map, breakdown.'
 aliases: ['charts', 'heat map']
 relationships: [{ 'type': 'depends-on', 'target': 'src/platform/theme/README.md' }]
 ---

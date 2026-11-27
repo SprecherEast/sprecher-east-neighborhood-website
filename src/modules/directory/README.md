@@ -1,7 +1,7 @@
 ---
 name: 'Directory'
 type: module
-summary: 'FAQ and resources.'
+summary: 'FAQ, resources, groups, portraits.'
 aliases: ['FAQ', 'resources']
 relationships: []
 ---

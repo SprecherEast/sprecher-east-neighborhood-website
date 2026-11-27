@@ -12,7 +12,7 @@ How an article's text is drawn, the blocks an editor can put inside it (banner, 
 
 ## How the pieces link
 
-- **Written once:** limits of key facts, timeline, fact tabs and section tabs are in `editorial/editorialLimits.ts` (a chart's are `CHART_LIMITS` in `src/platform/lib/chart/spec.ts`), and block slugs in `editorial/blockTypes.ts`; the configs, the Markdown tags and the article-width rule all read them.
+- **Written once:** limits of key facts, timeline, fact tabs, section tabs and the tax-bill block (`BILL_SHARE_LIMITS`, see [Whole tax bill](editorial/README.md)) are in `editorial/editorialLimits.ts` (a chart's are `CHART_LIMITS` in `src/platform/lib/chart/spec.ts`), and block slugs in `editorial/blockTypes.ts`; the configs, the Markdown tags and the article-width rule all read them.
 - **Stored block to plain props:** each `editorial/<block>.ts` maps stored fields to what the renderer draws and drops items without a heading, title or value (decision 0013); `editorial/chart.ts` maps both ways between stored rows and `ChartSpec`.
 - **Markdown tags for agents:** `<Chart … />` and `<FactTabs … />` are written and read with one escaping (`editorial/editorialTag.ts`, `chartMarkdown.ts`, `factTabsMarkdown.ts`); `<SectionTabs>` holds one `<Tab label="…">` per tab (`sectionTabsMarkdown.ts`); [agents](../../modules/agents/README.md)' suggestions use them.
 - **Headings and anchors:** the heading id and the "On this page" menu both read `headingAnchors.ts`, so they match; a document's first heading becomes a hero title (`splitHeadingFromBody.ts`, used by `src/modules/site/ui/PageHero.tsx`).

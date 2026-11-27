@@ -20,12 +20,26 @@ function visibleText(line, open) {
   return start === -1 ? { text, open: false } : { text: text.slice(0, start), open: true }
 }
 
+const LEADING_MARKERS = /^\s*(?:>\s*)*(?:(?:[-*+]|\d+[.)])(?:\s+|$)\s*)*/
+
+/**
+ * Whether a line says anything to a reader: some letter or digit once HTML tags and the leading
+ * quote and list markers (`>`, `-`, `*`, `+`, `1.`, `1)`) are removed. A rule (`---`), an empty
+ * list or quote marker of any kind, a table border or a bare tag is markup, not text.
+ */
+function hasWords(text) {
+  return /[\p{L}\p{N}]/u.test(text.replace(/<[^>]*>/g, '').replace(LEADING_MARKERS, ''))
+}
+
 export const FENCE = /^\s*(```|~~~)/
 
 /**
  * A note as `{ hasFrontmatter, error, data, title, purposeLines, sections, body, bodyLines }`.
  * `data` keeps the fields in the order written. The body starts after the front matter, and
- * `sections` are its level 2 headings (with their line in the body), code fences skipped.
+ * `sections` are its level 2 headings (with their line in the body), code fences skipped;
+ * `emptySections` are the headings with no words a reader sees under them (before the next heading
+ * or the end): a rule, an empty list marker, a table border or a bare tag is no words, while a
+ * deeper heading or a code block counts as something.
  */
 export function parseNote(markdown) {
   const { text: raw, rest } = splitFrontmatter(markdown)
@@ -46,9 +60,14 @@ export function parseNote(markdown) {
   note.bodyLines = lines.length
   note.title = /^# \S/.test(lines[0]) ? lines[0].slice(2).trim() : null
   note.sections = []
+  note.emptySections = []
   note.purposeLines = 0
   let fenced = false
   let inComment = false
+  let written = true
+  const closeSection = () => {
+    if (!written) note.emptySections.push(note.sections.at(-1).heading)
+  }
   lines.forEach((line, index) => {
     if (fenced) {
       if (FENCE.test(line)) fenced = false
@@ -58,12 +77,20 @@ export function parseNote(markdown) {
     inComment = visible.open
     if (FENCE.test(visible.text)) {
       fenced = true
+      written = true
       return
     }
     const heading = /^## (\S.*)/.exec(visible.text)
-    if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
-    else if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
-      note.purposeLines++
+    if (heading) {
+      closeSection()
+      written = false
+      note.sections.push({ heading: heading[1].trim(), line: index + 1 })
+    } else {
+      if (hasWords(visible.text)) written = true
+      if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
+        note.purposeLines++
+    }
   })
+  closeSection()
   return note
 }

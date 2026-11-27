@@ -71,7 +71,7 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 - **Who may edit:** header and footer are readable by anyone and editable by staff only; saving expires only their own tag (`cms/navGlobal.ts`; `cms/navGlobal.test.ts`, `cms/linkGroup.test.ts`).
 - **The header leaves out Contact and ends with Search:** an item pointing to `/contact` is dropped because the header has its own Contact button; the footer keeps every resolvable item and adds the forum link last (`domain/nav.ts`, `toHeaderNavLinks` in `src/modules/site/data/mappers.ts`; `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`).
 - **A link is current on its own page and inside its section,** never on a page that only starts with the same letters; outside links are never current (`domain/nav.ts`; `domain/nav.test.ts`).
-- **Submenus open by a press, never by hover:** an item with up to eight usable `subItems` is a button (a panel on a wide screen, an accordion on a phone) and its own link is not followed; with none it stays a link; the footer has none (`ui/HeaderNav.client.tsx`, `NavMenu` in the kit, #1237; `ui/HeaderNav.client.test.tsx`, `ui/SiteHeaderBar.client.test.tsx`).
+- **Submenus open by a press, never by hover:** an item with up to eight usable `subItems` is a button (a panel on a wide screen, an accordion on a phone) and its own link is not followed; with none it stays a link; the footer has none. Header and footer each hold at most six items, and only the header's items take submenu links, up to eight (`maxRows` in `cms/navGlobal.ts`; `ui/HeaderNav.client.tsx`, `NavMenu` in the kit, #1237; `ui/HeaderNav.client.test.tsx`, `ui/SiteHeaderBar.client.test.tsx`).
 - **The forum link is shown only for a safe address:** https with a real host and no login in it, else no link on the footer or the post page (`domain/forum.ts`, `use-cases/getForumUrl.ts`; `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`).
 - **Linked pages are populated whether or not published** and cached under the global's tag (`data/globals.ts`; `data/globals.test.ts`).
 - **A redirect never reveals a draft:** a target that is a draft, deleted or unreadable answers `null`; a custom URL wins over a reference (`use-cases/getRedirectTarget.ts`; `use-cases/getRedirectTarget.test.ts`, `ui/PayloadRedirects.test.tsx`, `cms/revalidateRedirects.test.ts`).
@@ -79,7 +79,7 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 
 ## Boundaries
 
-- Entry files: `server.ts` (header, footer, forum, redirects), `cms.ts` (globals, hooks), `index.ts` (the forum default and the sitemap tag). `ui/SiteHeaderBar.client.tsx` and `ui/HeaderNav.client.tsx` are client code and get plain props only.
+- Entry files, in `src/modules/site/` (the code of this part sits in that module's folders): `server.ts` (header, footer, forum, redirects), `cms.ts` (globals, hooks), `index.ts` (the forum default, `FORUM_DEFAULT_URL`, and the sitemap tag). `ui/SiteHeaderBar.client.tsx` and `ui/HeaderNav.client.tsx` are client code and get plain props only.
 - It imports no other module; lint enforces the layer and module rules (`eslint.boundaries.config.mjs`).
 
 ## Decisions

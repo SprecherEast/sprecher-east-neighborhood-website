@@ -6,11 +6,29 @@ import path from 'node:path'
 
 import { checkKnowledge } from './check.mjs'
 
-export const schema = JSON.parse(fs.readFileSync('docs/knowledge/note-schema.json', 'utf8'))
+/** The schema as the repository has it: every rule blocks (#1004). */
+export const realSchema = JSON.parse(fs.readFileSync('docs/knowledge/note-schema.json', 'utf8'))
+
+const COVERAGE_RULES = ['COVERAGE-SECTION', 'COVERAGE-CODE', 'NOTE-PATH']
+
+/**
+ * The schema the fixtures run against: the real one, with the content rules back to warnings. A
+ * fixture is a small note on purpose, so it lacks sections and code the real repository has; the
+ * tests that need a rule to block say so by using `realSchema` or `strict`.
+ */
+export const schema = {
+  ...realSchema,
+  rules: Object.fromEntries(
+    Object.entries(realSchema.rules).map(([id, rule]) => [
+      id,
+      COVERAGE_RULES.includes(id) ? 'warn' : rule,
+    ]),
+  ),
+}
 
 export const NOTE_PATH = 'src/modules/demo/README.md'
 
-/** A schema whose structure rules all block (the coverage rules keep their own state). */
+/** A schema whose structure rules all block (the fixtures' content rules stay warnings). */
 export const strict = {
   ...schema,
   rules: Object.fromEntries(

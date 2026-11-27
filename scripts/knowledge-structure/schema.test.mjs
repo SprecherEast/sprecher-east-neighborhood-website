@@ -160,6 +160,6 @@ describe('the source files that need a note', () => {
       'src/a/Card.tsx',
     ]
     const found = repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')
-    expect(found.map((f) => f.message)).toEqual(['1 source files have no note: src/a/Card.tsx 1'])
+    expect(found.map((f) => f.message)).toEqual(['1 source files have no note: src/a/Card.tsx'])
   })
 })
