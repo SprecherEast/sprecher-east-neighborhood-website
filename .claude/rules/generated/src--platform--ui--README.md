@@ -67,6 +67,7 @@ paths:
   - 'src/platform/ui/FieldMoney.client.test.tsx'
   - 'src/platform/ui/FieldMoney.client.tsx'
   - 'src/platform/ui/FieldSelect.client.tsx'
+  - 'src/platform/ui/FieldSwitch.client.tsx'
   - 'src/platform/ui/FieldTextArea.client.tsx'
   - 'src/platform/ui/Figure.test.tsx'
   - 'src/platform/ui/Figure.tsx'
@@ -114,6 +115,8 @@ paths:
   - 'src/platform/ui/SegmentedControl.tsx'
   - 'src/platform/ui/SidebarCTA.test.tsx'
   - 'src/platform/ui/SidebarCTA.tsx'
+  - 'src/platform/ui/Switch.client.test.tsx'
+  - 'src/platform/ui/Switch.client.tsx'
   - 'src/platform/ui/Tabs.client.test.tsx'
   - 'src/platform/ui/Tabs.client.tsx'
   - 'src/platform/ui/Tabs.examples.tsx'
@@ -155,6 +158,7 @@ paths:
   - 'src/platform/ui/scrollMargin.ts'
   - 'src/platform/ui/showcaseRegistry.test.ts'
   - 'src/platform/ui/showcaseRegistry.ts'
+  - 'src/platform/ui/touchTarget.ts'
   - 'src/platform/ui/useCountedNumber.client.test.tsx'
   - 'src/platform/ui/useCountedNumber.client.ts'
   - 'src/platform/ui/useReplayProgress.client.test.ts'
@@ -184,14 +188,14 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 - **Media:** `Media` picks `VideoMedia` for a video mime type, else `ImageMedia`; upload paths stay relative so Next optimizes them as local images, with the image's `updatedAt` as cache key (`Media.tsx`, `ImageMedia.client.tsx`, `src/platform/lib/getMediaUrl.ts`). A picture that must stay cropped keeps its subject in view through the upload's focal point (`atFocalPoint`, `src/platform/lib/focalPoint.ts`, #1013); cards never pass it.
 - **Article pages:** a post's or event's page heads with a plain `PageHeader` band (optionally over a title photo, `BandBackdrop`, #1024), a `MetaBar` and a whole, uncropped `FeaturedImage` placed by `ArticlePage` (`PageHeader.tsx`, `MetaBar.tsx`, `FeaturedImage.tsx`, `ArticlePage.tsx`, #1013, #1055).
 - **Forms:** a `Field` hands its one control its id, `aria-describedby` and `aria-invalid` through one context, and a control outside a `Field` throws (`fieldContext.ts`); `Field.Money` writes the whole-dollar rule in [shared helpers](/src/platform/lib/README.md) (`FieldMoney.client.tsx`).
-- **Libraries doing real work:** Radix (dialog, popover, tabs, select, checkbox, toast), `class-variance-authority` for variants, `react-hook-form` for forms, `lucide-react` for icons.
+- **Libraries doing real work:** Radix (dialog, popover, tabs, select, checkbox, switch, toast), `class-variance-authority` for variants, `react-hook-form` for forms, `lucide-react` for icons.
 - **Charts** and the data displays built like them have their own note: [Charts and data displays](/src/platform/ui/chart/README.md). Theme tokens: [theme](/src/platform/theme/README.md).
 
 ### The showcase
 
 - `npm run storybook` opens the component showcase (Storybook, #1424): each component has a `*.stories.tsx` beside it, drawn with the site's own `globals.css` and fonts, with a theme switch (every folder in `src/themes/`), a light/dark switch and the six widths of the [responsive table](/docs/guidelines/nextjs-tailwind.md#responsive-design--6-viewport-testing). Setup and its checks are in `.storybook/` (`viewports.test.ts`, `themes.test.ts`, `fonts.test.ts`).
 - It is public at https://dev.sprechereast.com/storybook/index.html (`/showcase/` is the native showcase's page, #1528), rebuilt by every production deploy; a preview that changes a story or a shared component gets its own copy ([`ops/developer-site.md`](/ops/developer-site.md), #1459). Stories cover only part of the kit; the old gallery stays until the rest has them.
-- **Showcase examples** (#1532, epic #1528): the native showcase that replaces both is built from a `*.examples.tsx` file beside each component (and a `*.examples.client.tsx` for an example with a handler or state; `defineExample` in `example.ts`), from `docs/reference/showcase-index.json` and from the import map `showcaseRegistry.ts`, which `npm run docs:generate` writes from the types, the imports and those files and `docs:check` keeps current. The format, and what an example may not do, is in [component-set.md](/docs/ui/component-set.md#showcase-examples); `examples.test.tsx` renders every example with axe and `examples.server.test.ts` draws the server ones with the framework's server renderer.
+- **Showcase examples** (#1532, epic #1528): the native showcase that replaces both is built from a `*.examples.tsx` file beside each component (and a `*.examples.client.tsx` for an example with a handler or state; `defineExample` in `example.ts`), from `docs/reference/showcase-index.json` and from the import map `showcaseRegistry.ts`, which `npm run docs:generate` writes from the types, the imports and those files and `docs:check` keeps current. The format, and what an example may not do, is in [showcase-examples.md](/docs/ui/showcase-examples.md); `examples.test.tsx` renders every example with axe and `examples.server.test.ts` draws the server ones with the framework's server renderer.
 
 ## Behaviors and events
 
@@ -216,6 +220,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 - **The "On this page" menu needs at least 3 sections** and highlights the last heading above a reading line (`onThisPage.ts`, `OnThisPage.client.tsx`; `OnThisPage.client.test.tsx`).
 - **Text on a photo stays readable:** `GlassPanel` is the one frosted-glass look and keeps 4.5:1 text over a very bright photo; a title band photo is dimmed so its title meets WCAG AA (`GlassPanel.tsx`, `BandBackdrop.tsx`, #1278, #1024; `GlassPanel.test.tsx`).
 - **A brand mark is never altered:** `BrandLogo` draws a provider's logo exactly as supplied, takes no class, and is the one place literal logo colours are allowed (`BrandLogo.tsx`, #1365; `BrandLogo.test.tsx`).
+- **`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px tap area (`TOUCH_TARGET` in `touchTarget.ts`, shared with `Field.Checkbox` and measured in a browser by `e2e/touchTargets.spec.ts`), the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).
 - **`Button` with `loading` ignores clicks but stays focusable;** `ProgressBar` needs a `label` and clamps its value (`Button.tsx`, `ProgressBar.tsx`, #939); `Alert` announces itself unless `live={false}` (`Alert.tsx`).
 - **Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.
 
