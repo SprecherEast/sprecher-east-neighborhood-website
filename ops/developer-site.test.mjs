@@ -1,4 +1,4 @@
-// ops/developer-site.sh and ops/caddy/developer-site.caddy (#1459): publishing the developer site. The
+// ops/developer-site.sh and ops/caddy/developer-site.caddy (#1459, #1530): publishing the developer site. The
 // real scripts run against a server-shaped tree in a temp folder; `caddy`, `curl` and the Caddy reload
 // are stand-ins (real Caddy, the certificate and a phone are checked on the server after the first
 // deploy, ops/README.md). Each condition and guard has a test that fails without it.
@@ -10,7 +10,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { SEES_AND_DUPLICATES } from './preview-access-harness.mjs'
-import { siteFaces, writeShowcaseFonts } from './developer-site-fonts.mjs'
+import { siteFaces, writePagesFonts, writeShowcaseFonts } from './developer-site-fonts.mjs'
 import { OPS } from './umami-harness.mjs'
 
 const SCRIPTS = [
@@ -44,8 +44,12 @@ const current = () => fs.readlinkSync(p('dev/current'))
 const releases = () => fs.readdirSync(p('dev/releases')).sort()
 const caddyfile = () => read('caddy/Caddyfile')
 
-/** A release folder as the production deploy leaves it: the repo's ops files, a built showcase, a live link. */
-function makeRelease(name, { live = true, showcase = true } = {}) {
+/**
+ * A release folder as the production deploy leaves it: the repo's ops files, the built developer pages, the
+ * built Storybook showcase, a live link. Each page's title is the release's name, so a test can tell which
+ * release is served.
+ */
+function makeRelease(name, { live = true, pages = true, storybook = true } = {}) {
   const code = p('app/releases', name)
   for (const f of SCRIPTS) write(path.join(code, 'ops', f), fs.readFileSync(path.join(OPS, f)))
   for (const f of ['developer-site.caddy', 'preview-headers.caddy'])
@@ -53,19 +57,19 @@ function makeRelease(name, { live = true, showcase = true } = {}) {
   // The release carries the whole repository, so the check finds the theme's font folder in it
   for (const face of siteFaces())
     write(path.join(code, 'src/platform/theme/fonts', `${face}.woff2`), 'wOF2')
-  for (const f of ['index.html', '404.html', 'style.css'])
-    write(
-      path.join(code, 'ops/developer-site', f),
-      fs.readFileSync(path.join(OPS, 'developer-site', f)),
-    )
-  if (showcase) {
-    for (const f of ['index.html', 'iframe.html'])
-      write(
-        path.join(code, 'developer-site/showcase', f),
-        `<!doctype html><title>${name}</title>\n`,
-      )
-    write(path.join(code, 'developer-site/showcase/assets/app.js'), `console.log("${name}")\n`)
-    writeShowcaseFonts(path.join(code, 'developer-site/showcase'))
+  const html = `<!doctype html><title>${name}</title>\n`
+  if (pages) {
+    const dest = path.join(code, 'developer-site/pages')
+    for (const f of ['index.html', '404.html', 'showcase/index.html'])
+      write(path.join(dest, f), html)
+    write(path.join(dest, '_next/static/chunks/page.js'), `console.log("${name}")\n`)
+    writePagesFonts(dest)
+  }
+  if (storybook) {
+    const dest = path.join(code, 'developer-site/storybook')
+    for (const f of ['index.html', 'iframe.html']) write(path.join(dest, f), html)
+    write(path.join(dest, 'assets/app.js'), `console.log("${name}")\n`)
+    writeShowcaseFonts(dest)
   }
   if (live) {
     fs.rmSync(p('app/current'), { force: true })
@@ -136,7 +140,7 @@ beforeEach(() => {
       'fi',
       '[ "$served" = yes ] || { [ "$mode" = status ] && echo 000; exit 1; }',
       'code=404; file=""',
-      'case "$path" in / ) code=200; file=index.html ;; /showcase/index.html) code=200; file=showcase/index.html ;; /robots.txt) code=200 ;; esac',
+      'case "$path" in / ) code=200; file=index.html ;; /showcase/) code=200; file=showcase/index.html ;; /storybook/index.html) code=200; file=storybook/index.html ;; /robots.txt) code=200 ;; esac',
       '[ -z "$STUB_LEAK" ] || case " $STUB_LEAK " in *" $path "*) code=200 ;; esac',
       '[ -z "$STUB_BAD_PATHS" ] || case " $STUB_BAD_PATHS " in *" $path "*) code=500 ;; esac',
       'if [ "$mode" = status ]; then echo "$code"; exit 0; fi',
@@ -196,23 +200,26 @@ async function publishedThenNewRelease() {
 }
 const stays = (name = 'r1') => {
   expect(current()).toBe(`releases/${name}`)
-  expect(fs.readFileSync(p('dev/current/showcase/index.html'), 'utf8')).toContain(`<title>${name}`)
+  expect(fs.readFileSync(p('dev/current/index.html'), 'utf8')).toContain(`<title>${name}`)
 }
 
 describe('developer-site.sh: the first publish', () => {
-  it('serves the index page, the 404 page and the showcase from the release folder `current` points at', async () => {
+  it('serves the developer pages and the Storybook showcase from the release folder `current` points at', async () => {
     const { code, out } = await run()
     expect(code, out).toBe(0)
     expect(out).toContain(`Developer site published: https://${HOST} serves release r1`)
     expect(current()).toBe('releases/r1')
     expect(fs.readdirSync(p('dev/current')).sort()).toEqual([
       '404.html',
+      '_next',
       'index.html',
       'showcase',
-      'style.css',
+      'storybook',
     ])
-    expect(read('dev/current/index.html')).toContain('Sprecher East developer site')
-    expect(read('dev/current/showcase/assets/app.js')).toContain('"r1"')
+    expect(read('dev/current/index.html')).toContain('<title>r1</title>')
+    expect(read('dev/current/storybook/index.html')).toContain('<title>r1</title>')
+    expect(read('dev/current/_next/static/chunks/page.js')).toContain('"r1"')
+    expect(read('dev/current/storybook/assets/app.js')).toContain('"r1"')
     expect(releases()).toEqual(['r1'])
   })
 
@@ -250,7 +257,8 @@ describe('developer-site.sh: the first publish', () => {
     const asks = lines('curl').filter((l) => l.includes(`https://${HOST}`))
     for (const path of [
       '/',
-      '/showcase/index.html',
+      '/showcase/',
+      '/storybook/index.html',
       '/robots.txt',
       '/api/version',
       '/admin',
@@ -270,7 +278,7 @@ describe('developer-site.sh: a newer release replaces the developer site in one 
     const { code, out } = await run('r2')
     expect(code, out).toBe(0)
     expect(current()).toBe('releases/r2')
-    expect(read('dev/current/showcase/index.html')).toContain('r2')
+    expect(read('dev/current/index.html')).toContain('r2')
     expect(releases()).toEqual(['r1', 'r2'])
     expect(reloads()).toBe(0)
     expect(lines('validate').length).toBe(2) // the Caddyfile, the block alone (it is the same, so no move)
@@ -322,20 +330,20 @@ describe('developer-site.sh: it changes nothing, and says why, when it should no
     expect(reloads()).toBe(0)
   }
 
-  it('without a built showcase in the release', async () => {
-    fs.rmSync(p('app/releases/r1/developer-site'), { recursive: true })
+  it('without built developer pages in the release', async () => {
+    fs.rmSync(p('app/releases/r1/developer-site/pages'), { recursive: true })
     const { code, out } = await run()
     expect(code).toBe(0)
-    expect(out).toContain('has no built showcase')
+    expect(out).toContain('has no built developer pages')
     unchanged()
   })
 
-  it('and keeps the previous developer site when the new release has none', async () => {
+  it('and keeps the previous developer site when the new release has no pages', async () => {
     await publishedThenNewRelease()
     fs.rmSync(p('app/releases/r2/developer-site'), { recursive: true })
     const { code, out } = await run('r2')
     expect(code).toBe(0)
-    expect(out).toContain('has no built showcase')
+    expect(out).toContain('has no built developer pages')
     stays()
   })
 
@@ -354,12 +362,9 @@ describe('developer-site.sh: it changes nothing, and says why, when it should no
     unchanged()
   })
 
-  it('without the pages or the block template in the release', async () => {
-    fs.rmSync(p('app/releases/r1/ops/developer-site/404.html'))
-    expect((await run()).out).toContain('pages or block template are missing')
-    makeRelease('r1')
+  it('without the block template in the release', async () => {
     fs.rmSync(p('app/releases/r1/ops/caddy/developer-site.caddy'))
-    expect((await run()).out).toContain('pages or block template are missing')
+    expect((await run()).out).toContain('block template is missing')
     unchanged()
   })
 
@@ -463,9 +468,9 @@ describe('developer-site.sh: it changes nothing, and says why, when it should no
 })
 
 describe('developer-site.sh: what is served is judged first', () => {
-  it('serves nothing from a showcase that holds a link, and keeps the previous developer site', async () => {
+  it('serves nothing from a Storybook showcase that holds a link, and keeps the previous developer site', async () => {
     await publishedThenNewRelease()
-    fs.symlinkSync('/etc/hostname', p('app/releases/r2/developer-site/showcase/assets/x.txt'))
+    fs.symlinkSync('/etc/hostname', p('app/releases/r2/developer-site/storybook/assets/x.txt'))
     const { code, out } = await run('r2')
     expect(code).toBe(1)
     expect(out).toContain('did not pass its check')
@@ -475,10 +480,10 @@ describe('developer-site.sh: what is served is judged first', () => {
     expect(reloads()).toBe(0)
   })
 
-  it('serves nothing from a showcase that names a third-party font host', async () => {
+  it('serves nothing from a Storybook showcase that names a third-party font host', async () => {
     await publishedThenNewRelease()
     write(
-      p('app/releases/r2/developer-site/showcase/assets/a.css'),
+      p('app/releases/r2/developer-site/storybook/assets/a.css'),
       'url(https://fonts.gstatic.com/x)',
     )
     const { code, out } = await run('r2')
@@ -487,14 +492,16 @@ describe('developer-site.sh: what is served is judged first', () => {
     stays()
   })
 
-  it('serves nothing from a showcase that lacks one of the site’s faces, and keeps the previous developer site', async () => {
+  it('serves nothing from a Storybook showcase that lacks one of the site’s faces, and keeps the previous developer site', async () => {
     await publishedThenNewRelease()
     fs.rmSync(
-      p('app/releases/r2/developer-site/showcase/assets/poppins-latin-400-normal-C8OXljZJ.woff2'),
+      p('app/releases/r2/developer-site/storybook/assets/poppins-latin-400-normal-C8OXljZJ.woff2'),
     )
     const { code, out } = await run('r2')
     expect(code).toBe(1)
-    expect(out).toContain("the showcase is missing the site's font: poppins-latin-400-normal")
+    expect(out).toContain(
+      "the Storybook showcase is missing the site's font: poppins-latin-400-normal",
+    )
     stays()
   })
 
@@ -502,7 +509,7 @@ describe('developer-site.sh: what is served is judged first', () => {
     fs.writeFileSync(path.join(dir, 'secret.txt'), 'TOP-SECRET')
     fs.symlinkSync(
       path.join(dir, 'secret.txt'),
-      p('app/releases/r1/developer-site/showcase/leak.txt'),
+      p('app/releases/r1/developer-site/storybook/leak.txt'),
     )
     const { out } = await run()
     expect(out).toContain('a link: leak.txt')
@@ -511,9 +518,9 @@ describe('developer-site.sh: what is served is judged first', () => {
   })
 
   it('copies no ownership or odd mode from the release', async () => {
-    fs.chmodSync(p('app/releases/r1/developer-site/showcase/assets/app.js'), 0o666)
+    fs.chmodSync(p('app/releases/r1/developer-site/storybook/assets/app.js'), 0o666)
     await run()
-    expect((fs.statSync(p('dev/current/showcase/assets/app.js')).mode & 0o777).toString(8)).toBe(
+    expect((fs.statSync(p('dev/current/storybook/assets/app.js')).mode & 0o777).toString(8)).toBe(
       '644',
     )
   })
@@ -730,21 +737,24 @@ describe('developer-site.sh: a step of putting the block in place that fails', (
   })
 })
 
-describe('developer-site.sh: the release’s showcase is judged before it is copied', () => {
-  it('refuses a file that is a hard link to something outside the showcase, which a copy would hide', async () => {
-    fs.writeFileSync(p('app/.env.local.copy'), 'TOP-SECRET\n')
-    fs.linkSync(
-      p('app/.env.local.copy'),
-      p('app/releases/r1/developer-site/showcase/assets/settings.txt'),
-    )
-    const { code, out } = await run()
-    expect(code).toBe(1)
-    expect(out).toContain('a file with another name elsewhere: assets/settings.txt')
-    expect(out).toContain("the release's showcase did not pass its check")
-    expect(out).not.toContain('TOP-SECRET')
-    expect(fs.existsSync(p('dev/current'))).toBe(false)
-    expect(fs.readdirSync(p('dev/releases'))).toEqual([])
-  })
+describe('developer-site.sh: the release’s own folders are judged before they are copied', () => {
+  it.each([
+    ['developer pages', 'pages/_next/static/settings.txt', 'did not pass their check'],
+    ['Storybook showcase', 'storybook/assets/settings.txt', 'did not pass its check'],
+  ])(
+    'refuses a file in the %s that is a hard link to something outside it, which a copy would hide',
+    async (what, file, verdict) => {
+      fs.writeFileSync(p('app/.env.local.copy'), 'TOP-SECRET\n')
+      fs.linkSync(p('app/.env.local.copy'), p('app/releases/r1/developer-site', file))
+      const { code, out } = await run()
+      expect(code).toBe(1)
+      expect(out).toContain(`a file with another name elsewhere: ${file.replace(/^[^/]+\//, '')}`)
+      expect(out).toContain(`the release's ${what} ${verdict}`)
+      expect(out).not.toContain('TOP-SECRET')
+      expect(fs.existsSync(p('dev/current'))).toBe(false)
+      expect(fs.readdirSync(p('dev/releases'))).toEqual([])
+    },
+  )
 })
 
 describe('developer-site.sh: the folder and the block file are the script’s own', () => {
@@ -798,15 +808,15 @@ describe('developer-site.sh: the folder and the block file are the script’s ow
     await refuses({}, 'is not inside the release')
   }
 
-  it('refuses a showcase that is another release’s, so the check is the release’s folder and not the folder of releases', async () => {
+  it('refuses developer pages that are another release’s, so the check is the release’s folder and not the folder of releases', async () => {
     await linkedInto('r0')
   })
 
-  it('refuses a showcase in a release whose name starts with this one’s (r10 for r1)', async () => {
+  it('refuses developer pages in a release whose name starts with this one’s (r10 for r1)', async () => {
     await linkedInto('r10')
   })
 
-  it('accepts the release’s own showcase when its folder is reached through a link', async () => {
+  it('accepts the release’s own pages when its folder is reached through a link', async () => {
     fs.mkdirSync(p('alias'))
     fs.symlinkSync(p('app/releases/r1'), p('alias/r1'))
     const { code, out } = await run('r1', { CODE_DIR: p('alias/r1') })
@@ -814,14 +824,18 @@ describe('developer-site.sh: the folder and the block file are the script’s ow
     expect(out).toContain('Developer site published')
   })
 
-  it('refuses a showcase folder that is a link leading out of the release’s folder', async () => {
-    const real = p('elsewhere/showcase')
-    fs.mkdirSync(path.dirname(real), { recursive: true })
-    fs.cpSync(p('app/releases/r1/developer-site/showcase'), real, { recursive: true })
-    fs.rmSync(p('app/releases/r1/developer-site/showcase'), { recursive: true })
-    fs.symlinkSync(real, p('app/releases/r1/developer-site/showcase'))
-    await refuses({}, 'is not inside the release')
-  })
+  it.each(['pages', 'storybook'])(
+    'refuses a %s folder that is a link leading out of the release’s folder',
+    async (name) => {
+      const real = p('elsewhere', name)
+      const inRelease = p('app/releases/r1/developer-site', name)
+      fs.mkdirSync(path.dirname(real), { recursive: true })
+      fs.cpSync(inRelease, real, { recursive: true })
+      fs.rmSync(inRelease, { recursive: true })
+      fs.symlinkSync(real, inRelease)
+      await refuses({}, 'is not inside the release')
+    },
+  )
 
   it('refuses a folder inside the previews’ block folder when that is not Caddy’s own folder', async () => {
     fs.mkdirSync(p('other/previews'), { recursive: true })
@@ -855,12 +869,30 @@ describe('developer-site.sh: the folder and the block file are the script’s ow
 })
 
 describe('developer-site.sh: what the release must hold, and what it keeps', () => {
-  it('skips, changing nothing, when the release has no style sheet for its pages', async () => {
-    fs.rmSync(p('app/releases/r1/ops/developer-site/style.css'))
+  it('refuses pages that are not a whole export, and keeps the previous developer site', async () => {
+    await publishedThenNewRelease()
+    fs.rmSync(p('app/releases/r2/developer-site/pages/index.html'))
+    const { code, out } = await run('r2')
+    expect(code).toBe(1)
+    expect(out).toContain('index.html is missing')
+    expect(out).toContain('the folder for the developer site did not pass its check')
+    stays()
+  })
+
+  it('publishes the pages without the Storybook showcase when its build was skipped, and serves no /storybook/', async () => {
+    fs.rmSync(p('app/releases/r1/developer-site/storybook'), { recursive: true })
     const { code, out } = await run()
-    expect(code).toBe(0)
-    expect(out).toContain('pages or block template are missing')
-    expect(fs.existsSync(p('dev'))).toBe(false)
+    expect(code, out).toBe(0)
+    expect(fs.existsSync(p('dev/current/storybook'))).toBe(false)
+    expect(lines('curl').some((l) => l.endsWith('/storybook/index.html'))).toBe(false)
+  })
+
+  it('refuses a page called storybook, which would be merged into the showcase’s folder', async () => {
+    write(p('app/releases/r1/developer-site/pages/storybook/index.html'), '<title>x</title>\n')
+    const { code, out } = await run()
+    expect(code).toBe(1)
+    expect(out).toContain('a page called storybook')
+    expect(fs.existsSync(p('dev/current'))).toBe(false)
   })
 
   it('keeps as many releases as DEVELOPER_KEEP_RELEASES says', async () => {
@@ -900,9 +932,14 @@ describe('developer-site.sh: the live check, and going back', () => {
   const spoils = [
     ['`/` that does not answer 200', { STUB_BAD_PATHS: '/' }, '/ answered 500'],
     [
-      'a showcase that does not answer 200',
-      { STUB_BAD_PATHS: '/showcase/index.html' },
-      '/showcase/index.html answered 500',
+      'a showcase page that does not answer 200',
+      { STUB_BAD_PATHS: '/showcase/' },
+      '/showcase/ answered 500',
+    ],
+    [
+      'a Storybook showcase that does not answer 200',
+      { STUB_BAD_PATHS: '/storybook/index.html' },
+      '/storybook/index.html answered 500',
     ],
     ['no noindex header', { STUB_NO_NOINDEX: '1' }, 'does not send noindex'],
     ['an HSTS header', { STUB_HSTS: '1' }, 'sends HSTS'],
@@ -1017,9 +1054,10 @@ describe('developer-site.sh: leftovers, the folder being served, and what is kep
     expect(fs.existsSync(p('dev/current/leftover.txt'))).toBe(false)
     expect(fs.readdirSync(p('dev/current')).sort()).toEqual([
       '404.html',
+      '_next',
       'index.html',
       'showcase',
-      'style.css',
+      'storybook',
     ])
   })
 
@@ -1062,13 +1100,13 @@ describe('developer-site.sh: leftovers, the folder being served, and what is kep
   })
 
   it('serves a file readable by Caddy when the build left it readable only by its owner', async () => {
-    fs.chmodSync(p('app/releases/r1/developer-site/showcase/index.html'), 0o600)
-    fs.chmodSync(p('app/releases/r1/developer-site/showcase'), 0o700)
+    fs.chmodSync(p('app/releases/r1/developer-site/storybook/index.html'), 0o600)
+    fs.chmodSync(p('app/releases/r1/developer-site/storybook'), 0o700)
     const { code, out } = await run()
     expect(code, out).toBe(0)
     const mode = (f) => fs.statSync(p('dev/current', f)).mode & 0o777
-    expect(mode('showcase/index.html')).toBe(0o644)
-    expect(mode('showcase')).toBe(0o755)
+    expect(mode('storybook/index.html')).toBe(0o644)
+    expect(mode('storybook')).toBe(0o755)
   })
 
   it('keeps going when the terminal hangs up, so a dropped SSH session never stops it between a change and its rollback', async () => {
@@ -1230,80 +1268,5 @@ describe('the developer site’s block template', () => {
     expect(env[0]).toBe(env[1])
     expect(env[2]).toBe(`${env[3]}/developer.caddy`)
     expect(path.basename(env[2])).not.toMatch(/^pr-/)
-  })
-})
-
-describe('the developer site’s pages', () => {
-  const index = fs.readFileSync(path.join(OPS, 'developer-site/index.html'), 'utf8')
-  const notFound = fs.readFileSync(path.join(OPS, 'developer-site/404.html'), 'utf8')
-  const stylesheet = fs.readFileSync(path.join(OPS, 'developer-site/style.css'), 'utf8')
-  const text = (html) =>
-    html
-      .replace(/<style[\s\S]*?<\/style>/g, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-
-  it('says it is unofficial tooling for the people building the site, and that it needs no sign-in', () => {
-    expect(text(index)).toContain('workshop for the people building the Sprecher East website')
-    expect(text(index)).toContain('unofficial tooling')
-    expect(text(index)).toContain('without signing in')
-  })
-
-  it('links to the showcase by a path that works under the folder it is served from', () => {
-    expect(index).toContain('<a href="showcase/index.html">Component showcase</a>')
-  })
-
-  it('marks a place for the system map with no link, so nothing leads nowhere', () => {
-    const map = index.slice(
-      index.indexOf('id="system-map"'),
-      index.indexOf('</li>', index.indexOf('id="system-map"')),
-    )
-    expect(map).toContain('System map')
-    expect(map).toContain('Coming soon')
-    expect(map).not.toContain('<a')
-  })
-
-  it('points to the neighborhood site and asks for nothing from a third party', () => {
-    const urls = [...(index + notFound).matchAll(/(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1])
-    expect(urls).toEqual(['https://sprechereast.com'])
-    expect(index + notFound).not.toMatch(/<script|@import|url\(/)
-    expect(stylesheet).not.toMatch(/@import|url\(/)
-  })
-
-  it('has one stylesheet, from the same place, that both pages link and neither repeats', () => {
-    for (const page of [index, notFound]) {
-      expect(page.match(/<link[^>]*>/g)).toEqual(['<link rel="stylesheet" href="/style.css" />'])
-      expect(page).not.toContain('<style')
-    }
-    expect(stylesheet).toContain('body {')
-  })
-
-  it('keeps itself out of search engines and follows the visitor’s light or dark setting', () => {
-    for (const page of [index, notFound]) {
-      expect(page).toContain('<meta name="robots" content="noindex, nofollow" />')
-      expect(page).toContain('<meta name="color-scheme" content="light dark" />')
-      expect(page).toContain(
-        '<meta name="viewport" content="width=device-width, initial-scale=1" />',
-      )
-      expect(page).toContain('<html lang="en">')
-    }
-  })
-
-  it('follows the brand voice: we, no I or me, no model name, the name in full', () => {
-    for (const page of [index, notFound]) {
-      expect(text(page)).not.toMatch(/\b(I|me|my)\b/)
-      expect(text(page)).not.toMatch(/Claude|Gemini|Grok|GPT|SENA/)
-    }
-    expect(text(index)).toContain('made with AI tools')
-  })
-
-  it('has a 404 page that leads back to the index page', () => {
-    expect(text(notFound)).toContain("We can't find that page")
-    expect(notFound).toContain('<a class="back" href="/">Back to the developer site</a>')
-  })
-
-  it('uses system colors, so the pages need no color value and follow dark mode', () => {
-    for (const page of [index, notFound, stylesheet])
-      expect(page).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(/)
   })
 })
