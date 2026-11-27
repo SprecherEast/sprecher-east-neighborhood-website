@@ -28,6 +28,7 @@ that supersedes the old one; don't edit history.
 | [0020](0020-social-sign-in.md)                               | Google sign-in through our routes and `openid-client`             | 2026-10-27 | Proposed                                         |
 | [0021](0021-passkey-sign-in.md)                              | Passkey sign-in on our own thin layer over `@simplewebauthn`      | 2026-11-19 | Proposed                                         |
 | [0022](0022-knowledge-note-structure.md)                     | Notes have front matter and fixed sections, defined once, checked | 2026-11-24 | Accepted; supersedes part of 0019 §2.1 and §3    |
+| [0023](0023-mcp-oauth-sign-in.md)                            | OAuth sign-in for MCP clients on `@node-oauth/oauth2-server`      | 2026-11-26 | Proposed                                         |
 
 Template for a new record: **Context** (the problem and the forces), **Decision**, **Consequences**
 (what gets easier, what gets harder), **Links** (issues, PRs, sources).

@@ -17,6 +17,8 @@ One page for every collection and global in the loaded Payload config, plugins i
 | [`forms`](forms.md)                                       | collection |                                                                                          | no     |
 | [`header`](header.md)                                     | global     |                                                                                          | no     |
 | [`media`](media.md)                                       | collection |                                                                                          | no     |
+| [`oauth-clients`](oauth-clients.md)                       | collection | AI tools that may sign in to the AI agent address.                                       | no     |
+| [`oauth-tokens`](oauth-tokens.md)                         | collection | Sign-ins of AI tools, stored as hashes.                                                  | no     |
 | [`pages`](pages.md)                                       | collection |                                                                                          | yes    |
 | [`passkey-challenges`](passkey-challenges.md)             | collection |                                                                                          | no     |
 | [`passkeys`](passkeys.md)                                 | collection | Passkeys residents added to sign in.                                                     | no     |

@@ -22,7 +22,13 @@ import {
   socialLinkRetentionTask,
   Users,
 } from '@/modules/accounts/cms'
-import { AgentReviewItems, AgentRuns, mcpOptions } from '@/modules/agents/cms'
+import {
+  AgentReviewItems,
+  AgentRuns,
+  mcpOptions,
+  OAuthClients,
+  OAuthTokens,
+} from '@/modules/agents/cms'
 import {
   contactRetentionTask,
   createFormBuilderOptions,
@@ -209,6 +215,8 @@ export default buildConfig({
     EmailConfirmations,
     AgentRuns,
     AgentReviewItems,
+    OAuthClients,
+    OAuthTokens,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],

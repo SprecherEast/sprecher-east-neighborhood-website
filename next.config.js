@@ -33,14 +33,36 @@ export const API_HEADERS = [
  * the modern form of `X-Frame-Options: DENY`. A passkey is made, and used to log in, on a page the
  * person sees, and a framed page could be made to look like something else. The account page and
  * the log in page, the two screens that make or use a passkey, and the password step that connects
- * Google (#1338). The app sends no other `Content-Security-Policy` and none of its own headers
+ * Google (#1338), and the page where an admin allows an AI tool in (#1501): a framed approval
+ * button could be clicked by someone who only thinks they are pressing something else. The app sends no other `Content-Security-Policy` and none of its own headers
  * come from a proxy, so this is the one place; Payload adds none for these paths.
  */
-export const NO_FRAMING_PATHS = ['/account', '/login', '/auth/:provider/connect']
+export const NO_FRAMING_PATHS = [
+  '/account',
+  '/login',
+  '/auth/:provider/connect',
+  '/oauth/authorize',
+]
 export const NO_FRAMING_HEADERS = NO_FRAMING_PATHS.map((source) => ({
   source,
   headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }],
 }))
+
+/**
+ * The OAuth discovery documents (#1501) must answer under `/.well-known/` at the site root, where
+ * MCP clients look (RFC 8414, RFC 9728), and the protected-resource one also with the resource's
+ * path added. The routes live under `/oauth/discovery/`, since `src/app` has no dot folders.
+ */
+export const WELL_KNOWN_REWRITES = [
+  {
+    source: '/.well-known/oauth-protected-resource/:path*',
+    destination: '/oauth/discovery/protected-resource',
+  },
+  {
+    source: '/.well-known/oauth-authorization-server',
+    destination: '/oauth/discovery/authorization-server',
+  },
+]
 
 /**
  * Payload adds `Critical-CH: Sec-CH-Prefers-Color-Scheme` to every route for its admin dark mode.
@@ -100,6 +122,7 @@ const nextConfig = {
   logging: { serverFunctions: false },
   reactStrictMode: true,
   redirects,
+  rewrites: async () => WELL_KNOWN_REWRITES,
   headers: async () => [...API_HEADERS, ...NO_FRAMING_HEADERS],
   // CI type-checks every PR with `tsc --noEmit` (the required "Type-check & Build" check), so
   // `next build` skips its own type check. On the 1-CPU server that step took over 8 minutes and

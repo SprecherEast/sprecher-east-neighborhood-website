@@ -81,7 +81,12 @@ Six account pages (sign-up, log in, verify, forgot and reset password, `/account
 ## Boundaries
 
 - Entry files: `index.ts` (types, paths, safe for the proxy), `server.ts` (use cases, forms, `requireUser`), `cms.ts` (collection, never server-only), `actions.ts` (server actions). Layers: `domain/`, `use-cases/`, `data/`, `cms/`, `ui/`; no other module is imported (`eslint.boundaries.config.mjs`).
+<<<<<<< HEAD
 - The account always comes from the session, never from a form or a caller.
+=======
+- Never let a form or caller name the account: the account comes from the session.
+- `SIGN_IN_PATH` is exported so the agents module's consent page can send a visitor to log in (#1501); sign-in itself is unchanged.
+>>>>>>> 73b54ff (feat: OAuth sign-in for the MCP address (#1501))
 
 ## Decisions
 

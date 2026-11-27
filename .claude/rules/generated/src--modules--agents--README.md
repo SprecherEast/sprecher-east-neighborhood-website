@@ -8,19 +8,26 @@ paths:
 ---
 name: 'Agents'
 type: module
+<<<<<<< HEAD
 summary: 'MCP access, drafts, runs.'
+=======
+summary: 'MCP access by key or OAuth sign-in, what agents may read, drafts, run history.'
+>>>>>>> 73b54ff (feat: OAuth sign-in for the MCP address (#1501))
 aliases: ['MCP', 'neighborhood agents']
 relationships: []
 ---
 
 # Agents
 
-How the neighborhood agents reach the site: one MCP address, a key an admin issues, read access to
-published content, suggestions that arrive as drafts for staff, and a history of each run. Agents
-never publish and never change existing content. Fields, access and hooks:
-[agent runs](/docs/reference/content-types/agent-runs.md),
+How the neighborhood agents reach the site: one MCP address, a key an admin issues or an AI tool the
+admin allowed in with OAuth, read access to published content, suggestions that arrive as drafts
+for staff, and a history of each run. Agents never publish and never change existing content.
+Fields, access and hooks: [agent runs](/docs/reference/content-types/agent-runs.md),
 [review items](/docs/reference/content-types/agent-review-items.md),
-[API keys](/docs/reference/content-types/payload-mcp-api-keys.md).
+[API keys](/docs/reference/content-types/payload-mcp-api-keys.md),
+[OAuth clients](/docs/reference/content-types/oauth-clients.md),
+[OAuth tokens](/docs/reference/content-types/oauth-tokens.md). The OAuth flow:
+[agent OAuth](/docs/architecture/agent-oauth.md).
 
 ## How the pieces link
 
@@ -29,9 +36,30 @@ never publish and never change existing content. Fields, access and hooks:
 
 ## Behaviors and events
 
+<<<<<<< HEAD
 - **Agents use Payload's official MCP plugin at `/api/mcp`.** The key acts as an agent account, so collection access decides what it may do (`cms/mcp.ts`).
 - **Agents get no password sign-in or session,** so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
 - **`submitSuggestion` stores a draft as the agent itself,** held as `suggested` whatever the agent sends, with a source name and link required (`cms/tools/submitSuggestion.ts`, `src/platform/payload/reviewQueue.ts`).
+=======
+- Agents use Payload's official MCP plugin at `/api/mcp`. The key, or an OAuth access token, acts as an agent account, so collection access decides what it may do; the per-key boxes in Admin can only narrow that (`cms/mcp.ts`).
+- Over MCP an agent can only find published events, posts and categories, create and update its own runs, and call two tools (`cms/mcp.ts`, `src/payload.config.agentAccess.test.ts`).
+- Keys are admin-only to create, read, change or delete, and each is bound to an account with the agent role (`cms/apiKeys.ts`). The key's account must still be an agent at each request, so a changed role stops the key (`cms/mcp.ts`).
+- An AI tool signs in with OAuth: an admin registers it by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/authorize`, which only a signed-in admin sees (`cms/oauth/oauthClients.ts`, `use-cases/oauth/beginAuthorization.ts`, `decideConsent.ts`).
+- Redirect addresses match exactly (a loopback `http` address may choose its port); PKCE S256, a state and the MCP address as `resource` are required, and the approval carries a signed, expiring ticket for that admin and request (`domain/oauth/redirectUri.ts`, `authorizeRequest.ts`, `consent.ts`).
+- `@node-oauth/oauth2-server` runs the protocol; codes and tokens are stored as HMACs in two admin-only collections. A code is spent by its first try, a refresh token is replaced on each use, and a reused one ends its whole family (`data/oauth/model.ts`, `credentials.ts`).
+- `/oauth/token` takes only the code and refresh grants, 30 requests a minute per connection; an access token lasts an hour (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/constants.ts`).
+- Every `/api/mcp` call with an access token (prefix `sea_`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent; any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`. API keys are unchanged (`cms/oauth/authenticateBearer.ts`, `cms/mcp.ts`).
+- Admins revoke by setting "Revoked at" on a token (its family goes with it), switching the client off, or deleting it (`cms/oauth/oauthTokens.ts`, `oauthClients.ts`).
+- Agents get no password sign-in or session, so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
+- Limits: 120 requests a minute per connection, counted before the key is looked up, then 60 a minute per key; past either, 429. Counted in memory, which assumes one server process (`domain/mcpLimits.ts`, `cms/mcp.ts`).
+- Every answer is rebuilt from the allowlisted view, so no personal data reaches the model; an error answer is kept as it is (`cms/mcp.ts`, `domain/agentView.ts`).
+- `submitSuggestion` stores a draft held as `suggested`, never published, as the agent itself; `holdSuggestions` holds it whatever the agent sends and requires a source name and link (`src/platform/payload/reviewQueue.ts`). The title cap is the only length guard on a draft, since Payload checks it only on publish (`domain/suggestion.ts`, #633).
+- The same source ID or fingerprint answers `duplicate` with the stored id, also when two calls race; the lookup bypasses access because agents can't read drafts. The run's counts stay the agent's to keep (`cms/tools/submitSuggestion.ts`).
+- `reportItem` adds one document per report under the agent's own run, so two reports never overwrite each other; it never changes the content it points at. Staff read every item, an agent only its own; only admins change or delete one (`cms/tools/reportItem.ts`, `cms/agentReviewItems.ts`).
+- An agent sees only its own runs, and another agent's run is "not found". That is how it resumes from its source cursors (`cms/agentRuns.ts`, `cms/tools/runs.ts`).
+- Admins may change a run's identity fields and set its agent when creating one; an agent can't (`cms/agentRuns.ts`).
+- Tool arguments follow the agents' contract in `intelligence/schemas/`, with a size cap on each and cross-field rules (an event needs `startsAt`; an update or cancellation needs a target) (`cms/tools/schemas.ts`).
+>>>>>>> 73b54ff (feat: OAuth sign-in for the MCP address (#1501))
 
 ## Shared pieces it uses
 
@@ -40,6 +68,7 @@ never publish and never change existing content. Fields, access and hooks:
 
 ## Rules and the tests that protect them
 
+<<<<<<< HEAD
 - **An agent sees only allowlisted fields,** each collection's allowlist checked against the generated types; related documents become ids, `meta` keeps only title and description, and every answer is rebuilt from that view, so no personal data reaches the model (`cms/agentViews.ts`, `domain/agentView.ts`; `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`).
 - **An agent never publishes or changes content:** over MCP it finds published events, posts and categories, writes its own runs and calls two tools; `submitSuggestion` stores a held `suggested` draft, `reportItem` adds a review item for staff (`cms/mcp.ts`; `src/payload.config.agentTools.test.ts`). The tools are listed in the [MCP tools reference](/docs/reference/mcp-tools.md).
 - **A suggestion is stored once:** the same source id or fingerprint answers `duplicate` with the stored id, also when two calls race; `externalId` (a lowercase source id, a colon, the source's own id: `EXTERNAL_ID` in `domain/suggestion.ts`) and `contentHash` are unique and the slug ends with the start of the hash (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`; `src/payload.config.agentTools.test.ts`).
@@ -49,15 +78,28 @@ never publish and never change existing content. Fields, access and hooks:
 - **A key is the only credential and it can be narrowed, not widened:** keys are admin-only, each bound to an account that must still have the agent role at each request; collection access decides what it may do and Admin's per-key boxes only narrow that. Limits: 120 requests a minute per connection, then 60 a minute per key, then 429, counted in memory (`cms/apiKeys.ts`, `cms/mcp.ts`, `domain/mcpLimits.ts`; `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`).
 - **A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is "not found") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).
 - **Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).
+=======
+- An agent sees only allowlisted fields, with related documents as ids: `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`.
+- Suggestion slug, schedule and default image rules: `domain/suggestion.test.ts`, `src/payload.config.agentSuggestionCards.test.ts`.
+- The tools' schemas and the agents' contract give the same verdicts: `cms/tools/schemas.contract.test.ts`.
+- Tools store held drafts, answer duplicates and keep concurrent reports: `src/payload.config.agentTools.test.ts`.
+- Keys, limits, run isolation and write-once identity: `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`.
+- Chart, fact-tab and section-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`.
+- The access migration rolls back and applies again: `src/payload.config.agentMigration.test.ts`.
+- OAuth rules: `domain/oauth/*.test.ts`; the sign-in, replay and refusals on real Payload: `use-cases/oauth/*.payload.test.ts`, `cms/oauth/*.payload.test.ts`; the routes: `src/app/(frontend)/oauth/**`, `src/app/wellKnownRewrites.test.ts`.
+>>>>>>> 73b54ff (feat: OAuth sign-in for the MCP address (#1501))
 
 ## Boundaries
 
-- Entry file: `cms.ts` only (collections and plugin options, never server-only). Layers: `domain/` (pure rules), `cms/` (collections, plugin options, tools). It imports no other module (`eslint.boundaries.config.mjs`).
+- Entry files: `cms.ts` (collections and plugin options, never server-only), `index.ts` (discovery documents), `server.ts` and `actions.ts` (the consent page and token address). Layers: `domain/`, `use-cases/`, `data/`, `cms/`, `ui/`. It imports no other module (`eslint.boundaries.config.mjs`); `src/app/(frontend)/oauth/authorize/page.tsx` composes it with accounts.
 
 ## Decisions
 
-[0008](/docs/architecture/decisions/0008-compose-modules-at-the-app-level.md), [0019](/docs/architecture/decisions/0019-knowledge-layer.md); issues #336, #363, #633.
+[0008](/docs/architecture/decisions/0008-compose-modules-at-the-app-level.md), [0019](/docs/architecture/decisions/0019-knowledge-layer.md), [0023](/docs/architecture/decisions/0023-mcp-oauth-sign-in.md); issues #336, #363, #633, #1501.
 
 ## Known gaps
 
-None known.
+- One scope, `mcp`: a client gets what its agent account's tools allow. Narrower scopes: #1499.
+- Clients are registered by hand; client ID metadata documents and dynamic registration are not offered.
+- The log in page has no return address, so the admin connects again from the AI tool after logging in.
+- Expired token rows stay in the table, and limits are counted in memory, which assumes one server process.

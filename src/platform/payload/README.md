@@ -42,6 +42,7 @@ The helpers every collection is built from (`src/platform/payload/`). The rules 
 - **A non-staff create is held:** REST, GraphQL, MCP or the Local API with a user stores a `suggested` draft that must name a source and an http(s) source link; any other write by them is refused; server code with no user (the seed) passes; blank text becomes null so unique ids never collide on blanks (`reviewQueue.ts`; `src/payload.config.reviewQueue.test.ts`, `src/payload.config.reviewQueueApi.test.ts`, `src/platform/lib/reviewQueue.test.ts`).
 - **A scheduled publish runs on time and queues are restricted** (`src/payload.config.scheduledPublishing.test.ts`, `jobRunners.test.ts`, `retentionJobs.test.ts`, `restrictJobStats.test.ts`, `restrictEditLocks.test.ts`).
 - **Titles stop at one shared limit when publishing,** not when saving a draft (`src/payload.config.titleLimit.test.ts`, `contentCollection.test.ts`).
+- **`testing/mcpRequest.ts` sends MCP calls to `/api/mcp`** with an API key, an OAuth access token or none, and returns the status, headers and body (`src/modules/agents/use-cases/oauth/signIn.payload.test.ts`).
 - **A fact tab's label stops at one short limit** so it fits its button (`src/payload.config.factTabs.test.ts`, `testing/factTabsRequests.ts`).
 - **Links, paging, cursors:** `resolveLink.test.ts`, `documentHref.test.ts`, `keyset.test.ts`, `src/platform/lib/cursor.test.ts`.
 - **The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.
