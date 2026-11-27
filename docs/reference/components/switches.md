@@ -21,8 +21,6 @@ Source: `src/platform/ui/Switch.client.tsx`
 | `label`           | `ReactNode`                  | yes      | What the switch turns on or off, in words; it is the switch's name for screen readers |
 | `hideLabel`       | `boolean`                    | no       | Keeps the label for screen readers only, where the context names the switch visually  |
 
-287 more props from package types (HTML attributes and the like) are not listed.
-
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
@@ -42,8 +40,6 @@ Source: `src/platform/ui/Switch.client.tsx`
 | `name`            | `string`                     | no       | The name the value is sent under in a form                                 |
 | `value`           | `string`                     | no       | What a form receives when the switch is on (`on` when left out)            |
 
-287 more props from package types (HTML attributes and the like) are not listed.
-
 **Used by** (direct imports):
 
 - Platform: `platform/ui`
@@ -54,16 +50,7 @@ An on or off switch for a form; place it inside a `Field`, which then lays out i
 
 Source: `src/platform/ui/FieldSwitch.client.tsx`
 
-| Prop              | Type                         | Required | Description                                                                |
-| ----------------- | ---------------------------- | -------- | -------------------------------------------------------------------------- |
-| `checked`         | `boolean`                    | no       | On or off, when the caller holds the value; pair it with `onCheckedChange` |
-| `value`           | `string`                     | no       | What a form receives when the switch is on (`on` when left out)            |
-| `defaultChecked`  | `boolean`                    | no       | On or off to start with, when the switch keeps its own value               |
-| `disabled`        | `boolean`                    | no       | Greys the switch out and stops it taking a press or a key                  |
-| `name`            | `string`                     | no       | The name the value is sent under in a form                                 |
-| `onCheckedChange` | `(checked: boolean) => void` | no       | Called with the new value each time the switch is turned                   |
-
-286 more props from package types (HTML attributes and the like) are not listed.
+No props.
 
 **Used by** (direct imports):
 
