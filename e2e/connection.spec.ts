@@ -51,6 +51,7 @@ test.describe('connecting an AI tool', () => {
 
   test('not allowing sends the tool back with a refusal and no code', async ({ page }) => {
     await logIn(page, CONNECT.adminEmail, CONNECT.password)
+    await expect(page).toHaveURL(/\/account/)
     await startFromTheTool(page, 'state-deny')
     await page.getByRole('link', { name: 'Continue to approval' }).click()
     await page.getByRole('button', { name: 'Don’t allow' }).click()
@@ -68,7 +69,8 @@ test.describe('connecting an AI tool', () => {
     await page.getByRole('link', { name: 'Continue to approval' }).click()
     await expect(allow(page)).toHaveCount(0)
     await expect(page.getByText('Log in with an admin account')).toBeVisible()
-    await page.getByRole('link', { name: 'Log in' }).click()
+    // The header has a plain log in link too; this one carries the pending request
+    await page.locator('a[href^="/login?next="]').click()
     await expect(page).toHaveURL(/\/login\?next=/)
 
     const form = page.getByRole('form', { name: 'Log in' })
@@ -111,7 +113,7 @@ test.describe('connecting an AI tool', () => {
     await page.goto(
       '/oauth/authorize?client_id=mcp_nobody&redirect_uri=https%3A%2F%2Fevil.example%2F',
     )
-    await expect(page.getByRole('alert')).toContainText('not valid')
+    await expect(page.getByRole('alert').filter({ hasText: 'not valid' })).toBeVisible()
     await expect(page).toHaveURL(/\/oauth\/authorize/)
   })
 })
