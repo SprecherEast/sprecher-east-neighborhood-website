@@ -7,24 +7,24 @@ import type { BarModel, BarSegment } from './barModel'
 /*
  * Where everything goes in the drawing, in SVG units (#663). The svg scales with its container, so
  * these are proportions. The width is the thumbnail's (20rem), where the drawing is shown 1:1, so a
- * unit is a screen pixel: the bar is as thick, and the text as big, as in the breakdown chart and
- * the bill's rows (`chartSizes.ts`, #1503); on a screen narrower than the thumbnail it shrinks with
+ * unit is a screen pixel: the bar is as thick, and the text as big, as in the breakdown chart
+ * (`chartSizes.ts`, #1503); on a screen narrower than the thumbnail it shrinks with
  * it. `Chart` sets how wide it runs: 1:1 as a thumbnail and twice that enlarged (#681).
  */
 export const VIEW_WIDTH = 320
 export const SEGMENT_GAP = 2
 export const BAR_HEIGHT = CHART_BAR_THICKNESS_PX
 export const BAR_RADIUS = 5
-export const FONT_SIZE = CHART_TEXT_PX.name
-export const SMALL_FONT_SIZE = CHART_TEXT_PX.detail
+export const FONT_SIZE = CHART_TEXT_PX
+export const SMALL_FONT_SIZE = CHART_TEXT_PX
 /** Poppins is wide: about this much of its size per character, to place labels without measuring */
 const CHAR_WIDTH = 0.6
 export const PAD_X = 4
 /** Baselines inside a row: its name and total, the first line of value labels, and each line after */
-export const HEAD_BASELINE = 16
-export const BAR_TOP = 24
-const LABEL_OFFSET = BAR_HEIGHT + 17
-export const LINE_HEIGHT = 20
+export const HEAD_BASELINE = 14
+export const BAR_TOP = 22
+const LABEL_OFFSET = BAR_HEIGHT + 16
+export const LINE_HEIGHT = 18
 const ROW_GAP = 22
 const LABEL_SPACING = 4
 /** How far the scale's lines reach above and below a bar: short ticks, never through text */

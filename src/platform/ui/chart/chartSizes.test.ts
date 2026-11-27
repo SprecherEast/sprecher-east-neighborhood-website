@@ -18,16 +18,15 @@ describe('the sizes every chart and data display of bars shares (#1503)', () => 
     expect(classPx(CHART_BAR_THICKNESS_CLASS)).toBe(CHART_BAR_THICKNESS_PX)
   })
 
-  it('sets a detail (values, notes) in the kit’s small text, and a name and total in the body text', () => {
+  it('sets every word in the drawing in the kit’s small text, as the breakdown chart does its rows', () => {
     const small = SMALL_TEXT.split(' ').find((c) => c in TEXT_STEP_PX)
-    expect(small && TEXT_STEP_PX[small]).toBe(CHART_TEXT_PX.detail)
-    expect(CHART_TEXT_PX.name).toBe(TEXT_STEP_PX['text-base'])
+    expect(small && TEXT_STEP_PX[small]).toBe(CHART_TEXT_PX)
   })
 
   it('has the bar chart draw with those sizes, one for one', () => {
     expect(BAR_HEIGHT).toBe(CHART_BAR_THICKNESS_PX)
-    expect(FONT_SIZE).toBe(CHART_TEXT_PX.name)
-    expect(SMALL_FONT_SIZE).toBe(CHART_TEXT_PX.detail)
+    expect(FONT_SIZE).toBe(CHART_TEXT_PX)
+    expect(SMALL_FONT_SIZE).toBe(CHART_TEXT_PX)
   })
 
   it('shows the drawing 1:1 at the thumbnail width, so its units are the page’s pixels', () => {

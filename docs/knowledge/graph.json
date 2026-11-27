@@ -2858,8 +2858,8 @@
     {
       "id": "business-rule:src/platform/ui/chart/README.md#4",
       "type": "business-rule",
-      "name": "**Bars and text follow one set of sizes in every display of labelled…",
-      "summary": "**Bars and text follow one set of sizes in every display of labelled bars:** a bar is as thick as the breakdown chart's main bars (14px, `h-3.5`), a name and its total are body text (16px) and values and notes the kit's small text (14px), defined once in `chartSizes.ts` and pinned to the classes they come from. The bar and stacked chart draws at 1:1 (320 units for 20rem), and its width is capped at that thumbnail width stacked or beside the text (`--chart-stack-width` is `--chart-small-width`), so a unit is a pixel on every screen from 352px up and it shrinks only below that; bars share one scale shown as short ticks (`chartSizes.ts`, `adapters/visx/barLayout.ts`, #1206, #1503; `chartSizes.test.ts`, `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`, `adapters/breakdown/BreakdownChart.test.tsx`).",
+      "name": "**The bar and stacked chart draws bars and text at the breakdown…",
+      "summary": "**The bar and stacked chart draws bars and text at the breakdown chart's sizes:** a bar is 14px thick (`h-3.5`, the breakdown's main bars) and every word, name, total, value and note, is the kit's small text (14px), defined once in `chartSizes.ts` and pinned to the classes they come from. It draws at 1:1 (320 units for 20rem) and its width is capped at that thumbnail width stacked or beside the text (`--chart-stack-width` is `--chart-small-width`), so a unit is a pixel on every screen from 352px up; below that it shrinks with the screen, and the old 16px minimum (#1206, #1211) is gone by the owner's decision (#1503). Bars share one scale shown as short ticks (`chartSizes.ts`, `adapters/visx/barLayout.ts`; `chartSizes.test.ts`, `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`, `adapters/breakdown/BreakdownChart.test.tsx`).",
       "path": "src/platform/ui/chart/chartSizes.test.ts",
       "module": "platform-area:ui",
       "aliases": [],

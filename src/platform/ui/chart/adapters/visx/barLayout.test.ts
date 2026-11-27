@@ -125,7 +125,12 @@ describe('long rows', () => {
     const plain = layout(stackedOf([[10], [20]])).rows[0]
     const long = layout(stackedOf([[10], [20]], { x: [label] })).rows[0]
     expect(long.headLines.length).toBeGreaterThan(1)
-    expect(long.headLines.map((l) => l.text).join(' ')).toBe(label)
+    expect(
+      long.headLines
+        .map((l) => l.text)
+        .filter(Boolean)
+        .join(' '),
+    ).toBe(label)
     expect(long.headLines.at(-1)?.total).toBe('$30')
     expect(long.barY).toBeGreaterThan(plain.barY)
     expect(plain.headLines).toEqual([{ text: 'Row 0', total: '$30' }])
