@@ -12,6 +12,9 @@
  * MCP plugin options, the route files, the source (which collections a tool or task reaches) and
  * the timed GitHub workflows; the owner of each content type is the module that defines it.
  *
+ * The showcase (#1532) also gets `docs/reference/showcase-index.json` and the import map
+ * `src/platform/ui/showcaseRegistry.ts`, from the same run and checked by the same command.
+ *
  * Run through `tsx`, which resolves the `@payload-config` alias from tsconfig.json and loads the
  * TypeScript config.
  */
@@ -29,34 +32,56 @@ import {
   renderCoverage,
 } from './reference/coverage.mjs'
 import { COMPONENT_GROUPS } from './reference/componentGroups.mjs'
+import { describeComponents, findUsers } from './reference/components.mjs'
 import {
-  describeComponents,
-  findUsers,
   groupComponents,
   renderComponentIndex,
   renderComponentPage,
-} from './reference/components.mjs'
+} from './reference/componentPages.mjs'
 import { renderApi } from './reference/endpointsPage.mjs'
 import { renderJobs } from './reference/jobsPage.mjs'
+import { safeKitFilesIn } from './reference/kitFiles.mjs'
 import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
 import { collectRoutes, renderRoutes } from './reference/routes.mjs'
-import { componentSourceFiles, createSourceProgram } from './reference/sourceProgram.mjs'
+import { buildShowcaseIndex, renderShowcaseIndex } from './reference/showcase.mjs'
+import { SHOWCASE_REGISTRY_FILE, renderShowcaseRegistry } from './reference/showcaseRegistry.mjs'
+import {
+  componentSourceFiles,
+  createSourceProgram,
+  examplesSourceFiles,
+} from './reference/sourceProgram.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = 'docs/reference'
+/** The showcase index (#1532): data for the developer site's showcase pages and its coverage check */
+const SHOWCASE_INDEX = 'showcase-index.json'
+
+/** The text of a file under the repository, or `undefined` when it is not there. */
+const readIfThere = (file) =>
+  fs.existsSync(path.join(ROOT, file)) ? fs.readFileSync(path.join(ROOT, file), 'utf8') : undefined
 
 function buildComponentPages({ program, fileNames }) {
   const files = componentSourceFiles(fileNames)
   const components = describeComponents(program, ROOT, files)
   const users = findUsers(program, ROOT, components)
   const groups = groupComponents(COMPONENT_GROUPS, components)
-  const pages = new Map([['components/README.md', renderComponentIndex(groups)]])
+  const index = buildShowcaseIndex({
+    groups,
+    users,
+    readFile: readIfThere,
+    exampleFiles: examplesSourceFiles(fileNames, ROOT),
+    kitFiles: safeKitFilesIn(ROOT),
+  })
+  const pages = new Map([
+    ['components/README.md', renderComponentIndex(groups, index.coverage)],
+    [SHOWCASE_INDEX, renderShowcaseIndex(index)],
+  ])
   for (const group of groups) {
     pages.set(`components/${group.slug}.md`, renderComponentPage(group, group.components, users))
   }
-  return pages
+  return { pages, registry: renderShowcaseRegistry(index) }
 }
 
 /** The element-to-component coverage page (#495), made from the element tables in docs/ui/. */
@@ -71,10 +96,16 @@ async function formatted(files) {
   const config = (await prettier.resolveConfig(path.join(ROOT, OUTPUT, 'routes.md'))) ?? {}
   const out = new Map()
   for (const [file, text] of files) {
-    // The Tailwind plugin only sorts class names; it does nothing to Markdown
-    const page = await prettier.format(text, { ...config, plugins: [], parser: 'markdown' })
+    // The Tailwind plugin only sorts class names; it does nothing to Markdown or JSON
+    const parser = file.endsWith('.json')
+      ? 'json'
+      : file.endsWith('.ts')
+        ? 'typescript'
+        : 'markdown'
+    const page = await prettier.format(text, { ...config, plugins: [], parser })
     const lines = page.trimEnd().split('\n').length
-    if (lines > PAGE_LINE_LIMIT) {
+    // A page is read by people and stays short; the showcase index and import map are data and grow with the kit
+    if (parser === 'markdown' && lines > PAGE_LINE_LIMIT) {
       throw new Error(
         `${file} has ${lines} lines, over the limit of ${PAGE_LINE_LIMIT}: split its group`,
       )
@@ -84,11 +115,11 @@ async function formatted(files) {
   return out
 }
 
-/** Every Markdown file under the folder, keyed by its path inside it. */
+/** Every Markdown file and the showcase index under the folder, keyed by its path inside it. */
 const readCommitted = (directory) =>
   new Map(
     listFiles(directory)
-      .filter((file) => file.endsWith('.md'))
+      .filter((file) => file.endsWith('.md') || file === SHOWCASE_INDEX)
       .map((file) => [file, fs.readFileSync(path.join(directory, file), 'utf8')]),
   )
 
@@ -98,7 +129,7 @@ const directory = path.join(ROOT, OUTPUT)
 // checker orders the members of a union by when it first met them, so this order keeps their
 // prop types as they were
 const source = createSourceProgram(ROOT)
-const componentPages = buildComponentPages(source)
+const { pages: componentPages, registry } = buildComponentPages(source)
 const facts = await loadFacts({ root: ROOT, program: source.program })
 const contentTypes = new Map(
   [...buildPages(facts.models)].map(([file, text]) => [`content-types/${file}`, text]),
@@ -117,12 +148,25 @@ const pages = await formatted(
     ...componentPages,
   ]),
 )
+// The showcase's import map (#1532) is code, so it lives beside the kit, not in docs/reference/
+const registryFile = (await formatted(new Map([[SHOWCASE_REGISTRY_FILE, registry]]))).get(
+  SHOWCASE_REGISTRY_FILE,
+)
+const registryPath = path.join(ROOT, SHOWCASE_REGISTRY_FILE)
 const seconds = ((Date.now() - started) / 1000).toFixed(1)
 
 if (process.argv.includes('--check')) {
   const message = describeDifferences(compareFiles(pages, readCommitted(directory)), OUTPUT)
-  if (message) {
-    console.error(message)
+  const onDisk = fs.existsSync(registryPath) ? fs.readFileSync(registryPath, 'utf8') : undefined
+  const registryMessage = describeDifferences(
+    compareFiles(
+      new Map([[SHOWCASE_REGISTRY_FILE, registryFile]]),
+      new Map(onDisk === undefined ? [] : [[SHOWCASE_REGISTRY_FILE, onDisk]]),
+    ),
+    path.posix.dirname(SHOWCASE_REGISTRY_FILE),
+  )
+  if (message || registryMessage) {
+    console.error([message, registryMessage].filter(Boolean).join('\n'))
     process.exit(1)
   }
   console.log(`${OUTPUT} is current (${pages.size} pages, ${seconds} s).`)
@@ -135,5 +179,7 @@ if (process.argv.includes('--check')) {
     fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true })
     fs.writeFileSync(path.join(directory, file), text)
   }
+  fs.mkdirSync(path.dirname(registryPath), { recursive: true })
+  fs.writeFileSync(registryPath, registryFile)
   console.log(`Wrote ${pages.size} pages to ${OUTPUT} (${seconds} s).`)
 }
