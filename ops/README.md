@@ -17,9 +17,10 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `caddy-limits.sh`            | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                                                                                                                                                                                                    | #124       |
 | `caddy-https.sh`             | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                                                                                                                                                                                               | #235       |
 | `caddy-previews.sh`          | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                                                                                                                                                                                           | #1072      |
-| `build-showcase.sh`          | runner | Builds the component showcase into a folder of the release (`developer-site/showcase` for production, `public/showcase` for a pull request preview); optional for production, so a failed showcase never fails the release; see [the developer site](developer-site.md)                                                                                                                                                 | #1459      |
-| `developer-site.sh`          | VPS    | Production deploy only, after the release is live: assembles, checks and publishes the developer site (the showcase and an index page) at `dev.sprechereast.com`; never fails the deploy; see [the developer site](developer-site.md)                                                                                                                                                                                   | #1459      |
-| `developer-site-check.sh`    | VPS    | Refuses to serve a folder that holds anything but the index page, the 404 page and the showcase: links, other names for a file, hidden or private-by-name files, writable files, too much, or a third-party font host, or a showcase without the site's font files                                                                                                                                                      | #1459      |
+| `build-developer-pages.sh`   | runner | Builds the developer pages (the static export of `developer/`) into `developer-site/pages` in the release; optional for production, so a failed build never fails the release; never in a pull request preview; see [the developer site](developer-site.md)                                                                                                                                                             | #1530      |
+| `build-showcase.sh`          | runner | Builds the Storybook showcase into a folder of the release (`developer-site/storybook` for production, `public/showcase` for a pull request preview); optional for production, so a failed showcase never fails the release; see [the developer site](developer-site.md)                                                                                                                                                | #1459      |
+| `developer-site.sh`          | VPS    | Production deploy only, after the release is live: assembles, checks and publishes the developer site (the developer pages and the Storybook showcase) at `dev.sprechereast.com`; never fails the deploy; see [the developer site](developer-site.md)                                                                                                                                                                   | #1459      |
+| `developer-site-check.sh`    | VPS    | Refuses to serve a folder that holds anything but the developer pages and the Storybook showcase: links, other names for a file, hidden or private-by-name files, writable files, too much, or a third-party font host, or pages or a showcase without the site's font files                                                                                                                                            | #1459      |
 | `install-umami.sh`           | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                                                                                                                                                                                          | #948       |
 | `backup-umami.sh`            | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                                                                                                                                                                                                  | #948       |
 | `environment.sh`             | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                                                                                                                                                                                              | #1073      |
@@ -46,8 +47,8 @@ from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on th
 
 ## Where the deploy secrets live
 
-The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`
-and `UMAMI_ADMIN_PASSWORD`) are secrets of the GitHub environment `production` (Settings →
+The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`,
+`UMAMI_ADMIN_PASSWORD` and `OFFSITE_BACKUP_RCLONE_CONF`) are secrets of the GitHub environment `production` (Settings →
 Environments → production). That environment only runs from `main`, so a workflow on any other
 branch cannot read them (#1071). A job that names an environment still sees repository secrets, so
 they are only out of reach once the repository-level copies of the same names are deleted. Only the jobs that read them, Preflight and
@@ -88,8 +89,9 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    from, so the paths the build writes are right on the server. The build gets only the public
    `NEXT_PUBLIC_*` values from the server's `.env.local`, a throwaway database and placeholders.
    Production `node_modules` ship with it; their native parts (sharp, libsql) are prebuilt for
-   Linux x64 and load on any Node of the same version. It also builds the component showcase into
-   the release (`developer-site/showcase`, `ops/build-showcase.sh`); if that fails the release is
+   Linux x64 and load on any Node of the same version. It also builds the developer pages and the
+   Storybook showcase into the release (`developer-site/pages` and `developer-site/storybook`,
+   `ops/build-developer-pages.sh` and `ops/build-showcase.sh`); if either fails the release is
    built without it, with a warning.
 3. **Deploy** uploads the archive into `releases/.incoming-<commit>`, renames it, and runs
    `deploy-release.sh` from the release:
@@ -127,7 +129,7 @@ with no secret, a deploy through the wrapper, and one comment on the pull reques
 | ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `.github/scripts/plan-preview.sh`     | runner | The gate: same-repository, not Dependabot, a change that reaches the server (`deploy-paths.sh`, also read by `plan-deploy.sh`), the label                                |
 | `.github/scripts/preview-facts.sh`    | runner | Asks the wrapper's `facts`; no key, or a server that refuses it, means "previews unavailable", once, without a retry                                                     |
-| `.github/scripts/preview-deploy.sh`   | runner | Checks the archive's sizes, the temporary one-at-a-time limit, then the wrapper's `upload` and `deploy`; reports live, taken down or failed                              |
+| `.github/scripts/preview-deploy.sh`   | runner | Checks the archive's sizes and the cap (`PREVIEW_MAX_COUNT`), then the wrapper's `upload` and `deploy`; reports live, taken down or failed                               |
 | `.github/scripts/preview-comment.mjs` | runner | The one comment: fixed texts and checked values, found by a hidden marker and edited in place                                                                            |
 | `e2e/previewSeed.ts`                  | VPS    | A preview's first database: one test account per role, with the passwords `preview-accounts.sh` made; run by `deploy-release.sh` after the migrations, before the switch |
 
@@ -174,8 +176,7 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   validate it before it is moved into `/etc/caddy/previews/` (under a name the folder's import does not
   match), moves it in with one rename, validates the whole config, reloads, and on any failure puts the
   previous block back and reloads again. A preview with no folder gets its block removed, moved first to a copy under a name the import does not read; if Caddy will not take the config without it and the copy cannot be moved back, the copy is kept there and the warning names it. It takes the shared
-  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (the cap, one for
-  now: [the cap](previews.md#removal-the-cap-and-the-sweep-1076)), because each block orders a certificate from a
+  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (the cap, two: [the cap](previews.md#removal-the-cap-and-the-sweep-1076)), because each block orders a certificate from a
   budget production shares; the wrapper refuses a new preview folder beyond the same number, under a lock so two
   starting together can't both take the last place, and removes the empty folder of a new preview whose upload
   failed.
@@ -291,7 +292,7 @@ the account's line in `cron.deny` and `at.deny`, and `chmod` back to the modes t
 
 ## Developer site
 
-`https://dev.sprechereast.com` is an index page and the component showcase, as static files that the same Caddy
+`https://dev.sprechereast.com` is the developer pages and the Storybook showcase, as static files that the same Caddy
 serves: how it is built, published, checked and undone is in [`developer-site.md`](developer-site.md).
 
 ## Releases
@@ -433,8 +434,8 @@ and roll back: [`umami/README.md`](umami/README.md).
 
 Archives are in `/var/backups/sprecher-east/{daily,weekly,pre-deploy,manual}/`, readable by root
 only. Each one holds `payload.db`, `env.local` and the `media/` folder. Hostinger's weekly
-whole-server backups (hPanel → VPS → Backups & Monitoring) include this folder, so a copy also
-exists off the machine.
+whole-server backups (hPanel → VPS → Backups & Monitoring) include this folder (same account). A
+weekly sealed copy also goes to Google Drive: [`offsite-backup.md`](offsite-backup.md).
 
 - Daily at 08:15 UTC, kept 7 days; Sunday's is also kept as a weekly, 5 weeks.
 - Before every deploy, the 5 most recent kept.
@@ -452,7 +453,7 @@ Run on the VPS as root. This replaces the site's current content with the archiv
 ```bash
 cd /var/www/sprecher-east
 bash current/ops/backup.sh manual         # keep a copy of what you are about to replace
-mkdir -p /root/restore && tar -C /root/restore -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
+mkdir -p /root/restore && tar -C /root/restore --no-same-owner --no-same-permissions -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
 pm2 stop sprecher-east
 cp /root/restore/payload.db data/payload.db
 rm -f data/payload.db-wal data/payload.db-shm data/payload.db-journal

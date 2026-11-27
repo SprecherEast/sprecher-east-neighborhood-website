@@ -3,6 +3,7 @@
 Colours and sizes come from settings.py. A part that is a real place lives in places.py instead.
 """
 import math
+from . import measure
 from .settings import *
 
 SW=OUTLINE_WIDTH
@@ -11,6 +12,42 @@ O=f'stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"'  # the outline 
 def sc(v):
     """A size in the scene, multiplied by the named scene scale (unchanged at 1)."""
     return v if SCENE_SCALE==1 else v*SCENE_SCALE
+
+PLACED=[]  # what the parts of the scene being built registered: kind, box, size, see place()
+
+def place(kind, x0, y0, x1, y1, size=None, bleed=False, label=None):
+    """Register a part for the build's checks: its kind, the box it fills on the canvas and, in
+    `size`, the pixels of the one dimension REAL_SIZE_M gives its real size for (height for a
+    person, length for a car). `bleed` lets it run to the edges: True for a surface that fills the
+    frame, "sides" for scenery that may be cropped left or right (never at the top)."""
+    PLACED.append({"kind":kind,"box":(x0,y0,x1,y1),"size":size,"bleed":bleed,"label":label or kind,"focal":False})
+
+def focal(svg, label, index=-1):
+    """Mark the part just drawn before this call (or the one at `index`) as the scene's one focal
+    subject, and pass its drawing through: focal(car(...), 'car')."""
+    PLACED[index]["focal"]=True
+    PLACED[index]["label"]=label
+    return svg
+
+def focal_group(svg, label, n):
+    """Mark the last `n` parts drawn as together the scene's one focal subject (a moment made of a few
+    parts: a car, the neighbor unloading it and the bin), and pass the drawing through."""
+    for q in PLACED[-n:]:
+        q["focal"]=label; q["label"]=label
+    return svg
+
+TEXTS=[]  # text drawn inside a part by text_in(): the text, its area and its ink, for the build's check
+
+def text_in(text, area, size, weight="bold", fill=NAVY, extra="", role="label"):
+    """`text` centred, by the ink the font draws, in `area` (x0, y0, x1, y1) of the canvas. Parts that
+    hold text draw it only through here, so its centring is the same everywhere and is checked. `role`
+    "lettering" marks text that is part of a place (a sign, a notice): it must also be readable on a phone."""
+    l,t,r,b=measure.ink_box(text,size,weight)
+    x=(area[0]+area[2])/2-(l+r)/2; y=(area[1]+area[3])/2-(t+b)/2
+    TEXTS.append({"text":text,"area":tuple(area),"ink":(x+l,y+t,x+r,y+b),"role":role})
+    css={"bold":700,"semibold":600}[weight]
+    return (f'<text x="{x:.1f}" y="{y:.1f}" font-family="Poppins" font-weight="{css}" '
+            f'font-size="{size:g}" fill="{fill}" {extra}>{text}</text>')
 
 LOWERED=[]  # the drawn scene of the picture being built, as the badge check needs it on its own
 
@@ -40,9 +77,12 @@ def person_head(skin,hair,hr,o,hat=None,cap=None):
         g.append(f'<path d="M{-hr},-191 Q{-hr+1},{-190-hr-3} 0,{-190-hr-3} Q{hr+1},{-190-hr-3} {hr},-191 Q{hr-3},-198 0,-197 Q{-hr+3},-198 {-hr},-191 Z" fill="{hair}" {o}/>')
     return "".join(g)
 
-def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None):
-    """A standing person at (x, y). arm: "down", "wave", "pad", or "none" when the scene draws the arms itself."""
+def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None,child=False):
+    """A standing person at (x, y). arm: "down", "wave", "pad", "reach" (one arm forward at chest height), or "none" when the scene draws the arms itself.
+    child: the person stands for a child, whose real height is smaller (see REAL_SIZE_M)."""
     s=sc(s)
+    top=(217 if arm=="wave" else 190+hr+3)*s
+    place("child" if child else "person",x-52*s,y-top,x+52*s,y+8*s,size=(190+hr+3+3)*s)
     sx=-s if flip else s
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=[f'<g transform="translate({x},{y}) scale({sx},{s})">']
@@ -56,6 +96,8 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,
     g.append(person_torso(shirt,o))
     if arm=="wave":
         g.append(f'<path d="M24,-160 L44,-206" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L44,-206" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="46" cy="-211" r="6.5" fill="{skin}" {o}/>')
+    elif arm=="reach":
+        g.append(f'<path d="M24,-160 L58,-136" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L58,-136" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="62" cy="-134" r="6.5" fill="{skin}" {o}/>')
     elif arm=="pad":
         g.append(f'<path d="M24,-160 L36,-128 L12,-120" stroke="{NAVY}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M24,-160 L36,-128 L12,-120" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="2" y="-146" width="20" height="26" rx="2" fill="#f5ede1" {o}/><circle cx="12" cy="-120" r="6" fill="{skin}" {o}/>')
     elif arm!="none":
@@ -65,6 +107,7 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,
 
 def tree(x,y,h=300,c="#6fae6c",d="#4f8e56",trunk="#6b4b3a"):
     h=sc(h)
+    place("tree",x-.4*h,y-.9*h,x+.4*h,y+10,size=.9*h,bleed="sides")
     r=h*.22
     return (f'<g><ellipse cx="{x}" cy="{y}" rx="{r*1.1}" ry="10" fill="#000" opacity=".1"/>'
     f'<rect x="{x-h*.025}" y="{y-h*.45}" width="{h*.05}" height="{h*.45}" fill="{trunk}" stroke="{NAVY}" stroke-width="{SW}"/>'
@@ -78,7 +121,9 @@ def cloud(x,y,s=1):
     return (f'<g transform="translate({x},{y}) scale({s})" fill="#fff" stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round">'
     '<path d="M-60,20 Q-78,20 -76,2 Q-74,-14 -54,-12 Q-52,-38 -22,-38 Q0,-52 24,-34 Q56,-38 62,-8 Q84,-4 80,14 Q78,22 64,20 Z"/></g>')
 
-def backdrop(sky_top="#f0f6ee", horizon=700, snow=False):
+def backdrop(sky_top="#f0f6ee", horizon=700, snow=False, edge=True):
+    """Sky, hills and ground. `edge=False` leaves the ground's far edge without an outline, so a thin line
+    behind a subject cannot be read as a rail or fence."""
     global HILL1,HILL2,GROUND,GROUND2
     if snow: HILL1,HILL2,GROUND,GROUND2="#e6eef3","#dbe6ee","#f3f7fa","#e1ebf2"
     else: HILL1,HILL2,GROUND,GROUND2="#d6e8d1","#c6ddc0","#cfe3c9","#bcd6b4"
@@ -89,7 +134,7 @@ def backdrop(sky_top="#f0f6ee", horizon=700, snow=False):
     g+=f'<rect width="{W}" height="{H}" fill="url(#sky)"/>'
     g+=f'<path d="M0,{horizon-70} Q220,{horizon-130} 470,{horizon-70} T1000,{horizon-80} T1600,{horizon-60} L1600,{H} L0,{H} Z" fill="{HILL1}"/>'
     g+=f'<path d="M0,{horizon-30} Q300,{horizon-80} 640,{horizon-30} T1300,{horizon-40} T1600,{horizon-25} L1600,{H} L0,{H} Z" fill="{HILL2}"/>'
-    g+=f'<path d="M0,{horizon} Q400,{horizon-26} 800,{horizon-2} T1600,{horizon-8} L1600,{H} L0,{H} Z" fill="url(#gr)" stroke="{NAVY}" stroke-width="{SW}"/>'
+    g+=f'<path d="M0,{horizon} Q400,{horizon-26} 800,{horizon-2} T1600,{horizon-8} L1600,{H} L0,{H} Z" fill="url(#gr)"{f' stroke="{NAVY}" stroke-width="{SW}"' if edge else ''}/>'
     return g
 
 PANELS=[]  # every panel() call is recorded here, so the build can check the text
@@ -112,9 +157,11 @@ def panel(title_lines, bullets):
         g.append(f'<text x="{px+88}" y="{y+52}" font-family="Poppins" font-weight="600" font-size="{BULLET_SIZE}" fill="{NAVY}">{b}</text>'); y+=BULLET_LINE
     return "".join(g)
 
-def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False):
+def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False,hatch=False):
     w=sc(w)
     k=w/250; sx=-k if flip else k
+    ex=(x-246*k,x-6*k) if flip else (x+6*k,x+246*k)
+    place("car",ex[0],y-(92 if suv else 84)*k,ex[1],y+11*k,size=240*k)
     o=f'stroke="{NAVY}" stroke-width="{SW/k:.2f}" stroke-linejoin="round"'
     top=-92 if suv else -84
     g=[f'<g transform="translate({x},{y}) scale({sx},{k})">']
@@ -128,6 +175,13 @@ def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False):
         g.append(f'<rect x="78" y="{top-12}" width="42" height="12" rx="3" fill="{RED}" {o}/><rect x="120" y="{top-12}" width="42" height="12" rx="3" fill="{BLUE}" {o}/>')
     g.append(f'<rect x="120" y="-50" width="3" height="40" fill="{NAVY}" opacity=".5"/><rect x="104" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/><rect x="132" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/>')
     g.append(f'<rect x="236" y="-40" width="10" height="9" rx="3" fill="#ffe89a" {o}/><rect x="6" y="-40" width="8" height="9" rx="3" fill="#e0603f" {o}/>')
+    if hatch:  # the rear hatch swung up on a hinge at the back of the roof, clear of the cargo bay it uncovers behind the rear seat
+        bt=top+10   # the bay's ceiling, 30 units above its floor
+        hx,hy=10,bt-3
+        g.append(f'<rect data-part="cargo-bay" x="8" y="{bt}" width="48" height="{-50-bt}" fill="#2b3040" {o}/>')
+        g.append(f'<rect x="6" y="{bt-6}" width="46" height="6" rx="2" fill="{body}" {o}/>')
+        g.append(f'<g data-part="hatch-door" transform="translate({hx},{hy}) rotate(-103)"><path d="M0,-5 L60,-9 L60,9 L0,6 Z" fill="{body}" {o}/><path d="M8,-3 L52,-5.5 L52,4.5 L8,3 Z" fill="{GLASS}" {o}/></g>')
+        g.append(f'<circle cx="{hx}" cy="{hy}" r="4.5" fill="#c9d0dc" {o}/>')
     for cx in (58,196):
         g.append(f'<circle cx="{cx}" cy="-16" r="27" fill="#1a2033" {o}/><circle cx="{cx}" cy="-16" r="13" fill="#c9d0dc" {o}/><circle cx="{cx}" cy="-16" r="4" fill="{NAVY}"/>')
     g.append('</g>'); return "".join(g)
@@ -159,6 +213,7 @@ def grass(extra=""):
 
 def cart(x,y,color,lid,s=1,recycle=False):
     s=sc(s)
+    place("cart",x-60*s,y-204*s,x+60*s,y+18*s,size=210*s)
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=f'<g transform="translate({x},{y}) scale({s})"><ellipse cx="0" cy="4" rx="70" ry="9" fill="#000" opacity=".14"/>'
     g+=f'<path d="M-52,-170 L52,-170 L44,-10 L-44,-10 Z" fill="{color}" {o}/><path d="M-52,-170 L-30,-170 L-24,-10 L-44,-10 Z" fill="#fff" opacity=".12"/>'
@@ -175,6 +230,7 @@ def tape(x1,y1,x2,y2,sag=14):
 def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin=SKIN_DARK):
     s=sc(s)
     """A cyclist seen from the side, standing on the ground at (x, y), facing right unless flipped."""
+    place("bike",x-72*s,y-160*s,x+72*s,y+4*s,size=144*s)
     o=f'stroke="{NAVY}" stroke-linejoin="round" stroke-linecap="round"'
     sx=-s if flip else s
     g=[f'<g transform="translate({x},{y}) scale({sx},{s})"><ellipse cx="0" cy="2" rx="62" ry="7" fill="#000" opacity=".14"/>']
@@ -190,12 +246,19 @@ def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin=SKIN_DARK):
     return "".join(g)
 
 def calendar_page(x,y,month,day,w=230,h=250):
-    """A wall-calendar page with its top-left corner at (x, y): the month on a red band, the day large."""
-    return (f'<g transform="translate({x},{y})"><rect x="0" y="0" width="{w}" height="{h}" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
-            f'<rect x="0" y="0" width="{w}" height="60" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/>'
-            f'<text x="{w/2:g}" y="42" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="34" fill="#fff">{month}</text>'
-            f'<text x="{w/2:g}" y="{h-60:g}" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="120" fill="{NAVY}">{day}</text>'
-            f'<circle cx="{w*.226:.0f}" cy="2" r="9" fill="{NAVY}"/><circle cx="{w*.774:.0f}" cy="2" r="9" fill="{NAVY}"/></g>')
+    """A wall-calendar page with its top-left corner at (x, y): the label centred on a red header band,
+    the day large and centred in the white area below it, with even clear space all round."""
+    place("calendar",x,y,x+w,y+h)
+    hb=round(.26*w); free=(x,y+hb,x+w,y+h)
+    ink=lambda s,sz: measure.ink_box(s,sz)
+    unit=ink(day,100)  # size the day so its ink fills .5 of the white area's height, or .72 of its width
+    size=min(.5*(h-hb)/(unit[3]-unit[1]), .72*w/(unit[2]-unit[0]))*100
+    label=min(.148*w, .62*hb/((ink(month,100)[3]-ink(month,100)[1])/100))
+    return (f'<g><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{hb}" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/>'
+            +text_in(month,(x,y,x+w,y+hb),label,fill="#fff")
+            +text_in(day,free,size)
+            +f'<circle cx="{x+w*.226:.0f}" cy="{y+2}" r="9" fill="{NAVY}"/><circle cx="{x+w*.774:.0f}" cy="{y+2}" r="9" fill="{NAVY}"/></g>')
 
 def roast_turkey(x,y,s=1):
     """A roast turkey on its platter, the platter's centre at (x, y)."""

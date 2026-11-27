@@ -43,9 +43,9 @@ PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most on
 # The most previews that may exist at once (folders, and Caddy blocks): the cap, defined here and nowhere
 # else (#1076). The preview workflow reads it from this file, the wrapper and the Caddy script enforce it on
 # the server. It is also bounded by the certificate budget: each block orders a certificate from a weekly
-# budget production shares (ops/previews.md, "Certificate budget"). One until the server's memory and disk
-# are measured with a preview running (ops/previews.md, "The cap"): raise it in one line, here, afterwards.
-PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"
+# budget production shares (ops/previews.md, "Certificate budget"). Two, as measured on the server
+# with previews running (ops/previews.md, "The cap"); change it in this one line.
+PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-2}"
 # The free disk space a preview may never take the server below, in KiB: production's own floor. The production
 # deploy's preflight refuses to start with less than this (a test keeps this equal to the number in
 # .github/workflows/deploy.yml), so a preview that left less would stop the next production deploy.
@@ -77,6 +77,16 @@ PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
 # Production's private places and Caddy's admin port: what the preview account must not reach (#1346,
 # ops/preview-isolation-check.sh proves it after every preview deploy; ops/preview-host-guards.sh makes it so).
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
+# The off-site backup's files (#1332, ops/offsite-backup.md): root-only, outside the app's folders. The folder holds the
+# Drive credential, so the preview isolation check proves a preview account can neither enter it nor read its log.
+OFFSITE_DIR="${OFFSITE_DIR:-/etc/sprecher-east}"
+OFFSITE_RCLONE_CONF="${OFFSITE_RCLONE_CONF:-$OFFSITE_DIR/offsite-rclone.conf}"
+OFFSITE_TRIED_MARK="${OFFSITE_TRIED_MARK:-$OFFSITE_DIR/offsite-tried}" # fingerprint of the credential and key last tried
+OFFSITE_LOG="${OFFSITE_LOG:-/var/log/sprecher-east-offsite-backup.log}"
+OFFSITE_CRON_FILE="${OFFSITE_CRON_FILE:-/etc/cron.d/sprecher-east-offsite-backup}"
+OFFSITE_STATUS="${OFFSITE_STATUS:-$BACKUP_ROOT/offsite-status}" # how the last run went, for `check`
+OFFSITE_LOCK="${OFFSITE_LOCK:-$BACKUP_ROOT/.offsite.lock}"
+OFFSITE_SHA_LIST="${OFFSITE_SHA_LIST:-$BACKUP_ROOT/offsite-sha256}" # the SHA-256 of each sealed copy in Drive, "<hash>  <name>"
 PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state
 # Where PM2 writes production's logs (sprecher-east-out.log and -error.log). ecosystem.config.cjs falls
 # back to the same folder when PM2_LOG_DIR is not set, and a test ties the two. A preview's logs go in its

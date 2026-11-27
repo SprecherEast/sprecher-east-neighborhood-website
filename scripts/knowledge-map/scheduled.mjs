@@ -50,10 +50,16 @@ export function buildScheduledTasks({ page, extras, groupId }) {
       facts: task.facts,
     })
   }
+  const perScript = new Map()
   for (const cron of extras.serverCrons) {
+    // One node for each cron line, named for the script that installs it; a script with a second line gets -2, -3.
+    const script = cron.file.split('/').pop().replace(/\.sh$/, '')
+    const count = (perScript.get(script) ?? 0) + 1
+    perScript.set(script, count)
+    const suffix = count > 1 ? `-${count}` : ''
     add({
-      id: nodeId('scheduled-task', 'server-cron'),
-      name: 'Server cron',
+      id: nodeId('scheduled-task', `server-cron-${slug(script)}${suffix}`),
+      name: `Server cron (${script}${suffix})`,
       summary: 'Installed on the server by the ops scripts.',
       path: cron.file,
       facts: [

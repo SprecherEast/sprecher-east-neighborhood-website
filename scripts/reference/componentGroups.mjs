@@ -27,6 +27,13 @@ export const COMPONENT_GROUPS = [
     ],
   },
   {
+    slug: 'switches',
+    title: 'Switches',
+    intro:
+      'An on or off switch: `Switch` with its label beside it, `Field.Switch` inside a `Field`, and the track and thumb they share.',
+    components: ['Switch', 'SwitchControl', 'FieldSwitch'],
+  },
+  {
     slug: 'cards',
     title: 'Cards',
     intro: 'The one card, its parts, and the grid that lays cards out.',
