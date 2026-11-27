@@ -17,6 +17,17 @@ const canRender =
     },
   ).status === 0
 
+// The golden hashes below depend on the font's real measures (a centred calendar page); CI has no Poppins.
+const hasFont =
+  spawnSync(
+    'python3',
+    [
+      '-c',
+      'from scripts.illustrations.measure import has_font as h; raise SystemExit(0 if h() else 1)',
+    ],
+    { cwd: process.cwd() },
+  ).status === 0
+
 const run = (code) => spawnSync('python3', ['-c', code], { encoding: 'utf8', cwd: process.cwd() })
 
 const FIND = `
@@ -160,18 +171,21 @@ print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.
   // Golden hashes of the two published pictures that show a calendar page. They changed once, on
   // purpose, when the calendar page's number and label were centred by their ink (#1561, the owner's
   // direction of 2026-11-27); any later change to a part's drawing must update these on purpose.
-  it('keeps the published trash and Thanksgiving pictures exactly as drawn', () => {
-    const r = run(
-      `import hashlib
+  it.skipIf(!hasFont)(
+    'keeps the published trash and Thanksgiving pictures exactly as drawn',
+    () => {
+      const r = run(
+        `import hashlib
 from scripts.illustrations.scenes import SCENES
 for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
-    )
-    expect(r.stderr).toBe('')
-    expect(r.stdout.trim().split('\n')).toEqual([
-      '274cdc7bea2c89ce77d8ec16fc876502a4079add9059acd161f2ffeb38ac1a19',
-      '5ad2fe2309ec6d1680835bd3b6aec5e71049dd86e27e85289aa17589784f84af',
-    ])
-  })
+      )
+      expect(r.stderr).toBe('')
+      expect(r.stdout.trim().split('\n')).toEqual([
+        '274cdc7bea2c89ce77d8ec16fc876502a4079add9059acd161f2ffeb38ac1a19',
+        '5ad2fe2309ec6d1680835bd3b6aec5e71049dd86e27e85289aa17589784f84af',
+      ])
+    },
+  )
 
   // Golden hashes of the drop-off and youth grants pictures, pinned before the shared road part
   // replaced the road each of them drew itself, so that refactor changed nothing.

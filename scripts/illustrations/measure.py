@@ -18,6 +18,11 @@ def _font(weight, size):
         return None
 
 
+def has_font():
+    """True when the Poppins file is installed, so measures are real and not the fallback."""
+    return _font("bold", 10) is not None
+
+
 def ink_box(text, size, weight="bold"):
     """The ink of `text` as (left, top, right, bottom) relative to the point where its baseline
     starts, in pixels of `size`. Top is negative: ink rises above the baseline."""
