@@ -1156,8 +1156,57 @@
         {
           "name": "Field.Switch",
           "description": "",
-          "props": [],
-          "inherited": 0
+          "props": [
+            {
+              "name": "checked",
+              "type": "boolean",
+              "optional": true,
+              "doc": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+              "variant": false,
+              "options": null
+            },
+            {
+              "name": "value",
+              "type": "string",
+              "optional": true,
+              "doc": "What a form receives when the switch is on (`on` when left out)",
+              "variant": false,
+              "options": null
+            },
+            {
+              "name": "defaultChecked",
+              "type": "boolean",
+              "optional": true,
+              "doc": "On or off to start with, when the switch keeps its own value",
+              "variant": false,
+              "options": null
+            },
+            {
+              "name": "disabled",
+              "type": "boolean",
+              "optional": true,
+              "doc": "Greys the switch out and stops it taking a press or a key",
+              "variant": false,
+              "options": null
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "optional": true,
+              "doc": "The name the value is sent under in a form",
+              "variant": false,
+              "options": null
+            },
+            {
+              "name": "onCheckedChange",
+              "type": "(checked: boolean) => void",
+              "optional": true,
+              "doc": "Called with the new value each time the switch is turned",
+              "variant": false,
+              "options": null
+            }
+          ],
+          "inherited": 286
         }
       ],
       "usedBy": {
@@ -1507,7 +1556,7 @@
           "options": null
         }
       ],
-      "inheritedProps": 0,
+      "inheritedProps": 287,
       "parts": [],
       "usedBy": {
         "count": 1,
@@ -1571,7 +1620,7 @@
           "options": null
         }
       ],
-      "inheritedProps": 0,
+      "inheritedProps": 287,
       "parts": [],
       "usedBy": {
         "count": 1,
@@ -1585,8 +1634,57 @@
       "groupTitle": "Switches",
       "file": "src/platform/ui/FieldSwitch.client.tsx",
       "description": "An on or off switch for a form; place it inside a `Field`, which then lays out inline with the label after the switch. With react-hook-form, render it through a `Controller` (`checked`, `onCheckedChange`).",
-      "props": [],
-      "inheritedProps": 0,
+      "props": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "optional": true,
+          "doc": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "variant": false,
+          "options": null
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": true,
+          "doc": "What a form receives when the switch is on (`on` when left out)",
+          "variant": false,
+          "options": null
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "optional": true,
+          "doc": "On or off to start with, when the switch keeps its own value",
+          "variant": false,
+          "options": null
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "optional": true,
+          "doc": "Greys the switch out and stops it taking a press or a key",
+          "variant": false,
+          "options": null
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": true,
+          "doc": "The name the value is sent under in a form",
+          "variant": false,
+          "options": null
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "optional": true,
+          "doc": "Called with the new value each time the switch is turned",
+          "variant": false,
+          "options": null
+        }
+      ],
+      "inheritedProps": 286,
       "parts": [],
       "usedBy": {
         "count": 1,
