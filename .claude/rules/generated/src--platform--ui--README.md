@@ -99,8 +99,6 @@ paths:
   - 'src/platform/ui/ProgressBar.test.tsx'
   - 'src/platform/ui/ProgressBar.tsx'
   - 'src/platform/ui/README.md'
-  - 'src/platform/ui/README.md'
-  - 'src/platform/ui/README.md'
   - 'src/platform/ui/RelatedLinks.test.tsx'
   - 'src/platform/ui/RelatedLinks.tsx'
   - 'src/platform/ui/RouteDialog.client.test.tsx'
