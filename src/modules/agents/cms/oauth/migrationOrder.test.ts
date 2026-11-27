@@ -1,3 +1,6 @@
+import { readdirSync } from 'node:fs'
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import { migrations } from '@/migrations'
@@ -26,5 +29,11 @@ describe('the migration list', () => {
   it('names the OAuth migration later than the delete-rule migration, which is 20261126_203500', () => {
     const oauth = names.find((name) => name.endsWith('_mcp_oauth_sign_in')) ?? ''
     expect(oauth > '20261126_203500_foreign_key_delete_rules').toBe(true)
+  })
+
+  it('keeps only migrations in the folder, because Payload imports every file there at start-up', () => {
+    // A test file in that folder crashed the server at start-up (vitest globals are missing there).
+    const files = readdirSync(path.join(process.cwd(), 'src/migrations'))
+    expect(files.filter((file) => /\.(test|spec)\./.test(file))).toEqual([])
   })
 })
