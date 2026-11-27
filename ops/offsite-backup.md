@@ -78,19 +78,32 @@ numbers up against the step's limit).
   or a setting before the section is refused, because rclone keeps the last value and `type = local` would keep the
   "backup" on the server's own disk. The file stored is written from the checked values, not the text received.
   The `token` must be one line of JSON with a non-empty `access_token` and `refresh_token` and an `expiry` that is
-  an RFC 3339 date (fractional seconds are fine): that is what rclone 1.76.0 needs to keep refreshing it. Google's raw
-  sign-in response (it has `expires_in`, no `expiry`) is refused. A value never appears in a message.
+  a real RFC 3339 date in the years 2000 to 2100 (fractional seconds are fine; 31 February, hour 24 and Go's zero time
+  are refused): that is what rclone 1.76.0 needs to keep refreshing it. Google's raw sign-in response (it has
+  `expires_in`, no `expiry`) is refused, and so is a name given twice in different capitals (Go's JSON reader matches
+  names without regard to case and keeps the last). The token stored is written from the checked fields only
+  (`access_token`, `token_type`, `refresh_token`, `expiry`). A value never appears in a message.
 - **The `scope = drive.file` line proves nothing.** Google fixes the scope when the owner signs in, and a sign-in with
   full Drive access written as `scope = drive.file` would pass the file check. So the first try (`test`) asks Google's
   token-info endpoint what the access token was granted, after the upload (so an expired token has been refreshed), and
-  accepts only exactly `drive.file`. Anything else, or no answer, fails the try with a warning that names no value, and
-  the job is not installed.
-- It stores the file as `/etc/sprecher-east/offsite-rclone.conf` (mode 600 in a mode 700 folder, replaced in one
-  rename; nothing is made before a key and a credential both exist), installs rclone **1.76.0** from rclone's `.deb`
-  after its SHA-256 matches the one in `offsite-lib.sh` (`dpkg -i`; an installed 1.76.0 is left alone), makes the log
-  root-only, tries the credential **once per credential and key** with a small made-up file, and **only after that
-  passes** installs the weekly job (`umask 077` in its line). A credential that fails is never scheduled; a job that is
-  already installed stays when a later try fails (a Drive outage must not stop the backups), and each deploy warns with the reason.
+  accepts only exactly `https://www.googleapis.com/auth/drive.file`. Any other scope, or an answer with no scope, is a
+  refusal and the credential is thrown away (below). No answer, or one that cannot be read, fails the try without
+  throwing anything away. Every warning names no value. This is a POST with the token in the body to Google's
+  `tokeninfo` endpoint, which Google documents for diagnostics with GET; the first real deploy (#1549) is what proves
+  the POST form, and a failure there is fail-closed and tried again at the next deploy.
+- **A new credential is tried from a staging file and promoted only when it passes.** It is written to a root-only
+  staging file in `/etc/sprecher-east/` (mode 600 in a mode 700 folder, tightened if the folder already existed),
+  tried there, and renamed over `/etc/sprecher-east/offsite-rclone.conf` only when the try passes. When Google says its
+  scope is wrong, the staging file is deleted: on a first install nothing is stored and no job is installed, and when
+  it replaces a working credential the stored credential and the weekly job stay as they were. Any other failure
+  (Drive down, a timeout) also keeps the stored credential and job and deletes the staging file; the secret brings
+  the credential again and it is tried at the next deploy (a Drive outage must not stop the backups), with a warning
+  each time. The staging file is removed even when the run is killed.
+- It installs rclone **1.76.0** from rclone's `.deb` after its SHA-256 matches the one in `offsite-lib.sh` (`dpkg -i`;
+  an installed 1.76.0 is left alone), makes the log root-only, tries the credential **once per credential and key**
+  with a small made-up file, and **only after that passes** installs the weekly job (`umask 077` in its line). A
+  credential that fails its first try is never scheduled on a first install. `curl` runs with `-q`, so no `.curlrc`
+  changes it.
 - Until the key and the credential both exist it installs nothing, uploads nothing and says which is missing.
   The job itself exits 78 ("not set up") the same way and never uploads without the key.
 - **Undo without a shell:** an empty secret removes the stored credential and the weekly job at the next deploy;
@@ -101,10 +114,15 @@ numbers up against the step's limit).
 
 Every deploy runs `offsite-backup.sh check` and shows the state as **warning annotations** on its run, and the deploy
 **stays green**: the age of the newest copy, how the last weekly run went, and any problem with the credential or
-the first try. A failed or stale backup never stalls a merge. The owner has been asked whether he wants a stronger
-signal (a red deploy, or an issue opened automatically): the options are on #1332. A scheduled check that does not
-wait for a deploy would need a workflow to name the `production` environment, which
-`.github/scripts/deploy-secrets-environment.test.mjs` forbids on purpose.
+the first try. A failed or stale backup never stalls a merge.
+
+**Open: a louder alert.** The owner decided (2026-11-27, recorded on #1332) that a failed or stale backup must raise a
+loud alert to him, not only a log line or a warning on a deploy. The repository has no owner alert for server jobs
+today: its only signals are the annotations above and GitHub's own failed-run emails. The smallest way to get one is
+a scheduled GitHub Actions workflow that runs the read-only `check` over the deploy's SSH access and fails when it
+fails, so GitHub emails the owner. It would need to name the `production` environment, which
+`.github/scripts/deploy-secrets-environment.test.mjs` forbids on purpose, so it is a policy change proposed on #1332
+and waits for his answer. Until then the signal is the annotations.
 
 ## Changes to the server and how to undo them
 
@@ -146,13 +164,20 @@ and cannot. On a Mac: `brew install openssl@3`, then name it:
 `OFFSITE_OPENSSL="$(brew --prefix openssl@3)/bin/openssl" bash offsite-restore.sh ...`. The script checks and says so.
 Linux: any current distribution; Windows: Git Bash's OpenSSL 3 or WSL. (Tested on Linux with OpenSSL 3.0.13 only.)
 
+The script runs on the `bash` macOS ships (3.2): it uses no bash 4 feature, and a test runs it with `mapfile` and
+`readarray` switched off and bash's 3.2 compatibility mode on.
+
 The private key never goes to the server, Drive, the repository or a chat. His key is a plain, unencrypted
 PKCS#8 file kept in the password manager, so it goes into a file **only for the restore**, and that file alone opens every
 copy:
 
-- Make the file empty with mode 600 first (`install -m 600 /dev/null ~/restore-key.pem`), then paste the key into it,
-  in a folder that is **not synced** (not Google Drive for desktop's folder, not iCloud, Dropbox or a backup folder).
-- Delete it right after the restore (`shred -u ~/restore-key.pem` where `shred` exists, otherwise `rm -P` on a Mac or `rm`).
+- Make the file empty with mode 600 first (`install -m 600 /dev/null ~/restore-key.pem`), then write the key straight
+  from the clipboard (`pbpaste > ~/restore-key.pem` on a Mac), in a folder that is **not synced** (not Google Drive for
+  desktop's folder, not iCloud, Dropbox or a backup folder). Do not paste it into an editor: editors leave autosave and
+  recovery copies.
+- Delete it right after the restore (`shred -u ~/restore-key.pem` where `shred` exists, otherwise `rm`; `rm -P` does
+  nothing on current macOS). On a modern disk deleting does not overwrite the bytes, which is why the key never
+  goes into a synced or backed-up place.
 
 1. **Get a copy.** Download `sprecher-east-<time>.tar.gz.cms` from the Drive folder `sprecher-east-backups` into a new,
    empty folder. (If Google Drive for desktop syncs that folder it is already on the computer.)
@@ -168,9 +193,11 @@ copy:
    ```
 
    It refuses a wrong key or a copy that was changed or damaged (nothing is written then; a key with a passphrase is asked
-   for it), and then reads the opened archive member by member: only `payload.db`, `env.local` and plain files and
+   for it), accepts only a file named like the job's own copies (`sprecher-east-<time>.tar.gz.cms`), and then reads
+   the opened archive member by member, always: only `payload.db`, `env.local` and plain files and
    folders under `media/` pass. A link, a device, a setuid bit, an absolute or parent path, a backslash in a name or any
-   other name is refused, and nothing is written. It writes `sprecher-east-<time>.tar.gz` readable by you only. It holds
+   other name is refused, and nothing is written. It prints "Checked" only after that check passed, and says whether the SHA-256 was compared. It writes
+   `sprecher-east-<time>.tar.gz` readable by you only. It holds
    residents' emails and the site's secrets; delete it afterwards.
 
 4. **Put it on the server** with `scp` into `/root/`, then follow
@@ -182,10 +209,11 @@ copy:
 
 ### How big a copy can be opened
 
-Free memory needed to open a copy is about **three times its size**. A 1 GB copy needs about 3 GB free. If a copy
-grows past what the owner's computer can hold, the options are splitting the archive into chunks sealed one by one
-with a sealed list of their checksums (a new file format, and so a decision for the owner), or opening on a larger
-machine. No stock OpenSSL option streams the opening (measured 2026-11-26). The job's warning names the size.
+Free memory needed to open a copy is about **three times its size**. A 1 GB copy needs about 3 GB free. The owner
+decided (2026-11-27, recorded on #1332) not to split archives into chunks (a new file format): the job warns above 1 GiB
+and names the size, so that warning is the watch on the size. If a copy ever grows past what the
+owner's computer can hold, he can open it on a larger machine. No stock OpenSSL option streams the opening (measured
+2026-11-26).
 
 The tests (`offsite-backup.test.mjs`) run the whole round trip with a throwaway key pair and a local stand-in for
 rclone, including a wrong key, a one-byte change, an old OpenSSL, and what the job refuses.

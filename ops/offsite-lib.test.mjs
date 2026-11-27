@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { makeKeyPair } from './offsite-harness.mjs'
+import { makeKeyPair, sealWithJobCommand } from './offsite-harness.mjs'
 
 const OPS = path.dirname(fileURLToPath(import.meta.url))
 const COMMITTED = path.join(OPS, 'offsite-backup-cert.pem')
@@ -45,33 +45,33 @@ describe("the owner's public certificate, as committed", () => {
     expect(text).not.toContain('PRIVATE')
   })
 
-  it('is a certificate a file can be sealed to with the job command, and cannot be opened with', () => {
+  it('is a certificate a file can be sealed to with the job command (offsite_seal), and a copy that another key cannot open', () => {
     fs.writeFileSync(p('plain.txt'), 'a test file')
-    execFileSync(
-      'openssl',
-      [
-        'cms',
-        '-encrypt',
-        '-aes-256-gcm',
-        '-binary',
-        '-outform',
-        'DER',
-        '-in',
-        p('plain.txt'),
-        '-out',
-        p('sealed.cms'),
-        '-recip',
-        COMMITTED,
-        '-keyopt',
-        'rsa_padding_mode:oaep',
-        '-keyopt',
-        'rsa_oaep_md:sha256',
-        '-keyopt',
-        'rsa_mgf1_md:sha256',
-      ],
-      { stdio: 'ignore' },
-    )
+    sealWithJobCommand(COMMITTED, p('plain.txt'), p('sealed.cms'))
     expect(fs.statSync(p('sealed.cms')).size).toBeGreaterThan(0)
+    expect(fs.readFileSync(p('sealed.cms')).includes('a test file')).toBe(false)
+    expect(() =>
+      execFileSync(
+        'openssl',
+        [
+          'cms',
+          '-decrypt',
+          '-binary',
+          '-inform',
+          'DER',
+          '-in',
+          p('sealed.cms'),
+          '-inkey',
+          keys.key,
+          '-out',
+          p('opened.txt'),
+        ],
+        { stdio: 'ignore' },
+      ),
+    ).toThrow()
+    expect(
+      fs.existsSync(p('opened.txt')) ? fs.readFileSync(p('opened.txt'), 'utf8') : '',
+    ).not.toContain('a test file')
   })
 })
 

@@ -2,12 +2,11 @@
 // `sha256sum` are stand-ins (no network, no package is installed), `rclone` is the local stand-in from
 // offsite-harness.mjs, and the credential below is made up. The real rclone and Drive are checked on the server.
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { makeKeyPair, setUpOffsiteHarness } from './offsite-harness.mjs'
+import { setUpOffsiteHarness } from './offsite-harness.mjs'
 import { OPS } from './umami-harness.mjs'
 
 const h = setUpOffsiteHarness({ install: true })
@@ -183,6 +182,94 @@ describe('the credential', () => {
       'RFC 3339',
     ],
     [
+      'an access token of only spaces',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"   ","refresh_token":"r","expiry":"2026-11-27T06:03:00Z"}',
+      ),
+      'no access_token',
+    ],
+    [
+      'a refresh token of only spaces',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"  ","expiry":"2026-11-27T06:03:00Z"}',
+      ),
+      'no refresh_token',
+    ],
+    [
+      'a character before the expiry date',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"x2026-11-27T06:03:00Z"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      'a character after the expiry date',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"2026-11-27T06:03:00Zx"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      'an expiry on a day that does not exist',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"2026-02-31T06:03:00Z"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      'an expiry at hour 24',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"2026-11-27T24:00:00Z"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      "Go's zero time as the expiry (never refreshed)",
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"0001-01-01T00:00:00Z"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      'an expiry in year 9999',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expiry":"9999-12-31T23:59:59Z"}',
+      ),
+      'RFC 3339',
+    ],
+    [
+      'a refresh token blanked by a key spelled in another case',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","REFRESH_TOKEN":"","expiry":"2026-11-27T06:03:00Z"}',
+      ),
+      'same setting twice',
+    ],
+    [
+      'a token type that is not text',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","token_type":5,"refresh_token":"r","expiry":"2026-11-27T06:03:00Z"}',
+      ),
+      'wrong type',
+    ],
+    [
+      'an expires_in that is not a number',
+      GOOD.replace(
+        TOKEN_JSON,
+        '{"access_token":"a","refresh_token":"r","expires_in":"x","expiry":"2026-11-27T06:03:00Z"}',
+      ),
+      'wrong type',
+    ],
+    [
       'a token spread over two lines',
       GOOD.replace(TOKEN_JSON, '{"access_token":"a",\n "refresh_token":"r"}'),
       'not a setting',
@@ -245,7 +332,8 @@ describe('the credential', () => {
     expect(fs.existsSync(cronFile())).toBe(false)
   })
 
-  it('leaves no copy of the credential behind when the run is killed in the middle of writing it', async () => {
+  it('leaves no copy of the credential behind when the run is killed while it is being put in place', async () => {
+    seedDrive(1)
     h.stub('mv', 'kill -TERM "$PPID"; sleep 2')
     await install()
     expect(fs.readdirSync(h.p('etc')).filter((n) => n.startsWith('.offsite-rclone.'))).toEqual([])
@@ -408,14 +496,9 @@ describe('the weekly job and the first try', () => {
     seedDrive(1)
     await install()
     const before = copies()
-    const other = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-newkey-'))
-    try {
-      fs.copyFileSync(makeKeyPair(other).cert, h.p('code/ops/offsite-backup-cert.pem'))
-      expect((await install()).code).toBe(0)
-      expect(copies()).toBe(before + 1)
-    } finally {
-      fs.rmSync(other, { recursive: true, force: true })
-    }
+    fs.copyFileSync(h.otherKeys.cert, h.p('code/ops/offsite-backup-cert.pem'))
+    expect((await install()).code).toBe(0)
+    expect(copies()).toBe(before + 1)
   })
 
   it('warns with the reason, without failing the deploy, when the test upload fails, and tries again next time', async () => {
@@ -516,7 +599,9 @@ describe('the scope the sign-in was granted (asked of Google, never read from th
       '{"scope":"https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata"}',
     ],
     ['another narrow scope', '{"scope":"https://www.googleapis.com/auth/drive.readonly"}'],
+    ['a bare drive.file with no URL', '{"scope":"drive.file"}'],
     ['no scope in the answer', '{"expires_in":"3000"}'],
+    ['an error answer', '{"error":"invalid_token"}'],
     ['an answer that is not JSON', 'not json'],
   ])(
     'refuses %s even though the file says scope = drive.file: not tried, not scheduled, no value shown',
@@ -525,7 +610,7 @@ describe('the scope the sign-in was granted (asked of Google, never read from th
       const { code, out } = await install({ STUB_TOKENINFO_ANSWER: answer })
       expect(code).toBe(0)
       expect(out).toContain('::warning')
-      expect(out).toMatch(/granted more than drive\.file|could not be read/)
+      expect(out).toMatch(/granted more than drive\.file|did not say what scope|could not be read/)
       expect(out).not.toContain(TOKEN)
       expect(fs.existsSync(h.p('etc/offsite-tried'))).toBe(false)
       expect(fs.existsSync(cronFile())).toBe(false)
@@ -600,5 +685,126 @@ describe('time and environment', () => {
     expect(out).toContain('symbolic link')
     expect(out).not.toContain('is missing')
     expect(fs.existsSync(cronFile())).toBe(false)
+  })
+})
+
+describe('a credential that is new is tried from a staging file and promoted only when it passes', () => {
+  const stored = () => fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')
+  const staged = () => fs.readdirSync(h.p('etc')).filter((n) => n.startsWith('.offsite-rclone.'))
+  const NEW = GOOD.replace('fake-refresh', 'a-new-sign-in')
+  const WIDE = { STUB_TOKENINFO_ANSWER: '{"scope":"https://www.googleapis.com/auth/drive"}' }
+
+  it('first install, scope refused: nothing is stored, no job, and the warning says so', async () => {
+    seedDrive(1)
+    const { code, out } = await install(WIDE)
+    expect(code).toBe(0)
+    expect(out).toContain('granted more than drive.file')
+    expect(out).toContain('nothing was stored')
+    expect(out).not.toContain('not installed until')
+    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
+    expect(staged()).toEqual([])
+    expect(fs.existsSync(cronFile())).toBe(false)
+    expect(fs.existsSync(h.p('etc/offsite-tried'))).toBe(false)
+  })
+
+  it('rotation, scope refused: the working credential and job stay, the refused one is gone', async () => {
+    seedDrive(1)
+    expect((await install()).code).toBe(0)
+    const before = stored()
+    const { code, out } = await install(WIDE, NEW)
+    expect(code).toBe(0)
+    expect(out).toContain('granted more than drive.file')
+    expect(out).toContain('stay as they were')
+    expect(stored()).toBe(before)
+    expect(stored()).not.toContain('a-new-sign-in')
+    expect(staged()).toEqual([])
+    expect(fs.existsSync(cronFile())).toBe(true)
+  })
+
+  it('rotation, a Drive failure: the old credential and job stay, nothing of the new one is kept, and the next deploy tries again', async () => {
+    seedDrive(1)
+    expect((await install()).code).toBe(0)
+    const before = stored()
+    const failed = await install({ MOCK_FAIL: 'copyto' }, NEW)
+    expect(failed.code).toBe(0)
+    expect(failed.out).toContain('did not pass the first try')
+    expect(failed.out).toContain('tried again on the next deploy')
+    expect(stored()).toBe(before)
+    expect(staged()).toEqual([])
+    expect(fs.existsSync(cronFile())).toBe(true)
+    const again = await install({}, NEW)
+    expect(again.code).toBe(0)
+    expect(stored()).toContain('a-new-sign-in')
+  })
+
+  it('first install, a Drive failure: nothing is stored and no job', async () => {
+    seedDrive(1)
+    const { code, out } = await install({ MOCK_FAIL: 'copyto' })
+    expect(code).toBe(0)
+    expect(out).toContain('did not pass the first try')
+    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
+    expect(staged()).toEqual([])
+    expect(fs.existsSync(cronFile())).toBe(false)
+  })
+
+  it('rotation that passes: the new credential replaces the old and is marked as tried', async () => {
+    seedDrive(1)
+    expect((await install()).code).toBe(0)
+    const { code } = await install({}, NEW)
+    expect(code).toBe(0)
+    expect(stored()).toContain('a-new-sign-in')
+    expect(staged()).toEqual([])
+    expect(mode('etc/offsite-rclone.conf')).toBe('600')
+  })
+})
+
+describe('what the installer needs of its own tools and folders', () => {
+  it('refuses a credential, and stores nothing, when Node cannot check the token', async () => {
+    h.stub('node', 'exit 127')
+    const { code, out } = await install()
+    expect(code).toBe(0)
+    expect(out).toContain('Node is needed on the server')
+    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
+    expect(fs.existsSync(cronFile())).toBe(false)
+  })
+
+  it('stores the token as canonical JSON of the checked fields only', async () => {
+    seedDrive(1)
+    const token =
+      '{"access_token":"a","token_type":"Bearer","refresh_token":"r","expires_in":3599,"expiry":"2026-11-27T06:03:00Z","extra":"x"}'
+    expect((await install({}, GOOD.replace(TOKEN_JSON, token))).code).toBe(0)
+    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).toContain(
+      'token = {"access_token":"a","token_type":"Bearer","refresh_token":"r","expiry":"2026-11-27T06:03:00Z"}\n',
+    )
+  })
+
+  it('makes the credential folder root-only even when it already exists with a wider mode', async () => {
+    seedDrive(1)
+    fs.mkdirSync(h.p('etc'), { mode: 0o755 })
+    fs.chmodSync(h.p('etc'), 0o755)
+    expect((await install()).code).toBe(0)
+    expect(mode('etc')).toBe('700')
+  })
+
+  it('downloads the package with the time limit from the setting, and ignores a .curlrc', async () => {
+    seedDrive(1)
+    await install({ OFFSITE_DOWNLOAD_SECONDS: '77' })
+    const line = stubLog()
+      .split('\n')
+      .find((l) => l.includes('.deb'))
+    expect(line).toContain('--max-time 77')
+    expect(line).toMatch(/^curl -q /)
+  })
+
+  it('asks Google over https only, at TLS 1.2 or later, with a time limit, ignoring a .curlrc', async () => {
+    seedDrive(1)
+    await install()
+    const line = stubLog()
+      .split('\n')
+      .find((l) => l.includes('tokeninfo'))
+    expect(line).toMatch(/^curl -q /)
+    expect(line).toContain('--proto =https')
+    expect(line).toContain('--tlsv1.2')
+    expect(line).toContain('--max-time 20')
   })
 })

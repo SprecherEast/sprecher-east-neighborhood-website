@@ -14,14 +14,16 @@
 # public key in the release (ops/offsite-backup-cert.pem), the credential, and rclone. With any piece missing the
 # script says which one in a notice. Nothing is created on the server before the key and a credential both exist.
 #   1. check the public key (offsite-lib.sh): one RSA certificate, no private key
-#   2. check the credential and store it, written from the checked values (offsite-lib.sh), in a root-only file in a
-#      root-only folder, under a temporary name that is renamed (and removed if the run is killed)
+#   2. check the credential and write it, from the checked values (offsite-lib.sh), to a root-only STAGING file in a
+#      root-only folder (removed whatever happens). The stored credential is not touched yet
 #   3. install rclone from the pinned package, after checking its SHA-256 (a version already there is kept)
-#   4. try the credential once with a small made-up file (offsite-backup.sh test), for each new credential or key; the
-#      test also asks Google what scope the sign-in was granted and accepts only drive.file
-#   5. install the weekly job in /etc/cron.d (rewritten only when it would change), and only after that first try has
-#      passed, so a credential that fails is never scheduled. A job that is already installed stays when a later try
-#      fails (a Drive outage must not stop the backups); the deploy warns with the reason every time until it passes
+#   4. try the staged credential once with a small made-up file (offsite-backup.sh test), for each new credential or
+#      key; the test also asks Google what scope the sign-in was granted and accepts only drive.file. Only a credential
+#      that passes is renamed into place. One that Google says has the wrong scope is deleted. Any other failure keeps
+#      the stored credential and the installed job as they were (a Drive outage must not stop the backups) and the new
+#      one is tried again on the next deploy; the deploy warns with the reason every time until it passes
+#   5. install the weekly job in /etc/cron.d (rewritten only when it would change), and only after the first try has
+#      passed, so a credential that fails is never scheduled
 #   6. run the check (offsite-backup.sh check): the newest copy in Drive is recent and the last run went well
 # Roll back: ops/offsite-backup.md, "Changes to the server and how to undo them".
 set -Eeuo pipefail
@@ -35,9 +37,11 @@ BACKUP_SCRIPT="$APP_DIR/current/ops/offsite-backup.sh"
 umask 077
 
 tmp=""
+staging="" # the new credential, until it has passed its first try
 download=""
 cleanup() {
   [ -z "$tmp" ] || rm -f "$tmp"
+  [ -z "$staging" ] || rm -f "$staging"
   [ -z "$download" ] || rm -rf "$download"
 }
 trap cleanup EXIT
@@ -78,7 +82,8 @@ if problem=$(offsite_cert_problem "$OFFSITE_CERT"); then :; else
   give_up "$problem; the weekly job was taken away"
 fi
 
-# --- 2. the credential. An empty secret means "none": the stored one and the job go.
+# --- 2. the credential. An empty secret means "none": the stored one and the job go. A new one goes to a staging file.
+candidate=""
 if [ "$have_stdin" = yes ] && [ -z "${config_stdin//[[:space:]]/}" ]; then
   if [ -f "$OFFSITE_RCLONE_CONF" ]; then
     rm -f "$OFFSITE_RCLONE_CONF" "$OFFSITE_TRIED_MARK"
@@ -91,13 +96,17 @@ elif [ -n "$config_stdin" ]; then
   fi
   mkdir -p "$OFFSITE_DIR"
   chmod 700 "$OFFSITE_DIR"
-  tmp=$(mktemp "$OFFSITE_DIR/.offsite-rclone.XXXXXX")
-  printf '%s' "$OFFSITE_CONF_CANONICAL" >"$tmp"
-  chmod 600 "$tmp"
-  mv -f "$tmp" "$OFFSITE_RCLONE_CONF"
-  tmp=""
+  staging=$(mktemp "$OFFSITE_DIR/.offsite-rclone.XXXXXX")
+  printf '%s' "$OFFSITE_CONF_CANONICAL" >"$staging"
+  chmod 600 "$staging"
 fi
-if [ ! -f "$OFFSITE_RCLONE_CONF" ]; then
+# The credential to try: the new one in its staging file, or the one already stored. Nothing replaces the stored
+# credential until the new one has passed (step 4).
+if [ -n "$staging" ]; then
+  candidate="$staging"
+elif [ -f "$OFFSITE_RCLONE_CONF" ]; then
+  candidate="$OFFSITE_RCLONE_CONF"
+else
   remove_job
   report "off-site backup is not set up: the Drive credential (the OFFSITE_BACKUP_RCLONE_CONF secret) has not been set yet"
   exit 0
@@ -114,7 +123,7 @@ if [ "$(installed_version)" != "$OFFSITE_RCLONE_VERSION" ]; then
   esac
   package="rclone-v$OFFSITE_RCLONE_VERSION-linux-$arch.deb"
   download=$(mktemp -d)
-  curl -fsSL --proto '=https' --tlsv1.2 --max-time "$OFFSITE_DOWNLOAD_SECONDS" -o "$download/$package" "$OFFSITE_RCLONE_URL/v$OFFSITE_RCLONE_VERSION/$package" ||
+  curl -q -fsSL --proto '=https' --tlsv1.2 --max-time "$OFFSITE_DOWNLOAD_SECONDS" -o "$download/$package" "$OFFSITE_RCLONE_URL/v$OFFSITE_RCLONE_VERSION/$package" ||
     give_up "downloading $package failed; nothing was installed"
   got_sha=$(sha256sum "$download/$package" | cut -d' ' -f1)
   [ "$got_sha" = "$want_sha" ] || give_up "$package does not match its pinned SHA-256; nothing was installed"
@@ -128,21 +137,44 @@ fi
 [ -e "$OFFSITE_LOG" ] || install -m 600 /dev/null "$OFFSITE_LOG"
 chmod 600 "$OFFSITE_LOG"
 
-# --- 4. try this credential and key once, with a small made-up file, so a wrong credential shows on this deploy.
-# The fingerprint holds what makes the credential and the key what they are, not the access token rclone refreshes
-# (and rewrites into the file) in every run, so a weekly run does not make the next deploy try again.
+# --- 4. try this credential and key once, with a small made-up file, so a wrong credential shows on this deploy. A new
+# credential is tried from its staging file and renamed over the stored one only when it passes. The fingerprint holds
+# what makes the credential and the key what they are, not the access token rclone refreshes (and rewrites into the
+# file) in every run, so a weekly run does not make the next deploy try again.
 fingerprint=$(
   {
-    grep -E '^(client_id|client_secret)[[:space:]]*=' "$OFFSITE_RCLONE_CONF" || true
-    grep -o '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$OFFSITE_RCLONE_CONF" || true
+    grep -E '^(client_id|client_secret)[[:space:]]*=' "$candidate" || true
+    grep -o '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$candidate" || true
     cat "$OFFSITE_CERT"
   } | sha256sum | cut -d' ' -f1
 )
-if [ "$(cat "$OFFSITE_TRIED_MARK" 2>/dev/null || true)" != "$fingerprint" ]; then
-  if timeout "$OFFSITE_TEST_TOTAL_SECONDS" bash "$BACKUP_SCRIPT" test; then
+promote() { # the staged credential replaces the stored one (one rename, same folder)
+  [ -z "$staging" ] || mv -f "$staging" "$OFFSITE_RCLONE_CONF"
+  staging=""
+}
+if [ "$(cat "$OFFSITE_TRIED_MARK" 2>/dev/null || true)" = "$fingerprint" ]; then
+  promote
+else
+  try_status=0
+  OFFSITE_RCLONE_CONF="$candidate" timeout "$OFFSITE_TEST_TOTAL_SECONDS" bash "$BACKUP_SCRIPT" test || try_status=$?
+  if [ "$try_status" = 0 ]; then
+    promote
     printf '%s\n' "$fingerprint" >"$OFFSITE_TRIED_MARK"
+  elif [ "$try_status" = "$OFFSITE_EXIT_SCOPE" ]; then
+    # Google says this credential can see more than the job's own files: it is never kept.
+    if [ -n "$staging" ] && [ -f "$OFFSITE_RCLONE_CONF" ]; then
+      give_up "the new credential was refused (the scope above); it was not stored, and the stored credential and the weekly job stay as they were"
+    elif [ -n "$staging" ]; then
+      give_up "the new credential was refused (the scope above); nothing was stored and no weekly job is installed"
+    fi
+    rm -f "$OFFSITE_RCLONE_CONF" "$OFFSITE_TRIED_MARK"
+    remove_job
+    give_up "the stored credential was refused (the scope above); it and the weekly job were removed"
+  elif [ -n "$staging" ]; then
+    # staging is removed when this run ends (the cleanup); the secret brings the credential again at the next deploy
+    give_up "the new credential did not pass the first try; nothing was changed (a stored credential and the weekly job stay as they were, and none is installed otherwise); it is tried again on the next deploy"
   else
-    give_up "the credential or the public key did not pass the first try; the weekly job is not installed until it does (it is tried again on the next deploy)"
+    give_up "the credential or the public key did not pass the first try; a weekly job already installed stays as it was, and none is installed until it does; it is tried again on the next deploy"
   fi
 fi
 

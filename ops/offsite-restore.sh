@@ -2,7 +2,7 @@
 # Opens an off-site backup copy on the owner's own computer (#1332). Never run on the server: the private key
 # must stay in the owner's password manager and on his computer only.
 #
-# Needs OpenSSL 3.0 or later (AES-GCM in `openssl cms`). macOS's own `openssl` is LibreSSL and will not do: install
+# Works with the bash macOS ships (3.2). Needs OpenSSL 3.0 or later (AES-GCM in `openssl cms`). macOS's own `openssl` is LibreSSL and will not do: install
 # OpenSSL 3 (`brew install openssl@3`) and name it: OFFSITE_OPENSSL="$(brew --prefix openssl@3)/bin/openssl" bash offsite-restore.sh ...
 # Opening needs about three times the copy's size in free memory (OpenSSL does not stream it): ops/offsite-backup.md.
 #
@@ -44,10 +44,10 @@ fi
 [ -f "$key" ] || fail "no such file: $key"
 [ -d "$out_dir" ] || fail "no such folder: $out_dir"
 name=$(basename "$sealed")
-case "$name" in
-  *"$OFFSITE_SUFFIX") ;;
-  *) fail "$name is not a sealed copy (its name should end in $OFFSITE_SUFFIX)" ;;
-esac
+# Only a copy the job made, by its own name: every one is an archive, and every archive gets the member check below.
+if ! [[ "$name" =~ $OFFSITE_ARCHIVE_PATTERN ]]; then
+  fail "$name is not a sealed copy the job made (its name should look like sprecher-east-<time>.tar.gz$OFFSITE_SUFFIX)"
+fi
 plain="$out_dir/${name%"$OFFSITE_SUFFIX"}"
 [ ! -e "$plain" ] || fail "$plain exists already; move it away first"
 if [ -n "${OFFSITE_EXPECTED_SHA256:-}" ]; then
@@ -59,12 +59,12 @@ partial="$plain.partial"
 trap 'rm -f "$partial"' EXIT
 # The private key may be protected by a passphrase (openssl asks for it here); the owner's own key is not.
 offsite_open "$key" "$sealed" "$partial" || fail "could not open the copy: wrong key, or the file was changed or damaged"
-case "$plain" in
-  *.tar.gz)
-    if problem=$(offsite_archive_problem "$partial"); then :; else fail "$problem; nothing was written"; fi
-    ;;
-esac
+if problem=$(offsite_archive_problem "$partial"); then :; else fail "$problem; nothing was written"; fi
 mv "$partial" "$plain"
 echo "Opened: $plain"
 echo "Checked: not changed since it was sealed, and nothing in it but the database, the environment file and plain files under media/."
-echo "Not checked: who sealed it. Compare its SHA-256 with the job's record (OFFSITE_EXPECTED_SHA256) before you restore."
+if [ -n "${OFFSITE_EXPECTED_SHA256:-}" ]; then
+  echo "Checked: its SHA-256 is the one you gave (the job's record)."
+else
+  echo "Not checked: who sealed it. Compare its SHA-256 with the job's record (OFFSITE_EXPECTED_SHA256) before you restore."
+fi

@@ -56,6 +56,7 @@ OFFSITE_TOKENINFO_SECONDS=20
 # Google fixes the scope when the owner signs in.
 OFFSITE_TOKENINFO_URL="https://oauth2.googleapis.com/tokeninfo"
 OFFSITE_SCOPE="https://www.googleapis.com/auth/drive.file"
+OFFSITE_EXIT_SCOPE=79 # the first try's exit status when Google says the credential was granted the wrong scope
 
 # What a sealed copy is called, and what the job may ever delete in Drive: nothing else matches these.
 OFFSITE_SUFFIX=".cms"
@@ -209,19 +210,24 @@ offsite_conf_normalize() { # <text>
     return 1
   fi
   printf -v OFFSITE_CONF_CANONICAL '[%s]\ntype = drive\nclient_id = %s\nclient_secret = %s\nscope = drive.file\ntoken = %s\n' \
-    "$OFFSITE_REMOTE_NAME" "${val[client_id]}" "${val[client_secret]}" "${val[token]}"
+    "$OFFSITE_REMOTE_NAME" "${val[client_id]}" "${val[client_secret]}" "$OFFSITE_TOKEN_CANONICAL"
 }
 
-# Checks the `token` value of a credential the way rclone 1.76.0 reads it, and either returns 0 or sets
-# OFFSITE_TOKEN_PROBLEM to a fixed sentence and returns 1 (a value is never in it). rclone needs one line of JSON with a
-# non-empty access_token and refresh_token (with an empty access_token it falls back to an old format and blanks the
-# refresh token) and an RFC 3339 expiry (with none the access token counts as never expiring and is never refreshed, so
-# the credential works for about an hour). Google's own response to a sign-in (it has `expires_in` and no `expiry`) is not
-# that shape and is refused. A fractional second in the expiry is valid. Node reads it (the server runs Node, as its
-# backup does); the token goes in on stdin, never in an argument.
+# Checks the `token` value of a credential the way rclone 1.76.0 reads it, and either sets OFFSITE_TOKEN_CANONICAL to the
+# JSON the server stores and returns 0, or sets OFFSITE_TOKEN_PROBLEM to a fixed sentence and returns 1 (a value is
+# never in it). rclone needs one line of JSON with a non-empty access_token and refresh_token (with an empty access_token
+# it falls back to an old format and blanks the refresh token) and an RFC 3339 expiry (with none the access token counts as
+# never expiring and is never refreshed, so the credential works for about an hour). Google's own response to a sign-in
+# (it has `expires_in` and no `expiry`) is not that shape and is refused. A fractional second in the expiry is valid.
+# Go's JSON reader matches names without regard to case and keeps the last, so a name given twice in two spellings is
+# refused; the expiry must be a real date (Go refuses 31 February and hour 24) in a year rclone will refresh from, not
+# Go's zero time or year 9999. The text stored is written from the checked fields (access_token, token_type, refresh_token,
+# expiry), never the text received. Node reads it (the server runs Node, as its backup does); the token goes in on
+# stdin, never in an argument.
 offsite_token_problem() { # <token value>
-  local verdict
+  local verdict canonical
   OFFSITE_TOKEN_PROBLEM=""
+  OFFSITE_TOKEN_CANONICAL=""
   verdict=$(
     printf '%s' "$1" | node -e '
       let text = ""
@@ -229,33 +235,55 @@ offsite_token_problem() { # <token value>
         let t
         try { t = JSON.parse(text) } catch { return console.log("json") }
         if (t === null || typeof t !== "object" || Array.isArray(t)) return console.log("json")
+        const names = Object.keys(t).map((k) => k.toLowerCase())
+        if (new Set(names).size !== names.length) return console.log("twice")
         const filled = (v) => typeof v === "string" && v.trim() !== ""
         if (!filled(t.access_token)) return console.log("access")
         if (!filled(t.refresh_token)) return console.log("refresh")
         if ("expires_in" in t && !("expiry" in t)) return console.log("raw")
-        const rfc3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
-        if (typeof t.expiry !== "string" || !rfc3339.test(t.expiry) || Number.isNaN(Date.parse(t.expiry))) return console.log("expiry")
-        console.log("ok")
+        if ("token_type" in t && typeof t.token_type !== "string") return console.log("type")
+        if ("expires_in" in t && !Number.isInteger(t.expires_in)) return console.log("type")
+        if (typeof t.expiry !== "string") return console.log("expiry")
+        const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-](\d{2}):(\d{2}))$/.exec(t.expiry)
+        if (m === null) return console.log("expiry")
+        const [year, month, day, hour, minute, second] = m.slice(1, 7).map(Number)
+        const real = new Date(Date.UTC(year, month - 1, day))
+        const offsetOk = m[8] === "Z" || (Number(m[9]) <= 23 && Number(m[10]) <= 59)
+        if (year < 2000 || year > 2100 || month < 1 || month > 12 || real.getUTCMonth() !== month - 1 || real.getUTCDate() !== day ||
+            hour > 23 || minute > 59 || second > 59 || !offsetOk) return console.log("expiry")
+        const out = { access_token: t.access_token }
+        if ("token_type" in t) out.token_type = t.token_type
+        out.refresh_token = t.refresh_token
+        out.expiry = t.expiry
+        console.log("ok" + JSON.stringify(out))
       })
     ' 2>/dev/null
   ) || verdict=node
   case "$verdict" in
-    ok) return 0 ;;
+    ok*)
+      canonical=${verdict#ok}
+      OFFSITE_TOKEN_CANONICAL=$canonical
+      return 0
+      ;;
     json) OFFSITE_TOKEN_PROBLEM="the credential's token must be one line of JSON, as rclone writes it" ;;
+    twice) OFFSITE_TOKEN_PROBLEM="the credential's token has the same setting twice (names are matched without regard to case)" ;;
     access) OFFSITE_TOKEN_PROBLEM="the credential's token has no access_token" ;;
     refresh) OFFSITE_TOKEN_PROBLEM="the credential's token has no refresh_token" ;;
     raw) OFFSITE_TOKEN_PROBLEM="the credential's token is Google's raw sign-in response; it needs an expiry (an RFC 3339 date) instead of expires_in" ;;
-    expiry) OFFSITE_TOKEN_PROBLEM="the credential's token needs an expiry that is an RFC 3339 date (for example 2026-11-27T06:03:00.123Z)" ;;
+    type) OFFSITE_TOKEN_PROBLEM="the credential's token has a value of the wrong type (token_type is text, expires_in a whole number)" ;;
+    expiry) OFFSITE_TOKEN_PROBLEM="the credential's token needs an expiry that is a real RFC 3339 date (for example 2026-11-27T06:03:00.123Z)" ;;
     *) OFFSITE_TOKEN_PROBLEM="the credential's token could not be checked (Node is needed on the server)" ;;
   esac
   return 1
 }
 
-# Asks Google what the access token in <credential file> was granted, and prints why it is not exactly drive.file (and
-# returns 1), or prints nothing (returns 0). The file's `scope` line proves nothing: the narrow scope is set when the
-# owner signs in, and a sign-in with full Drive access written as `scope = drive.file` would pass every other check. The
-# token goes to Google over HTTPS in the request body (stdin), never in an argument, and no value is ever printed.
-# Run after a first upload, so rclone has refreshed an expired access token into the file.
+# Asks Google what the access token in <credential file> was granted, and prints why it is not exactly the drive.file
+# scope. Returns 0 when it is exactly that (prints nothing), 1 when Google says it is something else or says nothing about
+# the scope (the credential is refused), and 2 when the answer could not be had or read (it is tried again next time).
+# The file's `scope` line proves nothing: the narrow scope is set when the owner signs in, and a sign-in with full Drive
+# access written as `scope = drive.file` would pass every other check. The token goes to Google over HTTPS in the request
+# body (stdin), never in an argument, and no value is ever printed. Run after a first upload, so rclone has refreshed an
+# expired access token into the file.
 offsite_scope_problem() { # <credential file>
   local token answer verdict
   token=$(
@@ -268,30 +296,39 @@ offsite_scope_problem() { # <credential file>
   ) || token=""
   if ! [[ "$token" =~ ^[A-Za-z0-9._~-]+$ ]]; then
     echo "the stored access token could not be read, so the granted scope could not be checked"
-    return 1
+    return 2
   fi
-  answer=$(printf 'access_token=%s' "$token" | curl -fsS --proto '=https' --tlsv1.2 --max-time "$OFFSITE_TOKENINFO_SECONDS" \
+  answer=$(printf 'access_token=%s' "$token" | curl -q -fsS --proto '=https' --tlsv1.2 --max-time "$OFFSITE_TOKENINFO_SECONDS" \
     -d @- "$OFFSITE_TOKENINFO_URL" 2>/dev/null) || {
     echo "Google would not say what scope the credential was granted, so it was not accepted"
-    return 1
+    return 2
   }
   verdict=$(
     printf '%s' "$answer" | node -e '
       let text = ""
       process.stdin.on("data", (d) => (text += d)).on("end", () => {
         try {
-          const scopes = String(JSON.parse(text).scope || "").split(/\s+/).filter(Boolean)
-          console.log(scopes.length === 1 && (scopes[0] === process.argv[1] || scopes[0] === "drive.file") ? "ok" : "wider")
+          const t = JSON.parse(text)
+          if (t === null || typeof t !== "object" || typeof t.scope !== "string") return console.log("none")
+          const scopes = t.scope.split(/\s+/).filter(Boolean)
+          console.log(scopes.length === 1 && scopes[0] === process.argv[1] ? "ok" : "wider")
         } catch { console.log("unreadable") }
       })
     ' "$OFFSITE_SCOPE" 2>/dev/null
   ) || verdict=unreadable
   case "$verdict" in
     ok) return 0 ;;
-    wider) echo "the credential was granted more than drive.file (or something else); sign in again with only the drive.file scope" ;;
+    wider)
+      echo "the credential was granted more than drive.file (or something else); sign in again with only the drive.file scope"
+      return 1
+      ;;
+    none)
+      echo "Google's answer did not say what scope the credential was granted, so it was not accepted"
+      return 1
+      ;;
     *) echo "Google's answer about the granted scope could not be read, so the credential was not accepted" ;;
   esac
-  return 1
+  return 2
 }
 
 # rclone reads settings from RCLONE_* environment variables ahead of its config file (a remote's type, its folder).
@@ -350,9 +387,12 @@ offsite_archive_problem() { # <file>
   long=$(tar -tvzf "$1" 2>/dev/null && printf x) || { echo "the copy opened but is not a readable archive"; return 1; }
   names=${names%x}
   long=${long%x}
-  mapfile -t n_list <<<"${names%$'\n'}"
-  mapfile -t l_list <<<"${long%$'\n'}"
-  if [ "${#n_list[@]}" != "${#l_list[@]}" ] || [ -z "$names" ]; then
+  # Read line by line: macOS's own bash is 3.2, which has no `mapfile`.
+  n_list=()
+  l_list=()
+  [ -z "$names" ] || while IFS= read -r line; do n_list+=("$line"); done <<<"${names%$'\n'}"
+  [ -z "$long" ] || while IFS= read -r line; do l_list+=("$line"); done <<<"${long%$'\n'}"
+  if [ "${#n_list[@]}" = 0 ] || [ "${#n_list[@]}" != "${#l_list[@]}" ]; then
     echo "the archive's member list could not be read safely"
     return 1
   fi

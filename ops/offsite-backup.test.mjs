@@ -10,7 +10,14 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { MARKER, REMOTE_DIR, makeKeyPair, setUpOffsiteHarness } from './offsite-harness.mjs'
+import {
+  MARKER,
+  REMOTE_DIR,
+  makeKeyPair,
+  sealWithJobCommand,
+  setUpOffsiteHarness,
+} from './offsite-harness.mjs'
+import { OPS } from './umami-harness.mjs'
 
 const h = setUpOffsiteHarness()
 const STAMP = '2026-11-22T0815Z'
@@ -279,15 +286,20 @@ describe('offsite-backup.sh test', () => {
     const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-test-'))
     try {
       fs.writeFileSync(path.join(work, tests[0]), h.remoteFile(tests[0]))
-      const opened = await h.run('offsite-restore.sh', [
-        path.join(work, tests[0]),
-        h.keys.key,
-        work,
-      ])
-      expect(opened.code).toBe(0)
-      expect(fs.readFileSync(path.join(work, tests[0].replace(/\.cms$/, '')), 'utf8')).toContain(
-        'holds no site data',
+      // the restore script is for archives; a test file is opened with the library's own opening
+      execFileSync(
+        'bash',
+        [
+          '-c',
+          `. "${path.join(OPS, 'offsite-lib.sh')}"; offsite_open "$1" "$2" "$3"`,
+          '_',
+          h.keys.key,
+          path.join(work, tests[0]),
+          path.join(work, 'opened.txt'),
+        ],
+        { stdio: 'ignore' },
       )
+      expect(fs.readFileSync(path.join(work, 'opened.txt'), 'utf8')).toContain('holds no site data')
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
     }
@@ -363,26 +375,7 @@ describe('offsite-restore.sh: the opened archive and the OpenSSL it needs', () =
     const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-notar-'))
     try {
       fs.writeFileSync(path.join(work, 'plain.txt'), 'this is not a tar archive')
-      execFileSync(
-        'openssl',
-        [
-          'cms',
-          '-encrypt',
-          '-aes-256-gcm',
-          '-binary',
-          '-outform',
-          'DER',
-          '-in',
-          path.join(work, 'plain.txt'),
-          '-out',
-          path.join(work, NAME),
-          '-recip',
-          h.keys.cert,
-          '-keyopt',
-          'rsa_padding_mode:oaep',
-        ],
-        { stdio: 'ignore' },
-      )
+      sealWithJobCommand(h.keys.cert, path.join(work, 'plain.txt'), path.join(work, NAME))
       const result = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work])
       expect(result.code).toBe(1)
       expect(result.out).toContain('not a readable archive')
@@ -432,16 +425,14 @@ describe('offsite-restore.sh', () => {
 
   it('refuses the wrong key and leaves no output', async () => {
     const work = await seal()
-    const otherDir = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-other-'))
     try {
-      const other = makeKeyPair(otherDir)
+      const other = h.otherKeys
       const result = await h.run('offsite-restore.sh', [path.join(work, NAME), other.key, work])
       expect(result.code).toBe(1)
       expect(result.out).toContain('could not open the copy')
       expect(fs.readdirSync(work)).toEqual([NAME])
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
-      fs.rmSync(otherDir, { recursive: true, force: true })
     }
   })
 
@@ -774,10 +765,25 @@ describe('the scope the sign-in was granted', () => {
     const { code, out } = await h.run('offsite-backup.sh', ['test'], {
       STUB_TOKENINFO_ANSWER: '{"scope":"https://www.googleapis.com/auth/drive"}',
     })
-    expect(code).toBe(1)
+    expect(code).toBe(79)
     expect(out).toContain('::warning')
     expect(out).toContain('granted more than drive.file')
     expect(out).not.toContain('ya29.fake-access-token')
+  })
+
+  it.each([
+    ['an access token with a character that could add a form field', 'a&scope=x'],
+    ['an empty access token', ''],
+  ])('is not asked about %s: nothing is sent to Google', async (_what, access) => {
+    fs.writeFileSync(
+      h.p('etc/offsite-rclone.conf'),
+      `[offsite]\ntype = drive\nscope = drive.file\ntoken = {"access_token":"${access}","refresh_token":"r","expiry":"2026-11-27T06:03:00Z"}\n`,
+      { mode: 0o600 },
+    )
+    const { code, out } = await h.run('offsite-backup.sh', ['test'])
+    expect(code).toBe(1)
+    expect(out).toContain('could not be read')
+    expect(fs.readFileSync(h.p('log'), 'utf8')).not.toContain('tokeninfo')
   })
 
   it('is not asked in the weekly run (one try per credential is enough)', async () => {
@@ -839,26 +845,7 @@ describe('offsite-restore.sh takes nothing but what a backup holds', () => {
     build(stage)
     const plain = path.join(work, `sprecher-east-${STAMP}.tar.gz`)
     execFileSync('tar', [...extra, '-czf', plain, '-C', stage, ...tarArgs], { stdio: 'ignore' })
-    execFileSync(
-      'openssl',
-      [
-        'cms',
-        '-encrypt',
-        '-aes-256-gcm',
-        '-binary',
-        '-outform',
-        'DER',
-        '-in',
-        plain,
-        '-out',
-        path.join(work, NAME),
-        '-recip',
-        h.keys.cert,
-        '-keyopt',
-        'rsa_padding_mode:oaep',
-      ],
-      { stdio: 'ignore' },
-    )
+    sealWithJobCommand(h.keys.cert, plain, path.join(work, NAME))
     fs.rmSync(plain)
     fs.rmSync(stage, { recursive: true })
     const out = path.join(work, 'out')
@@ -877,7 +864,8 @@ describe('offsite-restore.sh takes nothing but what a backup holds', () => {
     try {
       const result = await open(c)
       expect(result.code).toBe(0)
-      expect(result.out).toContain('Not checked: who sealed it')
+      expect(result.out).toContain('Checked: not changed since it was sealed')
+      expect(result.out).toContain('Compare its SHA-256')
       expect(fs.readdirSync(c.out)).toEqual([`sprecher-east-${STAMP}.tar.gz`])
     } finally {
       fs.rmSync(c.work, { recursive: true, force: true })
@@ -944,12 +932,22 @@ describe('offsite-restore.sh takes nothing but what a backup holds', () => {
       ['-P', '--transform', 's,^up.txt$,media/../up.txt,'],
     ],
     ['no database file', () => {}, ['env.local', 'media'], []],
+    [
+      'a plain file named media',
+      (stage) => {
+        fs.rmSync(path.join(stage, 'media'), { recursive: true })
+        fs.writeFileSync(path.join(stage, 'media'), 'not a folder')
+      },
+      undefined,
+      [],
+    ],
   ])('refuses %s, and writes nothing', async (_what, build, tarArgs, extra) => {
     const c = crafted(build, tarArgs, extra)
     try {
       const result = await open(c)
       expect(result.code).toBe(1)
       expect(result.out).toContain('nothing was written')
+      expect(result.out).not.toContain('Checked')
       expect(fs.readdirSync(c.out)).toEqual([])
       expect(fs.readdirSync(c.work).filter((n) => n.endsWith('.partial'))).toEqual([])
     } finally {
@@ -964,18 +962,60 @@ describe('offsite-restore.sh takes nothing but what a backup holds', () => {
     try {
       fs.writeFileSync(path.join(work, NAME), h.remoteFile(NAME))
       const sha = crypto.createHash('sha256').update(h.remoteFile(NAME)).digest('hex')
+      // an openssl that logs what it is asked to do: opening (`cms`) must not happen for a copy with the wrong hash
+      h.stub('openssl-logged', 'echo "$1" >> "$STUB_LOG"\nexec /usr/bin/openssl "$@"')
+      const logged = { OFFSITE_OPENSSL: h.p('bin/openssl-logged') }
       const wrong = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        ...logged,
         OFFSITE_EXPECTED_SHA256: '0'.repeat(64),
       })
       expect(wrong.code).toBe(1)
       expect(wrong.out).toContain('SHA-256 is not the one expected')
       expect(fs.readdirSync(work)).toEqual([NAME])
+      expect(fs.readFileSync(h.p('log'), 'utf8')).not.toMatch(/^cms$/m)
       const right = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        ...logged,
         OFFSITE_EXPECTED_SHA256: sha,
       })
       expect(right.code).toBe(0)
+      expect(right.out).toContain('Checked: its SHA-256 is the one you gave')
+      expect(right.out).not.toContain('Compare its SHA-256')
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses a copy that is not named like one the job made, even when it opens and holds a bad member', async () => {
+    const c = crafted((stage) => {
+      fs.rmSync(path.join(stage, 'media'), { recursive: true })
+      fs.symlinkSync('/etc', path.join(stage, 'media'))
+    })
+    try {
+      const odd = path.join(c.work, 'sprecher-east-2026-11-22T0815Z.tar.cms')
+      fs.renameSync(path.join(c.work, NAME), odd)
+      const result = await h.run('offsite-restore.sh', [odd, h.keys.key, c.out])
+      expect(result.code).toBe(1)
+      expect(result.out).toContain('is not a sealed copy the job made')
+      expect(result.out).not.toContain('Checked')
+      expect(fs.readdirSync(c.out)).toEqual([])
+    } finally {
+      fs.rmSync(c.work, { recursive: true, force: true })
+    }
+  })
+
+  it('works on the bash macOS ships: no mapfile or readarray (bash 4), and the bash 3.2 compatibility mode', async () => {
+    const c = crafted((stage) => {
+      fs.mkdirSync(path.join(stage, 'media/2026'), { recursive: true })
+      fs.writeFileSync(path.join(stage, 'media/2026/a photo.jpg'), 'jpg')
+    })
+    try {
+      fs.writeFileSync(h.p('no-bash4.sh'), 'enable -n mapfile readarray\n')
+      const result = await open(c, { BASH_ENV: h.p('no-bash4.sh'), BASH_COMPAT: '32' })
+      expect(result.code).toBe(0)
+      expect(result.out).toContain('Checked: not changed since it was sealed')
+      expect(fs.readdirSync(c.out)).toEqual([`sprecher-east-${STAMP}.tar.gz`])
+    } finally {
+      fs.rmSync(c.work, { recursive: true, force: true })
     }
   })
 })

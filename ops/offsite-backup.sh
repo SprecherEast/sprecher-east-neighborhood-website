@@ -8,7 +8,8 @@
 #          (the installer runs it once for each new credential); it never writes the result of a run
 #   check  read-only: is there a copy in Drive no older than OFFSITE_MAX_AGE_DAYS, and did the last run
 #          succeed? (run by every deploy, which shows the answer as a warning and stays green)
-# Exit status: 0 done, 1 failed (the message says why), 78 not set up yet (no public key or no credential).
+# Exit status: 0 done, 1 failed (the message says why), 78 not set up yet (no public key or no credential), 79 (`test`
+# only) Google says the credential was granted a scope other than drive.file.
 #
 # The daily archive (ops/backup.sh) already holds a consistent copy of the database (VACUUM INTO, ops/backup-db.mjs),
 # the media and .env.local, so this job seals that file rather than copying the live files again.
@@ -193,7 +194,14 @@ fi
 # The first try also asks Google what the credential was granted: only drive.file is accepted. By now rclone has
 # refreshed an expired access token into the file, which is the token asked about.
 if [ "$MODE" = test ]; then
-  scope_problem=$(offsite_scope_problem "$OFFSITE_RCLONE_CONF") || fail "$scope_problem"
+  scope_status=0
+  scope_problem=$(offsite_scope_problem "$OFFSITE_RCLONE_CONF") || scope_status=$?
+  if [ "$scope_status" = 1 ]; then
+    # Google says the credential is the wrong one: a distinct exit status, so the installer throws it away at once.
+    report "$level: off-site backup: $scope_problem"
+    exit "$OFFSITE_EXIT_SCOPE"
+  fi
+  [ "$scope_status" = 0 ] || fail "$scope_problem"
 fi
 
 # 4. Retention, only after a verified upload: the newest $keep of this kind stay. Only names this job makes can

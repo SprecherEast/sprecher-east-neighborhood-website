@@ -122,17 +122,39 @@ export function makeKeyPair(dir, { bits = 3072 } = {}) {
   return { key, cert }
 }
 
+/** Seals `input` to `cert` into `output` with the job's own command (offsite_seal in offsite-lib.sh), never a copy of it. */
+export function sealWithJobCommand(cert, input, output) {
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      `. "${path.join(OPS, 'offsite-lib.sh')}"; offsite_seal "$1" "$2" "$3"`,
+      '_',
+      cert,
+      input,
+      output,
+    ],
+    { stdio: 'ignore' },
+  )
+}
+
 /** Registers hooks and returns the helpers; call it once at the top of a test file. */
 export function setUpOffsiteHarness({ install = false } = {}) {
-  const h = { dir: '', keys: null, keyDir: '' }
+  const h = { dir: '', keys: null, keyDir: '', otherKeys: null, otherKeyDir: '' }
   const p = (...parts) => path.join(h.dir, ...parts)
   const stub = (name, body) => write(p('bin', name), `#!/usr/bin/env bash\n${body}\n`, 0o755)
 
   beforeAll(() => {
     h.keyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-keys-'))
     h.keys = makeKeyPair(h.keyDir)
+    // A second pair, made once here (a key made inside a test can outlast its time limit under load).
+    h.otherKeyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-keys2-'))
+    h.otherKeys = makeKeyPair(h.otherKeyDir)
+  }, 60000)
+  afterAll(() => {
+    fs.rmSync(h.keyDir, { recursive: true, force: true })
+    fs.rmSync(h.otherKeyDir, { recursive: true, force: true })
   })
-  afterAll(() => fs.rmSync(h.keyDir, { recursive: true, force: true }))
 
   beforeEach(() => {
     h.dir = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-'))
