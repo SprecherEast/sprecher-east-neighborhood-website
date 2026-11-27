@@ -88,8 +88,8 @@ export const LEGEND_GAP = '-mt-[calc(var(--figure-gap)_-_var(--legend-gap))]'
 
 /**
  * How wide a chart's drawing runs (#681, #1206). Stacked (a phone, a narrow column) it fills the
- * width up to 28rem, so its labels stay large; from the chart's `2xl` container it is a thumbnail,
- * 20rem: the drawing's own 320-unit width at 1:1, with the text beside it. In the enlarged dialog
+ * width up to the thumbnail's 20rem; from the chart's `2xl` container it sits left at that same
+ * width with the text beside it: the drawing's own 320-unit width at 1:1 on every screen wide enough (#1503). In the enlarged dialog
  * it fills a 40rem body. The numbers are variables in globals.css; no adapter sets a width.
  */
 export const CHART_SMALL_WIDTH =
