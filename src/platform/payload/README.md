@@ -61,7 +61,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 ## Rules and the tests that protect them
 
 - Visitors and residents do only what the policy allows, and only published documents show: `payload/accessPolicy.test.ts`, `accessPolicy.fields.test.ts`, `src/payload.config.roles.test.ts`, `src/payload.config.protectedFields.test.ts`, `payload/roles.test.ts`.
-- Suggestions are held, approved by publishing, de-duplicated and not copied by Duplicate: `src/payload.config.reviewQueue.test.ts`, `reviewQueueApi.test.ts`, `lib/reviewQueue.test.ts`.
+- Suggestions are held, approved by publishing, de-duplicated and not copied by Duplicate: `src/payload.config.reviewQueue.test.ts`, `src/payload.config.reviewQueueApi.test.ts`, `lib/reviewQueue.test.ts`.
 - Scheduled publishing and the runners: `src/payload.config.scheduledPublishing.test.ts`, `payload/jobRunners.test.ts`, `retentionJobs.test.ts`, `restrictJobStats.test.ts`, `restrictEditLocks.test.ts`.
 - Titles stop at one shared limit when publishing, not when saving a draft: `src/payload.config.titleLimit.test.ts`, `payload/contentCollection.test.ts`.
 - A fact tab's label stops at one short limit (`FACT_TABS_LIMITS.label`) so it sits on one line in its button, while a key fact card's label keeps its longer one; the fixtures the config tests save use labels within it: `src/payload.config.factTabs.test.ts`, `payload/testing/factTabsRequests.ts`.
