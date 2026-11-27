@@ -16,6 +16,7 @@ import {
   RESOURCE,
   signIn,
   viewerOf,
+  onlyDoc,
 } from '../../testing/oauthFlow'
 
 /**
@@ -47,7 +48,7 @@ describe('registering a client', () => {
     })
     const updated = await payload.update({
       collection: 'oauth-clients',
-      id: found.docs[0]!.id,
+      id: onlyDoc(found).id,
       data: { name: 'Claude', clientId: 'mcp_chosen' },
       user: admin,
       overrideAccess: false,

@@ -13,6 +13,7 @@ import {
   REDIRECT,
   registerClient,
   RESOURCE,
+  onlyDoc,
 } from '../../testing/oauthFlow'
 
 /**
@@ -87,7 +88,7 @@ describe('the token address', () => {
     })
     await payload.db.updateOne({
       collection: 'oauth-tokens',
-      id: docs[0]!.id,
+      id: onlyDoc({ docs }).id,
       data: { expiresAt: new Date(Date.now() - 1000).toISOString() },
     })
     const answer = await exchange(form)
@@ -117,7 +118,7 @@ describe('the token address', () => {
     })
     await payload.update({
       collection: 'oauth-clients',
-      id: found.docs[0]!.id,
+      id: onlyDoc(found).id,
       data: { enabled: false },
       user: admin,
       overrideAccess: false,

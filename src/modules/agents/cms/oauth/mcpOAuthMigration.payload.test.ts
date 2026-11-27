@@ -48,10 +48,13 @@ beforeAll(async () => {
   const clientId = await registerClient(payload, admin, agent)
   await signIn(payload, admin, clientId)
   const client = await payload.find({ collection: 'oauth-clients', overrideAccess: true })
+  const [clientDoc] = client.docs
+  if (!clientDoc) throw new Error('The client was not found')
+  const lockedId = clientDoc.id
   await payload.db.create({
     collection: 'payload-locked-documents',
     data: {
-      document: { relationTo: 'oauth-clients' as const, value: client.docs[0]!.id },
+      document: { relationTo: 'oauth-clients' as const, value: lockedId },
       user: { relationTo: 'users', value: admin.id },
     },
   })

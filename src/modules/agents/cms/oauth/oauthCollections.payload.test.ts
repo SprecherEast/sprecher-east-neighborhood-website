@@ -7,7 +7,7 @@ import {
   type Account,
 } from '@/platform/payload/testing/inMemoryPayload'
 
-import { registerClient, signIn } from '../../testing/oauthFlow'
+import { registerClient, signIn, onlyDoc } from '../../testing/oauthFlow'
 
 /**
  * Who may touch the OAuth collections (#1501): admins only, in every operation, and the rows the
@@ -112,8 +112,9 @@ describe('OAuth clients', () => {
 
 describe('OAuth tokens', () => {
   const first = async () =>
-    (await payload.find({ collection: 'oauth-tokens', depth: 0, limit: 1, ...asUser(admin) }))
-      .docs[0]!
+    onlyDoc(
+      await payload.find({ collection: 'oauth-tokens', depth: 0, limit: 1, ...asUser(admin) }),
+    )
 
   it('cannot be created through the API, even by an admin', async () => {
     const row = await first()
@@ -170,7 +171,7 @@ describe('deleting a client', () => {
       where: { clientId: { equals: own } },
       ...asUser(admin),
     })
-    const id = found.docs[0]!.id
+    const id = onlyDoc(found).id
     const before = await payload.count({
       collection: 'oauth-tokens',
       where: { client: { equals: id } },

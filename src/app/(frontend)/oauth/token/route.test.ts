@@ -28,14 +28,17 @@ describe('POST /oauth/token', () => {
       'x-forwarded-for': '203.0.113.5',
     })
     expect(response.status).toBe(200)
-    const [form, headers] = mocks.exchangeToken.mock.calls[0]!
+    const [form, headers] = mocks.exchangeToken.mock.lastCall ?? []
     expect(form).toEqual({ grant_type: 'refresh_token', refresh_token: 'ser_x' })
-    expect(headers.get('x-forwarded-for')).toBe('203.0.113.5')
+    expect(headers?.get('x-forwarded-for')).toBe('203.0.113.5')
   })
 
   it('keeps a repeated field as a list, so the library can refuse it', async () => {
     await post('grant_type=a&resource=one&resource=two&resource=three')
-    expect(mocks.exchangeToken.mock.calls[0]![0].resource).toEqual(['one', 'two', 'three'])
+    expect(mocks.exchangeToken).toHaveBeenCalledWith(
+      expect.objectContaining({ resource: ['one', 'two', 'three'] }),
+      expect.anything(),
+    )
   })
 
   it('never lets a cache or the browser keep a token', async () => {

@@ -37,7 +37,7 @@ describe('refreshing', () => {
     const renewed = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     })
     expect(renewed.status).toBe(200)
     expect(renewed.body.access_token).toMatch(/^sea_/)
@@ -47,7 +47,7 @@ describe('refreshing', () => {
     const again = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     })
     expect(again.status).toBe(400)
     expect(again.body.error).toBe('invalid_grant')
@@ -58,18 +58,18 @@ describe('refreshing', () => {
     const renewed = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     })
     await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     })
     // The newest refresh token, which the thief or the client holds, is dead too
     const latest = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: renewed.body.refresh_token!,
+      refresh_token: renewed.body.refresh_token ?? '',
     })
     expect(latest.body.error).toBe('invalid_grant')
   })
@@ -79,7 +79,7 @@ describe('refreshing', () => {
     const form = {
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     }
     const results = await Promise.all([exchange(form), exchange(form)])
     expect(results.map((r) => r.status).sort()).toEqual([200, 400])
@@ -91,7 +91,7 @@ describe('refreshing', () => {
     const stolen = await exchange({
       grant_type: 'refresh_token',
       client_id: other,
-      refresh_token: first.refresh_token!,
+      refresh_token: first.refresh_token,
     })
     expect(stolen.body.error).toBe('invalid_grant')
   })
@@ -117,7 +117,7 @@ describe('a code is single use', () => {
     const refreshed = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: first.body.refresh_token!,
+      refresh_token: first.body.refresh_token ?? '',
     })
     expect(refreshed.body.error).toBe('invalid_grant')
   })

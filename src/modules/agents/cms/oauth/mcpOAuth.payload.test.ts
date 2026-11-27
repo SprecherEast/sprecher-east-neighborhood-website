@@ -10,7 +10,7 @@ import { createMcpKey, mcpClient } from '@/platform/payload/testing/mcpRequest'
 
 import { bearerChallenge } from '../../domain/oauth/metadata'
 import { hashToken } from '../../domain/oauth/secrets'
-import { exchange, RESOURCE, registerClient, signIn } from '../../testing/oauthFlow'
+import { exchange, RESOURCE, registerClient, signIn, onlyDoc } from '../../testing/oauthFlow'
 
 /**
  * An OAuth access token at `/api/mcp` (#1501): it acts as the client's agent account with the
@@ -56,7 +56,7 @@ beforeAll(async () => {
   })
 }, 60_000)
 
-const accessToken = async () => (await signIn(payload, admin, clientId)).body.access_token!
+const accessToken = async () => (await signIn(payload, admin, clientId)).body.access_token
 const toolNames = async (token: string | null) => {
   const { status, body } = await mcp.call('tools/list', {}, token)
   return {
@@ -65,15 +65,15 @@ const toolNames = async (token: string | null) => {
   }
 }
 const row = async (kind: string, token: string) =>
-  (
+  onlyDoc(
     await payload.find({
       collection: 'oauth-tokens',
       where: { tokenHash: { equals: hashToken(token, payload.secret) }, kind: { equals: kind } },
       limit: 1,
       depth: 0,
       overrideAccess: true,
-    })
-  ).docs[0]!
+    }),
+  )
 
 describe('a valid access token', () => {
   it('offers the same tools as an API key for the same agent', async () => {
@@ -149,7 +149,7 @@ describe('a request that is not let in', () => {
 
   it('refuses a refresh token presented as an access token', async () => {
     const { body } = await signIn(payload, admin, clientId)
-    expectChallenge(await mcp.call('tools/list', {}, body.refresh_token!))
+    expectChallenge(await mcp.call('tools/list', {}, body.refresh_token))
   })
 
   it('refuses a token issued for another audience', async () => {
@@ -182,7 +182,7 @@ describe('a request that is not let in', () => {
 
   it('refuses a token an admin revoked, and signs out the refresh token with it', async () => {
     const { body } = await signIn(payload, admin, clientId)
-    const stored = await row('access', body.access_token!)
+    const stored = await row('access', body.access_token)
     await payload.update({
       collection: 'oauth-tokens',
       id: stored.id,
@@ -190,11 +190,11 @@ describe('a request that is not let in', () => {
       user: admin,
       overrideAccess: false,
     })
-    expectChallenge(await mcp.call('tools/list', {}, body.access_token!))
+    expectChallenge(await mcp.call('tools/list', {}, body.access_token))
     const refreshed = await exchange({
       grant_type: 'refresh_token',
       client_id: clientId,
-      refresh_token: body.refresh_token!,
+      refresh_token: body.refresh_token,
     })
     expect(refreshed.body.error).toBe('invalid_grant')
   })
@@ -202,7 +202,7 @@ describe('a request that is not let in', () => {
   it('refuses every token of a client an admin switched off', async () => {
     const own = await registerClient(payload, admin, agent, { name: 'Switch' })
     const { body } = await signIn(payload, admin, own)
-    expect((await mcp.call('tools/list', {}, body.access_token!)).status).toBe(200)
+    expect((await mcp.call('tools/list', {}, body.access_token)).status).toBe(200)
     const found = await payload.find({
       collection: 'oauth-clients',
       where: { clientId: { equals: own } },
@@ -211,27 +211,27 @@ describe('a request that is not let in', () => {
     })
     await payload.update({
       collection: 'oauth-clients',
-      id: found.docs[0]!.id,
+      id: onlyDoc(found).id,
       data: { enabled: false },
       user: admin,
       overrideAccess: false,
     })
-    expectChallenge(await mcp.call('tools/list', {}, body.access_token!))
+    expectChallenge(await mcp.call('tools/list', {}, body.access_token))
   })
 
   it('refuses a token whose account is no longer an agent', async () => {
     const promoted = await createAccount(payload, 'agent', 'drift')
     const own = await registerClient(payload, admin, promoted, { name: 'Drift' })
     const { body } = await signIn(payload, admin, own)
-    expect((await mcp.call('tools/list', {}, body.access_token!)).status).toBe(200)
+    expect((await mcp.call('tools/list', {}, body.access_token)).status).toBe(200)
     await payload.db.updateOne({ collection: 'users', id: promoted.id, data: { role: 'editor' } })
-    expectChallenge(await mcp.call('tools/list', {}, body.access_token!))
+    expectChallenge(await mcp.call('tools/list', {}, body.access_token))
   })
 
   it('counts a client`s requests, and answers 429 past the limit', async () => {
     const busy = await createAccount(payload, 'agent', 'busy')
     const own = await registerClient(payload, admin, busy, { name: 'Busy' })
-    const token = (await signIn(payload, admin, own)).body.access_token!
+    const token = (await signIn(payload, admin, own)).body.access_token
     const statuses: number[] = []
     for (let i = 0; i < 61; i++) statuses.push((await mcp.call('tools/list', {}, token)).status)
     expect(statuses.slice(0, 60).every((s) => s === 200)).toBe(true)

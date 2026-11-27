@@ -13,6 +13,7 @@ import {
   REDIRECT,
   registerClient,
   viewerOf,
+  onlyDoc,
 } from '../../testing/oauthFlow'
 
 /**
@@ -171,7 +172,7 @@ describe('the approval', () => {
     })
     await payload.update({
       collection: 'oauth-clients',
-      id: found.docs[0]!.id,
+      id: onlyDoc(found).id,
       data: { enabled: false },
       user: admin,
       overrideAccess: false,

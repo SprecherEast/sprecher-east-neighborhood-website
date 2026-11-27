@@ -84,6 +84,13 @@ export async function approve(
   return decide(begun.view.request, begun.view.ticket, 'approve', viewerOf(admin))
 }
 
+/** The one document a test's query must have found, or a failure that says so. */
+export function onlyDoc<T>(result: { docs: T[] }): T {
+  const [doc] = result.docs
+  if (doc === undefined) throw new Error('The query found nothing')
+  return doc
+}
+
 export const codeFrom = (url: string): string => new URL(url).searchParams.get('code') ?? ''
 
 export type TokenBody = {
@@ -114,7 +121,10 @@ export async function signIn(payload: Payload, admin: Account, clientId: string)
     code_verifier: verifier,
     redirect_uri: REDIRECT,
   })
-  return { ...answer, code, verifier }
+  const body = answer.body
+  if (!body.access_token || !body.refresh_token) throw new Error('The sign-in gave no tokens')
+  const tokens = { ...body, access_token: body.access_token, refresh_token: body.refresh_token }
+  return { ...answer, body: tokens, code, verifier }
 }
 
 /** Boots Payload with an admin, an agent account and one registered client. */
