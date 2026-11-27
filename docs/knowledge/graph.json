@@ -2786,7 +2786,7 @@
       "id": "business-rule:src/platform/ui/README.md#8",
       "type": "business-rule",
       "name": "**`Switch` is a native switch button, not a styled box:** Radix's…",
-      "summary": "**`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px target, the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).",
+      "summary": "**`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px tap area (`TOUCH_TARGET` in `touchTarget.ts`, shared with `Field.Checkbox` and measured in a browser by `e2e/touchTargets.spec.ts`), the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).",
       "path": "src/platform/ui/Switch.client.test.tsx",
       "module": "platform-area:ui",
       "aliases": [],
@@ -15708,8 +15708,51 @@
       "path": "src/platform/ui/FieldSwitch.client.tsx",
       "module": "platform-area:ui",
       "aliases": [],
-      "fields": [],
-      "facts": [{ "label": "Props from its element", "value": "292" }],
+      "fields": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        }
+      ],
+      "facts": [{ "label": "Props from its element", "value": "286" }],
       "watchOuts": [],
       "links": []
     },
@@ -17606,6 +17649,48 @@
       "aliases": [],
       "fields": [
         {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        },
+        {
           "name": "label",
           "type": "ReactNode",
           "required": true,
@@ -17620,7 +17705,7 @@
           "notes": []
         }
       ],
-      "facts": [{ "label": "Props from its element", "value": "293" }],
+      "facts": [{ "label": "Props from its element", "value": "287" }],
       "watchOuts": [],
       "links": []
     },
@@ -17628,12 +17713,55 @@
       "id": "shared-component:SwitchControl",
       "type": "shared-component",
       "name": "SwitchControl",
-      "summary": "The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears \"on\" or \"off\". The track is 24 px tall; the after: area makes the target 44 px (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.",
+      "summary": "The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears \"on\" or \"off\". The track is 44 x 24 px; `TOUCH_TARGET` makes the tap area 44 px tall (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.",
       "path": "src/platform/ui/Switch.client.tsx",
       "module": "platform-area:ui",
       "aliases": [],
-      "fields": [],
-      "facts": [{ "label": "Props from its element", "value": "293" }],
+      "fields": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        }
+      ],
+      "facts": [{ "label": "Props from its element", "value": "287" }],
       "watchOuts": [],
       "links": []
     },

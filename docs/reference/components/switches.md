@@ -10,12 +10,18 @@ An on or off switch with its label beside it; pressing the label works too. For 
 
 Source: `src/platform/ui/Switch.client.tsx`
 
-| Prop        | Type        | Required | Description                                                                           |
-| ----------- | ----------- | -------- | ------------------------------------------------------------------------------------- |
-| `label`     | `ReactNode` | yes      | What the switch turns on or off, in words; it is the switch's name for screen readers |
-| `hideLabel` | `boolean`   | no       | Keeps the label for screen readers only, where the context names the switch visually  |
+| Prop              | Type                         | Required | Description                                                                           |
+| ----------------- | ---------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `checked`         | `boolean`                    | no       | On or off, when the caller holds the value; pair it with `onCheckedChange`            |
+| `defaultChecked`  | `boolean`                    | no       | On or off to start with, when the switch keeps its own value                          |
+| `onCheckedChange` | `(checked: boolean) => void` | no       | Called with the new value each time the switch is turned                              |
+| `disabled`        | `boolean`                    | no       | Greys the switch out and stops it taking a press or a key                             |
+| `name`            | `string`                     | no       | The name the value is sent under in a form                                            |
+| `value`           | `string`                     | no       | What a form receives when the switch is on (`on` when left out)                       |
+| `label`           | `ReactNode`                  | yes      | What the switch turns on or off, in words; it is the switch's name for screen readers |
+| `hideLabel`       | `boolean`                    | no       | Keeps the label for screen readers only, where the context names the switch visually  |
 
-293 more props from package types (HTML attributes and the like) are not listed.
+287 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 
@@ -23,13 +29,20 @@ Source: `src/platform/ui/Switch.client.tsx`
 
 ## `SwitchControl`
 
-The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears "on" or "off". The track is 24 px tall; the after: area makes the target 44 px (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.
+The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears "on" or "off". The track is 44 x 24 px; `TOUCH_TARGET` makes the tap area 44 px tall (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.
 
 Source: `src/platform/ui/Switch.client.tsx`
 
-No props.
+| Prop              | Type                         | Required | Description                                                                |
+| ----------------- | ---------------------------- | -------- | -------------------------------------------------------------------------- |
+| `checked`         | `boolean`                    | no       | On or off, when the caller holds the value; pair it with `onCheckedChange` |
+| `defaultChecked`  | `boolean`                    | no       | On or off to start with, when the switch keeps its own value               |
+| `onCheckedChange` | `(checked: boolean) => void` | no       | Called with the new value each time the switch is turned                   |
+| `disabled`        | `boolean`                    | no       | Greys the switch out and stops it taking a press or a key                  |
+| `name`            | `string`                     | no       | The name the value is sent under in a form                                 |
+| `value`           | `string`                     | no       | What a form receives when the switch is on (`on` when left out)            |
 
-293 more props from package types (HTML attributes and the like) are not listed.
+287 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 
@@ -41,9 +54,16 @@ An on or off switch for a form; place it inside a `Field`, which then lays out i
 
 Source: `src/platform/ui/FieldSwitch.client.tsx`
 
-No props.
+| Prop              | Type                         | Required | Description                                                                |
+| ----------------- | ---------------------------- | -------- | -------------------------------------------------------------------------- |
+| `checked`         | `boolean`                    | no       | On or off, when the caller holds the value; pair it with `onCheckedChange` |
+| `value`           | `string`                     | no       | What a form receives when the switch is on (`on` when left out)            |
+| `defaultChecked`  | `boolean`                    | no       | On or off to start with, when the switch keeps its own value               |
+| `disabled`        | `boolean`                    | no       | Greys the switch out and stops it taking a press or a key                  |
+| `name`            | `string`                     | no       | The name the value is sent under in a form                                 |
+| `onCheckedChange` | `(checked: boolean) => void` | no       | Called with the new value each time the switch is turned                   |
 
-292 more props from package types (HTML attributes and the like) are not listed.
+286 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 

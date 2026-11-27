@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Field } from './Field.client'
 import { Switch } from './Switch.client'
 import { expectAccessible } from './testing/expectAccessible'
+import { TOUCH_TARGET } from './touchTarget'
 
 // Radix Switch measures itself with ResizeObserver inside a form, which jsdom lacks
 beforeEach(() => {
@@ -120,13 +121,16 @@ describe('Switch', () => {
     expect(data.get('updates')).toBe('yes')
   })
 
-  it('has a 44 px touch target, tokens only, a focus ring and calm motion', () => {
+  it('uses the shared touch target, tokens only, a focus ring and calm motion', () => {
     render(<Switch label="Dark mode" />)
     const { className } = screen.getByRole('switch')
 
-    // The track is 24 px tall; the after: area reaches 44 px (WCAG 2.5.8)
+    // jsdom has no layout, so this pins the class only: the shared TOUCH_TARGET that makes a
+    // 44 px tap area around the 44 x 24 px track (WCAG 2.5.8). The size itself is measured in a
+    // browser, in e2e/touchTargets.spec.ts
     expect(className).toContain('h-6')
-    expect(className).toContain('after:-inset-y-2.5')
+    expect(className).toContain('w-11')
+    expect(className).toContain(TOUCH_TARGET)
     expect(className).toContain('focus-visible:outline-ring')
     expect(className).toContain('border-input')
     expect(className).toContain('data-[state=checked]:bg-primary-fill')

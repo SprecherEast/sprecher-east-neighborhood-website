@@ -4,15 +4,37 @@ import { cn } from '@/platform/lib/cn'
 import * as SwitchPrimitive from '@radix-ui/react-switch'
 import type { ComponentProps, ReactNode } from 'react'
 
+import { TOUCH_TARGET } from './touchTarget'
+
 export type SwitchControlProps = Omit<
   ComponentProps<typeof SwitchPrimitive.Root>,
-  'asChild' | 'children'
->
+  | 'asChild'
+  | 'children'
+  | 'checked'
+  | 'defaultChecked'
+  | 'onCheckedChange'
+  | 'disabled'
+  | 'name'
+  | 'value'
+> & {
+  /** On or off, when the caller holds the value; pair it with `onCheckedChange` */
+  checked?: boolean
+  /** On or off to start with, when the switch keeps its own value */
+  defaultChecked?: boolean
+  /** Called with the new value each time the switch is turned */
+  onCheckedChange?: (checked: boolean) => void
+  /** Greys the switch out and stops it taking a press or a key */
+  disabled?: boolean
+  /** The name the value is sent under in a form */
+  name?: string
+  /** What a form receives when the switch is on (`on` when left out) */
+  value?: string
+}
 
 /**
  * The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native
  * button with the switch role (Radix), so Space and Enter work and a screen reader hears "on" or
- * "off". The track is 24 px tall; the after: area makes the target 44 px (WCAG 2.5.8). The thumb
+ * "off". The track is 44 x 24 px; `TOUCH_TARGET` makes the tap area 44 px tall (WCAG 2.5.8). The thumb
  * slides the other way in a right-to-left page, and neither moves under reduced motion.
  */
 export function SwitchControl({ className, ...rest }: SwitchControlProps) {
@@ -20,7 +42,8 @@ export function SwitchControl({ className, ...rest }: SwitchControlProps) {
     <SwitchPrimitive.Root
       {...rest}
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-input bg-muted p-px transition-colors duration-200 after:absolute after:inset-x-0 after:-inset-y-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive-strong data-[state=checked]:border-primary-fill data-[state=checked]:bg-primary-fill motion-reduce:transition-none',
+        TOUCH_TARGET,
+        'inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-input bg-muted p-px transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive-strong data-[state=checked]:border-primary-fill data-[state=checked]:bg-primary-fill motion-reduce:transition-none',
         className,
       )}
     >
