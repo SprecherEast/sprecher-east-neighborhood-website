@@ -29,13 +29,13 @@ const all = async <T>(query: ReturnType<typeof sql>): Promise<T[]> =>
   ).rows
 
 type Step = typeof up | typeof down
-type Drizzle = { transaction: <T>(fn: (tx: unknown) => Promise<T>) => Promise<T> }
-/** One migration step in a transaction, as `payload migrate` runs it. */
+/**
+ * One migration step on the connection itself: the delete-rules migration switches foreign keys
+ * off, which SQLite ignores inside a transaction, and manages its own transaction.
+ */
 const run = async (step: Step) => {
   const req = await createLocalReq({}, payload)
-  await (payload.db.drizzle as unknown as Drizzle).transaction((tx) =>
-    step({ db: tx, payload, req } as unknown as MigrateUpArgs & MigrateDownArgs),
-  )
+  await step({ db: payload.db.drizzle, payload, req } as unknown as MigrateUpArgs & MigrateDownArgs)
 }
 
 beforeAll(async () => {
