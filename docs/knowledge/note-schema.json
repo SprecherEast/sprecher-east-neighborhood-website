@@ -193,13 +193,13 @@
     "NOTE-TITLE": "block",
     "NOTE-SECTIONS": "block",
     "NOTE-CAP": "block",
-    "NOTE-PATH": "warn",
+    "NOTE-PATH": "block",
     "NOTE-ORPHAN": "block",
     "MAP-NOTE": "block",
     "NOTE-NO-CODE": "block",
     "INDEX-DRIFT": "block",
-    "COVERAGE-SECTION": "warn",
-    "COVERAGE-CODE": "warn"
+    "COVERAGE-SECTION": "block",
+    "COVERAGE-CODE": "block"
   },
   "kinds": {
     "text": {

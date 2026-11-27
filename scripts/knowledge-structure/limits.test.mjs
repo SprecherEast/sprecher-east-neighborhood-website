@@ -131,6 +131,6 @@ describe('the index and the map', () => {
     expect(messagesOf(found, 'NOTE-ORPHAN')).toEqual(['no map entry names this note'])
     const files = [...GOOD_FILES, `src/${LONG}/${LONG}.ts`, 'src/a/B.TS']
     const [loose] = messagesOf(repo({ schema, files }), 'COVERAGE-CODE')
-    expect(loose).toBe(`1 source files have no note: src/${LONG}/${LONG}.ts 1`)
+    expect(loose).toBe(`1 source files have no note: src/${LONG}/${LONG}.ts`)
   })
 })

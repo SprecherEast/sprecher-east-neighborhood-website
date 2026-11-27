@@ -12,7 +12,7 @@ paths:
 ---
 name: 'Platform services'
 type: platform-area
-summary: 'email, robot check, metadata.'
+summary: 'email, robot check, analytics, metadata, runUseCase.'
 aliases: ['turnstile', 'umami', 'seo', 'runUseCase']
 relationships: []
 ---
@@ -38,7 +38,7 @@ Five small shared areas that talk to the outside or shape what a page says about
 
 ## Rules and the tests that protect them
 
-- **The robot check fails closed.** It is off until both Turnstile keys are set; any error refuses; action and hostname are checked; no IP is sent; the widget appears only when Cloudflare asks (`interaction-only`) and a token is single use, so `useRobotCheck` renews it after each attempt (`turnstile/turnstileVerifier.ts`, `turnstile/useRobotCheck.client.ts`, decision 0003; `turnstile/turnstileVerifier.test.ts`).
+- **The robot check fails closed.** It is off until both Turnstile keys are set; any error refuses; action and hostname are checked (extra accepted hostnames come from `TURNSTILE_ALLOWED_HOSTNAMES`); no IP is sent; the widget appears only when Cloudflare asks (`interaction-only`) and a token is single use, so `useRobotCheck` renews it after each attempt (`turnstile/turnstileVerifier.ts`, `turnstile/useRobotCheck.client.ts`, decision 0003; `turnstile/turnstileVerifier.test.ts`).
 - **Likely-human clicks** (#975): one listener sends the Umami event `likely-human-click` for a click the browser made for a person (`isTrusted`) on a button or a link to another site, once per element per visit; same-site, `mailto:` and `tel:` links, disabled buttons, scripted clicks, automated browsers and Do Not Track send nothing. It holds no cookie or identifier, only the label (60 characters) or the other site's host (`analytics/likelyHumanClicks.ts`; `analytics/likelyHumanClicks.test.ts`, `analytics/LikelyHumanClicks.client.test.tsx`).
 - **The counter is cookie-free and off in the admin** (`analytics/umami.test.ts`, `analytics/UmamiScript.test.tsx`, `src/app/nextConfigEnv.test.ts`).
 - **A tab title shows the site name once:** the title is the SEO title, else the document's own, else the site name set as the whole title, since the layout's template adds the name after any other (`seo/generateMeta.ts`, `seo/siteName.ts`, #1011; `seo/generateMeta.test.ts`). Defaults call Sprecher East an unofficial site, never an association (`seo/organizationJsonLd.ts`, #1010).

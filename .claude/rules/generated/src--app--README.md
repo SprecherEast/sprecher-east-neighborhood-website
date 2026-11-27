@@ -15,7 +15,7 @@ paths:
 ---
 name: 'Site shell'
 type: feature
-summary: 'layout, sitemap, proxy.'
+summary: 'layout, sitemap, proxy (bounded paging), headers, Payload config.'
 aliases: ['app shell', 'composition root', 'payload config', 'proxy']
 relationships: []
 ---
@@ -29,12 +29,14 @@ The files that put the modules together. The root layout, home page, error and n
 - **The config** lists the collections of [events](/src/modules/events/README.md), [news](/src/modules/news/README.md), [directory](/src/modules/directory/README.md), [accounts](/src/modules/accounts/README.md), [verification](/src/modules/verification/README.md), [agents](/src/modules/agents/README.md), [site](/src/modules/site/README.md) and `media`, the plugins (SEO, redirects, nested docs, search, form builder, MCP), the SQLite adapter, the email adapter, the jobs and their access, and the GraphQL rule that refuses the account verify mutation (`src/payload.config.ts`). It then restricts edit locks and job stats ([Shared Payload code](/src/platform/payload/README.md)).
 - **The layout** joins the header and footer, the account slots, the theme (`InitTheme`, `Providers`, `ThemeDecoration`), the visit counter and `VersionCheck` ([theme](/src/platform/theme/README.md), [platform services](/src/platform/service/README.md), [UI kit](/src/platform/ui/README.md)); the page-builder's block registry is `[slug]/pageBlocks.tsx` ([site](/src/modules/site/README.md)).
 - **The sitemap** reads each module's slug list under its own cache tag and leaves out account pages (`sitemap.ts`).
+- **Response headers** come from `next.config.js`: the `/api/` ones are in the [Payload routes note](/src/app/<(payload)/README.md>), the pages that refuse framing in the [accounts note](/src/modules/accounts/README.md).
 - **Libraries doing real work:** Next.js (routing, caching, metadata) and Payload.
 
 ## Behaviors and events
 
 - **The proxy runs before any page and answers 404 for a malformed paging address** (`/posts/page/zz`, `/events/list/x/1`, a category slug with the wrong shape), because Next would otherwise cache the 404 and a flood of junk URLs could grow the page cache without limit (#119); `/events?category=<slug>` redirects to the category's own page; the admin's Forgot and Verify pages redirect to the site's (`src/proxy.ts`).
 - **The sitemap is rendered on request** and each list stays in the data cache until a save expires its tag, or 10 minutes, since a scheduled publish runs outside a request and cannot expire tags (`sitemap.ts`, decision 0011, #141).
+- **`next build` skips the type check** (`typescript.ignoreBuildErrors` in `next.config.js`; CI's `tsc --noEmit` does it), so a green build proves nothing about types; stated in [`docs/project.md`](/docs/project.md).
 - **The home page re-renders every 10 minutes** (`page.tsx`); a failure of the layout itself shows `global-error.tsx`, which brings its own `<html>` and shows no error text (#521).
 - **`/api/version`** answers the build's id for `VersionCheck`; `/next/preview` and `/next/exit-preview` start and end draft mode for the admin's preview (`preview` needs `PREVIEW_SECRET`); `/next/seed` runs the demo seed for an admin where it is on ([Seed and preview accounts](/src/endpoints/seed/README.md)).
 

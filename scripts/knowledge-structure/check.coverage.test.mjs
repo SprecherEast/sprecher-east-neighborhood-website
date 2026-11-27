@@ -12,15 +12,17 @@ import {
 
 describe('COVERAGE-CODE', () => {
   it('COVERAGE-CODE lists the folders with the most loose files first', () => {
-    const files = [...GOOD_FILES, 'src/a/one.ts', 'src/b/x/p.ts', 'src/b/x/q.ts']
+    const files = [...GOOD_FILES, 'src/a/one.ts', 'src/b/x/p.ts', 'src/b/x/q.ts', 'src/c/z.ts']
     const [found] = repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')
-    expect(found.message).toContain('3 source files have no note: src/b/x 2, src/a/one.ts 1')
+    expect(found.message).toBe(
+      '4 source files have no note: src/b/x 2, src/a/one.ts 1, src/c/z.ts 1; first files: src/a/one.ts, src/b/x/p.ts, src/b/x/q.ts and 1 more',
+    )
   })
 
   it('COVERAGE-CODE counts every loose file of a folder, not only the first two', () => {
     const files = [...GOOD_FILES, 'src/b/x/p.ts', 'src/b/x/q.ts', 'src/b/x/r.ts', 'src/a/one.ts']
     expect(messagesOf(repo({ schema, files }), 'COVERAGE-CODE')).toEqual([
-      '4 source files have no note: src/b/x 3, src/a/one.ts 1',
+      '4 source files have no note: src/b/x 3, src/a/one.ts 1; first files: src/b/x/p.ts, src/b/x/q.ts, src/b/x/r.ts and 1 more',
     ])
   })
 
@@ -33,7 +35,7 @@ describe('COVERAGE-CODE', () => {
       'src/a/b.tsx',
     ]
     expect(messagesOf(repo({ schema, files }), 'COVERAGE-CODE')).toEqual([
-      '1 source files have no note: src/a/b.tsx 1',
+      '1 source files have no note: src/a/b.tsx',
     ])
   })
 
@@ -59,7 +61,7 @@ describe('COVERAGE-CODE', () => {
     }
     const files = [...GOOD_FILES, 'lib/y.ts', 'lib/x/z.ts', 'lib/w.d.ts', 'src/b/other.ts']
     const [found] = repo({ schema: two, files }).filter((f) => f.rule === 'COVERAGE-CODE')
-    expect(found.message).toBe('1 source files have no note: lib/y.ts 1')
+    expect(found.message).toBe('1 source files have no note: lib/y.ts')
   })
 
   it('COVERAGE-CODE counts a file no entry describes, even when another entry does', () => {
@@ -73,9 +75,7 @@ describe('COVERAGE-CODE', () => {
     )
     const files = [...GOOD_FILES, 'src/modules/b/README.md', 'src/modules/b/x.ts', 'src/c/y.ts']
     const found = repo({ map: two, files, texts: { 'src/modules/b/README.md': b } })
-    expect(messagesOf(found, 'COVERAGE-CODE')).toEqual([
-      '1 source files have no note: src/c/y.ts 1',
-    ])
+    expect(messagesOf(found, 'COVERAGE-CODE')).toEqual(['1 source files have no note: src/c/y.ts'])
   })
 
   it('COVERAGE-CODE: warns once about source code no map entry describes', () => {
@@ -84,6 +84,6 @@ describe('COVERAGE-CODE', () => {
     expect(found).toHaveLength(1)
     expect(found[0].severity).toBe('warning')
     expect(found[0].note).toBe('docs/knowledge/map.json')
-    expect(found[0].message).toBe('2 source files have no note: src/lib/a.ts 1, src/app/x 1')
+    expect(found[0].message).toBe('2 source files have no note: src/lib/a.ts, src/app/x/page.tsx')
   })
 })

@@ -6,7 +6,7 @@
  *   node scripts/knowledge-structure/cli.mjs --write-index    rewrite the Notes lines of the index
  *   node scripts/knowledge-structure/cli.mjs --skeleton TYPE  print a new note's fields and sections
  *
- * Warnings (the coverage rules, and any rule the schema still marks `warn`) are printed and counted
+ * Warnings (any rule the schema marks `warn`) are printed and counted
  * in the job summary, and never fail the run.
  */
 import { execFileSync } from 'node:child_process'

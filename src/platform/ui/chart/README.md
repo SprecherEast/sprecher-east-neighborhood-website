@@ -1,7 +1,7 @@
 ---
 name: 'Charts and data displays'
 type: feature
-summary: 'charts, heat map, bill.'
+summary: 'charts, heat map, breakdown.'
 aliases: ['charts', 'heat map']
 relationships: [{ 'type': 'depends-on', 'target': 'src/platform/theme/README.md' }]
 ---
@@ -13,7 +13,7 @@ How the kit draws a chart and the data displays built the same way: the chart re
 ## How the pieces link
 
 - **Registry and adapters:** `Chart` checks the spec, asks `chartRegistry.ts` for an adapter and draws the key, caption and numbers table around it. The first adapter that supports the kind draws it (`breakdown`; `css` for units; `visx` for bar and stacked); the `text` adapter supports every kind and is last. Chart libraries (`@visx/*`) are allowed only under `adapters/` (`CHART_LIBRARIES` in `eslint.boundaries.config.mjs`; decision 0018).
-- **Colours** follow the parts' order, `chart-1` to `chart-6`, from the [theme](../../theme/README.md)'s chart tokens; `palette: 'warm'` draws orange and gray by marking the root `data-chart-palette`; a seventh part throws, and the spec refuses it first (`chartPalette.ts`, `src/platform/lib/chart/spec.ts`). `LegendSlot` and `SWATCH_COLOUR` in `Legend.tsx` are fixed at six.
+- **Colours** follow the parts' order, `chart-1` to `chart-6`, from the [theme](../../theme/README.md)'s chart tokens; `palette: 'warm'` draws orange and gray by marking the root `data-chart-palette`; a seventh part throws, and the spec refuses it first (`chartPalette.ts`, `src/platform/lib/chart/spec.ts`). `LegendSlot` and `SWATCH_COLOUR` in `Legend.tsx` are fixed at six. Limits are `CHART_LIMITS` (`src/platform/lib/chart/spec.ts`): six `parts` for a grid or stacked chart, one colour each, but up to seven `areas` for a `breakdown`, one step of its seven-step ramp each.
 - **Numbers and arithmetic** come from [shared helpers](../../lib/README.md) (`chart/breakdown.ts`, `scale.ts`, `table.ts`); this folder only draws them.
 - **Tax picture:** `ShareBill`, `ShareStrip` and `ScaledBreakdown` draw the bill a typed home value produces; the shares are worked out in `src/platform/lib/billShare.ts`, and a bill's slice colours (`shareTones.ts`) are steps of the breakdown chart's ramp.
 - **Roadmap:** `AreaChart`, `HeatMap` and `PeriodNav` draw the plan's activity ([roadmap](../../../modules/roadmap/README.md)).

@@ -71,6 +71,9 @@ function indexFindings(entries, indexText, add) {
     add('INDEX-DRIFT', INDEX, `the lines are not in the order of the map${FIX}`)
 }
 
+/** How many uncovered files the message names; the folder counts say how many there are. */
+const NAMED_FILES = 3
+
 function coverageFinding(schema, entries, files, add) {
   const roots = schema.coverage.roots.map(globToRegExp)
   const ignored = schema.coverage.ignore.map(globToRegExp)
@@ -90,10 +93,15 @@ function coverageFinding(schema, entries, files, add) {
     byFolder.set(key, (byFolder.get(key) ?? 0) + 1)
   }
   const top = [...byFolder].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`)
+  const named = loose.slice(0, NAMED_FILES).join(', ')
+  const detail =
+    loose.length <= NAMED_FILES
+      ? named
+      : `${top.join(', ')}; first files: ${named} and ${loose.length - NAMED_FILES} more`
   add(
     'COVERAGE-CODE',
     'docs/knowledge/map.json',
-    `${loose.length} source files have no note: ${top.join(', ')}`,
+    `${loose.length} source files have no note: ${detail}`,
   )
 }
 

@@ -1,7 +1,7 @@
 ---
 name: 'Whole tax bill'
 type: feature
-summary: 'the tax-bill tab.'
+summary: 'tax-bill tab: counting, notes, notices, limits.'
 aliases: ['bill share', 'Rough Estimator', 'property tax bill']
 relationships: []
 ---
@@ -22,6 +22,7 @@ The one fact-tab panel that works out what a neighbor's property-tax bill might 
 - **Nothing changes while typing:** the answer, bill, rows and the status line a screen reader hears follow the value last estimated. The check-mark button is disabled until the typed value is a new valid number; Enter presses it. The page loads already estimated for the City's average home (`RoughEstimator.tsx`, #1110).
 - **Counts and flashes:** an estimate counts the amounts over 1.5 s and then flashes the total once; a year switch counts over half a second, the mill rates moving from one year's to the other's; with reduced motion everything lands at once (`rateBlend.ts`, `useBillCount.client.ts`, #1087, #1351).
 - **The City's breakdown row opens by itself** after an estimate that changes the bill, once the count and flash have ended and `OPEN_AFTER_TOTAL_MS` has passed; a year switch alone never opens it, a row the reader closed opens again on the next new estimate (`useBreakdownAutoOpen.client.ts`, #1165, #1176; `useBreakdownAutoOpen.client.test.ts`).
+- **Limits of the block's fields** (years, intro, share label and note, row titles, the notes and their text, a notice's title, message and seconds) are written once in `BILL_SHARE_LIMITS`, `src/platform/richtext/editorial/editorialLimits.ts`; Admin refuses a value past one (`billShareBlockConfig.ts`, `billToastFields.ts`).
 - **Notices** (toasts, #1379): each is set once by the moment it is for (an earlier year's rates in use, every rate the year's own, or the reader pressing an Estimate button), with its kind, where it sits and how it ends; one is on show at a time, none opens by itself, and a message left empty turns it off (`billToasts.ts`, `useBillToasts.client.ts`, `BillToastSlot.client.tsx`; `billToasts.test.ts`).
 
 ## Shared pieces it uses

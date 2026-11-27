@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { checkKnowledge } from './check.mjs'
-import { schema } from './testkit.mjs'
+import { realSchema as schema } from './testkit.mjs'
 
 describe('this repository', () => {
   const files = execFileSync(
@@ -27,12 +27,12 @@ describe('this repository', () => {
     expect(found.filter((f) => f.severity === 'error')).toEqual([])
   })
 
-  it('blocks every structure rule; only the path and coverage rules still warn (#1004 closes them)', () => {
-    const warn = Object.entries(schema.rules).filter(([, state]) => state === 'warn')
-    expect(warn.map(([id]) => id).sort()).toEqual([
-      'COVERAGE-CODE',
-      'COVERAGE-SECTION',
-      'NOTE-PATH',
-    ])
+  it('has no finding at all, so a warning rule has nothing left to hide', () => {
+    expect(found).toEqual([])
+  })
+
+  it('blocks every rule: none is left as a warning (#1004)', () => {
+    const warn = Object.entries(schema.rules).filter(([, state]) => state !== 'block')
+    expect(warn).toEqual([])
   })
 })

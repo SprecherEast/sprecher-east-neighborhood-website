@@ -15,7 +15,7 @@ paths:
 ---
 name: 'Accounts'
 type: module
-summary: 'sign-up and sign-in.'
+summary: 'sign-up, sign-in (password, Google, passkeys), resets, limits.'
 aliases: ['sign-in', 'passkeys', 'Google sign-in']
 relationships: []
 ---
@@ -39,7 +39,7 @@ Six account pages (sign-up, log in, verify, forgot and reset password, `/account
 
 ## Behaviors and events
 
-- **Sign-up** makes a guest who cannot sign in until the emailed link is pressed as Confirm on `/verify-account`, after the robot check, so a mail scanner verifies nothing. The link has no expiry and a resend replaces it (`use-cases/signUpResident.ts`, `use-cases/verifyAccountFromLink.ts`).
+- **Sign-up** makes a guest who cannot sign in until the emailed link is pressed as Confirm on `/verify-account`, after the robot check, so a mail scanner verifies nothing. The link has no expiry (Payload's own verify; the 24 hours of the [verification note](/src/modules/verification/README.md) are for contact and address links only) and a resend replaces it (`use-cases/signUpResident.ts`, `use-cases/verifyAccountFromLink.ts`).
 - **Quick ways in first** on `/login`: passkey, then Google, then the email form; either button appears only when its switch is on (`ui/SignInMethods.tsx`, `ui/signInButton.ts`). Google needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`; passkeys need `PASSKEYS_ENABLED=true` (`data/passkeySettings.ts`).
 - **Google flow:** `/auth/google` keeps `state`, `nonce` and PKCE in a signed ten-minute cookie; the callback applies `decideSocialSignIn` (`domain/socialSignIn.ts`). Failures go to `/login?social=<code>` with a fixed message (`use-cases/socialSignIn.ts`). Sessions last Payload's two hours.
 - **Connecting Google** to a password account (decision 0020): at sign-in the callback parks Google's id and email in `social-link-requests` (purged hourly, `cms/socialLinkRetention.ts`) and `/auth/google/connect` asks for the password once; from `/account` it needs a recent sign-in (`use-cases/connectGoogle.ts`, `domain/googleLink.ts`). A note with the time goes to the account's address. No disconnect yet.
@@ -73,7 +73,7 @@ Six account pages (sign-up, log in, verify, forgot and reset password, `/account
 - **Removing the last passkey is allowed:** every account keeps a password or forgot-password, so nobody is locked out (`use-cases/removePasskey.test.ts`).
 - **Sign-up never makes an admin;** only Payload's first registration on an empty database does, and a Google create on an empty database is a guest (`cms/firstAccountIsAdmin.ts`; `cms/signUpFirstAccount.test.ts`, `src/payload.config.roles.test.ts`).
 - **Own password and email changes need their flags** (`cms/requireCurrentPassword.test.ts`, `src/payload.config.emailChange.test.ts`); fields no resident can set are in `src/payload.config.protectedFields.test.ts`.
-- **No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`next.config.js`; `src/app/apiHeaders.test.ts`).
+- **No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).
 - **An MCP key is not a signed-in account:** only a user of the users collection counts (`getSessionPayloadUser` in `data/session.ts`).
 - **Roles gate pages:** `requireUser` sends a visitor to sign in, `requireRole` gives a 404 (`use-cases/requireUser.test.ts`); old residents became guests (`src/payload.config.guestMigration.test.ts`).
 - **A forged or stale answer from the browser is refused** without saying which check failed (`data/webauthn.ts`, `data/webauthn.signIn.test.ts`, `data/webauthn.registration.test.ts`).

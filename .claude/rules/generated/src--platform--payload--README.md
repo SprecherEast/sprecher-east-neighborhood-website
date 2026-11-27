@@ -10,7 +10,7 @@ paths:
 ---
 name: 'Shared Payload code'
 type: platform-area
-summary: 'roles, drafts, queue, jobs, link and site-address helpers, keyset paging.'
+summary: 'roles, drafts, queue, jobs, link, site-address helpers, keyset paging.'
 aliases: ['review queue', 'access policy']
 relationships: []
 ---
@@ -46,7 +46,7 @@ The helpers every collection is built from (`src/platform/payload/`). The rules 
 
 ## Rules and the tests that protect them
 
-- **Roles:** `admin`, `editor`, `guest`, `resident`, `agent`; only admin and editor are staff, guest and resident have the same access, and a principal from another collection (an MCP key acting as itself) counts as signed out. `isNoOne` refuses every operation, admins included, and `serverOnlyFieldAccess` does the same for a field (`roles.ts`; `roles.test.ts`, `src/payload.config.roles.test.ts`, `src/payload.config.protectedFields.test.ts`).
+- **Roles:** `admin`, `editor`, `guest`, `resident`, `agent`; only admin and editor are staff, guest and resident have the same access, and a user with no role counts as a guest (`getRole`), and a principal from another collection (an MCP key acting as itself) counts as signed out. `isNoOne` refuses every operation, admins included, and `serverOnlyFieldAccess` does the same for a field (`roles.ts`; `roles.test.ts`, `src/payload.config.roles.test.ts`, `src/payload.config.protectedFields.test.ts`).
 - **Public lists never show drafts:** `PUBLISHED` filters on `_status` even for staff; `authenticatedOrPublished` lets staff read everything and others published only (`published.ts`, `authenticatedOrPublished.ts`; `accessPolicy.test.ts`).
 - **A non-staff create is held:** REST, GraphQL, MCP or the Local API with a user stores a `suggested` draft that must name a source and an http(s) source link; any other write by them is refused; server code with no user (the seed) passes; blank text becomes null so unique ids never collide on blanks (`reviewQueue.ts`; `src/payload.config.reviewQueue.test.ts`, `src/payload.config.reviewQueueApi.test.ts`, `src/platform/lib/reviewQueue.test.ts`).
 - **A scheduled publish runs on time and queues are restricted** (`src/payload.config.scheduledPublishing.test.ts`, `jobRunners.test.ts`, `retentionJobs.test.ts`, `restrictJobStats.test.ts`, `restrictEditLocks.test.ts`).

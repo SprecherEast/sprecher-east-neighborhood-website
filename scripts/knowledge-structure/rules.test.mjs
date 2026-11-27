@@ -18,7 +18,7 @@ const run = (text, files = GOOD_FILES) =>
 const rulesOf = (text, files) => run(text, files).map((f) => f.rule)
 const withFields = (over, body = GOOD_BODY) => goodNote({ ...GOOD_FIELDS, ...over }, body)
 const allSections = (heads) =>
-  GOOD_BODY.replace('## Behaviors and events', heads.map((h) => `## ${h}`).join('\n\n'))
+  GOOD_BODY.replace('## Behaviors and events', heads.map((h) => `## ${h}\n\nText.`).join('\n\n'))
 
 describe('a note that follows the structure', () => {
   it('has no findings', () => {

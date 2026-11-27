@@ -116,3 +116,42 @@ describe('parseNote', () => {
     }
   })
 })
+
+describe('parseNote: sections with nothing under their heading', () => {
+  const empties = (body) =>
+    parseNote(frontmatter(GOOD_FIELDS) + '\n# T\n\nPurpose.\n\n' + body).emptySections
+
+  it('lists a heading followed by another heading, by blank lines or by a comment only', () => {
+    expect(empties('## A\n\n## B\n\n\n## C\n<!-- x -->\n\n## D\n\ntext\n')).toEqual(['A', 'B', 'C'])
+  })
+
+  it('does not list a section with text, a list, a deeper heading or a code block', () => {
+    expect(empties('## A\ntext\n## B\n- x\n## C\n### d\n## D\n```\nx\n```\n')).toEqual([])
+  })
+
+  it.each([
+    ['a horizontal rule', '---'],
+    ['a rule of stars with spaces', '* * *'],
+    ['a rule of underscores', '_____'],
+    ['an empty list marker and a quote marker', '-\n>'],
+    ['an empty ordered-list marker', '1.'],
+    ['an empty ordered-list marker with a bracket', '1)'],
+    ['empty markers of every kind, nested', '> - 12.\n+\n*'],
+    ['an HTML tag with no text', '<br />'],
+    ['a table border', '| --- | --- |'],
+  ])('lists a section holding only %s', (_what, markup) => {
+    expect(empties(`## A\n\n${markup}\n\n## B\n\ntext\n`)).toEqual(['A'])
+  })
+
+  it('does not list a section whose text sits beside markup, or one holding a table with words', () => {
+    expect(empties('## A\n\n---\n\ntext\n\n## B\n\n| a | b |\n| - | - |\n')).toEqual([])
+  })
+
+  it('does not list a section whose list item has words after its marker', () => {
+    expect(empties('## A\n\n1. one\n\n## B\n\n2) two\n\n## C\n\n> - three\n')).toEqual([])
+  })
+
+  it('lists the last heading of the note when nothing follows it', () => {
+    expect(empties('## A\n\ntext\n\n## B\n')).toEqual(['B'])
+  })
+})

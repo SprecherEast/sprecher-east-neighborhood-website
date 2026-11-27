@@ -1,7 +1,7 @@
 ---
 name: 'UI kit'
 type: platform-area
-summary: 'shared components.'
+summary: 'shared components; raw tags banned outside.'
 aliases: ['shared components']
 relationships: [{ 'type': 'depends-on', 'target': 'src/platform/theme/README.md' }]
 ---
