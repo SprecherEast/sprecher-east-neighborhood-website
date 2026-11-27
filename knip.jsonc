@@ -12,6 +12,9 @@
   "ignoreIssues": {
     // PM2 reads the default export on the server
     "ecosystem.config.cjs": ["exports"],
+    // Next.js reads the exports of the developer pages' routes (default component, `metadata`); knip's Next
+    // plugin only knows src/app (#1530)
+    "developer/app/**": ["exports"],
     // Kept on purpose: only its tests call it today (#756)
     "src/modules/accounts/server.ts": ["exports"],
   },
