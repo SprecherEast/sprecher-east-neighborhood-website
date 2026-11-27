@@ -6,6 +6,11 @@
 
 /** 7035 Littlemore Dr, the Door Creek Park shelter: inside, about 500 m from any edge. */
 export const INSIDE = [-89.254140370164, 43.095074776666]
+/**
+ * 7202 Cottage Grove Rd, a Door Creek Park access point on the City's park page, in the park's
+ * southern end: the point the City's locator answered on 2026-11-26. Outside the boundary.
+ */
+export const PARK_SOUTH_ACCESS = [-89.253806435811, 43.089476630168]
 /** 30 m inside the polygon's longest edge (on the I-94 side). */
 export const JUST_INSIDE = [-89.247382, 43.098764]
 /** 60 m outside the same edge. */

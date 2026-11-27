@@ -28,6 +28,10 @@ Primary references, in the order to trust them:
 
 Facts to keep straight:
 
+- **Door Creek Park is split by the City's boundary.** The shelter (7035 Littlemore Dr, the park's
+  address on the City's page) and the northern part are inside; the southern end, with its Cottage
+  Grove Road access point (7202), is outside, usually `catchment`. An item naming only "Door Creek
+  Park" keeps `core`: the City lists the park's events at the shelter, and an address decides it.
 - **Partly outside the City.** The planning area is "partly in the City of Madison and partly in
   the Town of Blooming Grove". A city program may not apply to a Town address: say so when it
   matters, and don't assume.
@@ -42,14 +46,14 @@ Facts to keep straight:
 
 [`background.md`](background.md) summarizes the City's Sprecher Neighborhood Development Plan
 (adopted January 1998, last amended March 2012), with a page for every fact. Verify and curate are given its summary ([stage-context.md](stage-context.md)). Read it
-before judging whether a development, road, park or school item fits what was planned. Three rules:
+before judging whether a development, road, park or school item fits what was planned. Two rules:
 
-- The plan says what was **expected**, never what exists. Approved or planned is not built (Verification, check 5,
-  stage of a project, below); only an item the note marks `[confirmed]` is current.
+- The plan says what was **expected**, never what exists. Approved or planned is not built (check 5,
+  below); only an item the note marks `[confirmed]` is current. Never state a figure from it as
+  today's: say "the plan expected", with its year.
 - The plan's area is larger than the core area: it spans both sides of Sprecher Road, to I-90. A
   place named in the plan, such as the town center near North Star Drive, still gets its tier by
   address, not by the plan.
-- Never state a figure from the plan as today's. Say "the plan expected" with its year.
 
 ## Tiers
 
@@ -57,7 +61,7 @@ Every verified item gets one `coverage` value (`schemas/common.schema.json`):
 
 | Value       | Means                                                                                                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`      | The confirmed address or affected place is inside the area. Door Creek Park counts as inside, the shelter and the park around it (owner's decision, #1009).                                                                                                                                                               |
+| `core`      | The confirmed address or affected place is inside the area. Door Creek Park's shelter and northern part count as inside; its southern end does not (owner's decisions, #1009, #1547).                                                                                                                                     |
 | `catchment` | Close enough that residents use it: Pinney Library, Elvehjem Sanctuary, the stretches of Sprecher Road, Cottage Grove Road and I-94 that bound the area, District 16 meetings that name a place near the area, and the major events and public matters of the neighboring associations in `area.yaml`.                    |
 | `citywide`  | City of Madison or Dane County, with a direct use for residents: a deadline, a service, a council decision, a free program open to everyone. Not tied to a place, or at a fixed place elsewhere in the city only when it is a public event or service open to anyone and of wide interest (see "Review passes", check 2). |
 | `outside`   | Somewhere else, including places with similar names.                                                                                                                                                                                                                                                                      |
@@ -172,9 +176,8 @@ These rules are written only here; `prompts/verify.md` and `prompts/curate.md` p
 What the pipeline does is two reads: **verify** applies the five checks below, and **curate** reads
 the result again with the relevance rules and sends the item to `needs-review` when a check
 wasn't met. Both are prompt rules, a model's judgment; code guards only what `promotionGuard` in
-`pipeline.yaml` lists and the safety rule below. The third step is not a pipeline stage: **before publishing**, the person
-or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
-longer current.
+`pipeline.yaml` lists and the safety rule below. A third step is no pipeline stage: **before
+publishing**, whoever publishes by hand re-checks freshness (check 3) and withdraws a stale item.
 
 A safety item is never `accept`, and code enforces it (#1007). What counts as one is written once, as a
 principle, in [`safety.yaml`](safety.yaml); verify and curate each judge by what the item means and
@@ -183,7 +186,6 @@ item from an always-held source, or one a stage didn't clear with a plain `false
 the accepted limit and where each lives are in the pipeline note
 ([`README.md`](README.md#output-suggestions-and-review-items-in-the-cms), "The same gate"). Only a decision of `accept` creates a
 suggestion, so `reject`, `update` and `cancel` of a safety item stay as decided ("Public interest and context", rule 4).
-Nothing publishes by itself either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:
 
@@ -244,10 +246,8 @@ The five checks, which verify runs on every item:
 ## Discovering sources
 
 An organizer or publisher met in an accepted item that isn't in `sources.yaml` is a candidate
-source. Curate notes each one in its reasons and proposes it as `pending`, with what was observed
-(`prompts/curate.md`, "Discovering sources"). No code records the proposal yet (#1008): an editor
-reads it in the reasons, and only a pull request changes the registry. Nothing is polled until a
-hand check makes it `valid`.
+source: curate proposes it as `pending` in its reasons (`prompts/curate.md`). No code records it yet
+(#1008); only a pull request changes the registry, and nothing is polled before a hand check.
 
 ## What never changes
 

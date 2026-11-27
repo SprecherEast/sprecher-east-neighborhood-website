@@ -83,4 +83,20 @@ cases:
       }
     graders:
       - { check: equals, field: $.placement.method, value: word-match }
-    why: The park is inside the area (coverage.md), so naming it is enough for core; with no street address the word match stands and says so.
+    why: The park is mostly inside the area (coverage.md), so naming it alone is read as the shelter's park and stays core; with no street address the word match stands and says so.
+  - id: verify-place-park-south-access-outside
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: madison365-news
+      title: Open house at the Door Creek Park south entrance
+      sourceText: The City invites neighbors to see the trail work at the park's Cottage Grove Road entrance, with the address on the park page.
+      startsAt: 2026-12-05T10:00:00-06:00
+      locationText: Door Creek Park, 7202 Cottage Grove Rd, Madison, WI
+    expected:
+      { decision: accept, coverage: catchment, route: submitSuggestion, placement: boundary }
+    graders:
+      - { check: equals, field: $.placement.method, value: boundary }
+      - { check: equals, field: $.placement.inside, value: false }
+      - { check: notMatches, field: $.coverage, value: '^core$' }
+    why: The park's southern end is outside the City's boundary, so an address there is not core even though the park is named; it is a place next door that residents use, so catchment.
