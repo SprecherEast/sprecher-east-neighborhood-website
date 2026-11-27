@@ -305,7 +305,8 @@ describe('offsite-backup.sh check', () => {
     h.putRemote(NAME, 'x', 12)
     const { code, out } = await h.run('offsite-backup.sh', ['check'])
     expect(code).toBe(1)
-    expect(out).toContain('::error')
+    expect(out).toContain('::warning') // a warning annotation: the deploy that reports it stays green
+    expect(out).not.toContain('::error')
     expect(out).toContain('12 days old')
   })
 
@@ -321,6 +322,7 @@ describe('offsite-backup.sh check', () => {
   })
 
   it('waits for the first weekly run right after the install, then fails', async () => {
+    h.makeRemoteDir()
     fs.mkdirSync(h.p('cron'), { recursive: true })
     fs.writeFileSync(h.p('cron/sprecher-east-offsite-backup'), 'job\n')
     let result = await h.run('offsite-backup.sh', ['check'])
@@ -339,6 +341,82 @@ describe('offsite-backup.sh check', () => {
     expect(h.rcloneLog()).not.toMatch(/copyto|deletefile/)
     fs.rmSync(h.p('etc/offsite-rclone.conf'))
     expect((await h.run('offsite-backup.sh', ['check'])).code).toBe(78)
+  })
+})
+
+describe('offsite-restore.sh: the opened archive and the OpenSSL it needs', () => {
+  it('writes the opened archive readable by its owner only', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-mode-'))
+    try {
+      fs.writeFileSync(path.join(work, NAME), h.remoteFile(NAME))
+      await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work])
+      expect(fs.statSync(path.join(work, `sprecher-east-${STAMP}.tar.gz`)).mode & 0o077).toBe(0)
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses a copy that opens but is not a readable archive, leaving no output', async () => {
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-notar-'))
+    try {
+      fs.writeFileSync(path.join(work, 'plain.txt'), 'this is not a tar archive')
+      execFileSync(
+        'openssl',
+        [
+          'cms',
+          '-encrypt',
+          '-aes-256-gcm',
+          '-binary',
+          '-outform',
+          'DER',
+          '-in',
+          path.join(work, 'plain.txt'),
+          '-out',
+          path.join(work, NAME),
+          '-recip',
+          h.keys.cert,
+          '-keyopt',
+          'rsa_padding_mode:oaep',
+        ],
+        { stdio: 'ignore' },
+      )
+      const result = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work])
+      expect(result.code).toBe(1)
+      expect(result.out).toContain('not a readable archive')
+      expect(fs.readdirSync(work).sort()).toEqual(['plain.txt', NAME])
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true })
+    }
+  })
+
+  it.each([
+    ['LibreSSL, which a Mac ships', 'LibreSSL 3.3.6'],
+    ['OpenSSL older than 3.0', 'OpenSSL 1.1.1w  11 Sep 2023'],
+  ])('stops with what to install when openssl is %s', async (_what, banner) => {
+    h.stub('openssl', `echo "${banner}"`)
+    const result = await h.run('offsite-restore.sh', ['/dev/null', '/dev/null', h.dir])
+    expect(result.code).toBe(1)
+    expect(result.out).toContain('OpenSSL 3.0 or later')
+    expect(result.out).toContain('brew install openssl@3')
+    expect(result.out).toContain('OFFSITE_OPENSSL=')
+  })
+
+  it('uses the openssl that OFFSITE_OPENSSL names', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-alt-'))
+    try {
+      h.stub('openssl', 'echo "LibreSSL 3.3.6"')
+      fs.writeFileSync(path.join(work, NAME), h.remoteFile(NAME))
+      const result = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        OFFSITE_OPENSSL: '/usr/bin/openssl',
+      })
+      expect(result.code).toBe(0)
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true })
+    }
   })
 })
 
@@ -396,6 +474,175 @@ describe('offsite-restore.sh', () => {
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
     }
+  })
+})
+
+describe('the guards that protect the copies', () => {
+  const oldCopies = (n) => {
+    for (let i = 1; i <= n; i++)
+      h.putRemote(
+        `sprecher-east-2026-10-${String(i).padStart(2, '0')}T0815Z.tar.gz.cms`,
+        'old',
+        60 - i,
+      )
+  }
+
+  it.each([
+    ['a different size', 'MOCK_CORRUPT_UPLOAD'],
+    ['one flipped byte of the same size', 'MOCK_FLIP_UPLOAD'],
+  ])(
+    'keeps every older copy when the new one has %s (retention only after the check)',
+    async (_what, flag) => {
+      h.makeArchive()
+      oldCopies(9) // more than the 8 kept: a retention run before the check would delete one
+      const { code } = await h.run('offsite-backup.sh', [], { [flag]: '1' })
+      expect(code).toBe(1)
+      expect(archiveNames()).toHaveLength(9)
+      expect(h.rcloneLog().match(/deletefile/g)).toHaveLength(1) // only the copy that did not match
+    },
+  )
+
+  it('seals with RSA-OAEP using SHA-256 and MGF1 with SHA-256, not the SHA-1 default', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-asn1-'))
+    try {
+      fs.writeFileSync(path.join(tmp, 'c.der'), h.remoteFile(NAME))
+      const text = execFileSync(
+        'openssl',
+        ['asn1parse', '-inform', 'DER', '-in', path.join(tmp, 'c.der'), '-i'],
+        {
+          stdio: ['ignore', 'pipe', 'ignore'],
+        },
+      ).toString()
+      const head = text.split('\n').slice(0, 40).join('\n')
+      expect(head).toContain('rsaesOaep')
+      expect(head.match(/OBJECT\s+:sha256/g)?.length).toBeGreaterThanOrEqual(2) // the hash and the MGF1 hash
+      expect(head).not.toMatch(/OBJECT\s+:sha1\b/)
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true })
+    }
+  })
+
+  it('deletes only names that are exactly the job pattern (anchored at both ends, dots literal)', async () => {
+    h.makeArchive()
+    oldCopies(9)
+    const lookalikes = [
+      'old-sprecher-east-2026-09-01T0815Z.tar.gz.cms', // starts differently
+      'sprecher-east-2026-09-01T0815Z.tar.gz.cms.bak', // ends differently
+      'sprecher-east-2026-09-01T0815Zxtar.gz.cms', // a dot is a dot
+    ]
+    for (const name of lookalikes) h.putRemote(name, 'not ours', 90)
+    const { code } = await h.run('offsite-backup.sh')
+    expect(code).toBe(0)
+    for (const name of lookalikes) expect(h.remoteNames()).toContain(name)
+    expect(archiveNames()).toHaveLength(8)
+  })
+
+  it('refuses a certificate file with two certificates in it', async () => {
+    h.makeArchive()
+    const cert = fs.readFileSync(h.keys.cert, 'utf8')
+    fs.writeFileSync(h.p('code/ops/offsite-backup-cert.pem'), cert + cert)
+    const { code, out } = await h.run('offsite-backup.sh')
+    expect(code).toBe(1)
+    expect(out).toContain('exactly one')
+    expect(h.rcloneLog()).toBe('')
+  })
+
+  it('refuses a certificate that holds a key that is not RSA', async () => {
+    h.makeArchive()
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-ec-'))
+    try {
+      execFileSync(
+        'openssl',
+        [
+          'genpkey',
+          '-algorithm',
+          'EC',
+          '-pkeyopt',
+          'ec_paramgen_curve:P-256',
+          '-out',
+          path.join(dir, 'ec.pem'),
+        ],
+        { stdio: 'ignore' },
+      )
+      execFileSync(
+        'openssl',
+        [
+          'req',
+          '-new',
+          '-x509',
+          '-key',
+          path.join(dir, 'ec.pem'),
+          '-subj',
+          '/CN=x',
+          '-days',
+          '30',
+          '-out',
+          h.p('code/ops/offsite-backup-cert.pem'),
+        ],
+        { stdio: 'ignore' },
+      )
+      const { code, out } = await h.run('offsite-backup.sh')
+      expect(code).toBe(1)
+      expect(out).toContain('RSA')
+      expect(h.rcloneLog()).toBe('')
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('keeps what it writes private to root (umask 077)', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    expect(fs.statSync(h.p('backups/offsite-status')).mode & 0o077).toBe(0)
+    expect(fs.statSync(h.p('backups/.offsite.lock')).mode & 0o077).toBe(0)
+    expect(fs.statSync(h.p('offsite.log')).mode & 0o077).toBe(0)
+  })
+
+  it('stops with a clear message when openssl is too old for the scheme', async () => {
+    h.makeArchive()
+    h.stub('openssl', 'echo "OpenSSL 1.1.1w  11 Sep 2023"')
+    const { code, out } = await h.run('offsite-backup.sh')
+    expect(code).toBe(1)
+    expect(out).toContain('OpenSSL 3.0 or later')
+    expect(h.rcloneLog()).toBe('')
+  })
+
+  it("keeps rclone's own error text out of the output (it goes to the root-only log)", async () => {
+    h.makeArchive()
+    const { out } = await h.run('offsite-backup.sh', [], { MOCK_FAIL: 'copyto' })
+    expect(out).not.toContain('mock: copyto failed')
+    expect(fs.readFileSync(h.p('offsite.log'), 'utf8')).toContain('mock: copyto failed')
+    const check = await h.run('offsite-backup.sh', ['check'], { MOCK_FAIL: 'lsf' })
+    expect(check.out).not.toContain('mock: lsf failed')
+  })
+
+  it('warns, before it uploads, when the copy is too big to open comfortably', async () => {
+    h.makeArchive()
+    const { code, out } = await h.run('offsite-backup.sh', [], { OFFSITE_WARN_BYTES: '1000' })
+    expect(code).toBe(0)
+    expect(out).toContain('::warning')
+    expect(out).toContain('memory')
+  })
+
+  it('a test run does not clear the failure of a weekly run', async () => {
+    h.makeArchive()
+    h.putRemote(NAME, 'x', 3)
+    fs.writeFileSync(
+      h.p('backups/offsite-status'),
+      'result=failed\ntime=2026-11-22T09:30:00Z\ndetail=the upload to Drive failed\n',
+    )
+    expect((await h.run('offsite-backup.sh', ['test'])).code).toBe(0)
+    expect(status()).toContain('result=failed')
+    const { code } = await h.run('offsite-backup.sh', ['check'])
+    expect(code).toBe(1)
+  })
+
+  it('check fails, saying so, when the Drive folder cannot be listed', async () => {
+    const { code, out } = await h.run('offsite-backup.sh', ['check'])
+    expect(code).toBe(1)
+    expect(out).toContain('could not list')
   })
 })
 

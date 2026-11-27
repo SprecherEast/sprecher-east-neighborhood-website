@@ -16,6 +16,7 @@ export const REMOTE_DIR = 'sprecher-east-backups'
 const SCRIPTS = [
   'lib.sh',
   'environment.sh',
+  'public-key-lib.sh',
   'offsite-lib.sh',
   'offsite-backup.sh',
   'offsite-restore.sh',
@@ -51,12 +52,14 @@ if (cmd === 'copyto') {
   const dest = remote(args[1])
   fs.mkdirSync(path.dirname(dest), { recursive: true })
   let data = fs.readFileSync(args[0])
-  if (process.env.MOCK_CORRUPT_UPLOAD) data = data.subarray(0, data.length - 1)
+  if (process.env.MOCK_CORRUPT_UPLOAD) data = data.subarray(0, data.length - 1) // a different size
+  if (process.env.MOCK_FLIP_UPLOAD) { data = Buffer.from(data); data[data.length >> 1] ^= 1 } // the same size
   fs.writeFileSync(dest, data)
 } else if (cmd === 'deletefile') {
   fs.rmSync(remote(args[0]), { force: true })
 } else if (cmd === 'lsf') {
   const dir = remote(args[0])
+  if (!fs.existsSync(dir)) fail('directory not found') // as rclone does: exit 3, nothing listed
   const sep = flags['--separator'] || ';'
   const names = fs.existsSync(dir) ? fs.readdirSync(dir).sort() : []
   for (const name of names) {
@@ -134,7 +137,7 @@ export function setUpOffsiteHarness({ install = false } = {}) {
     fs.copyFileSync(p('bin/rclone-mock'), p('bin/rclone'))
     fs.chmodSync(p('bin/rclone'), 0o755)
     if (install) {
-      fs.rmSync(p('etc/offsite-rclone.conf'))
+      fs.rmSync(p('etc'), { recursive: true }) // the installer makes it when it stores a credential
       fs.rmSync(p('bin/rclone'))
     }
   })
@@ -163,6 +166,7 @@ export function setUpOffsiteHarness({ install = false } = {}) {
     fs.utimesSync(file, when, when)
     return file
   }
+  h.makeRemoteDir = () => fs.mkdirSync(p('store', REMOTE_DIR), { recursive: true })
   h.remoteNames = () =>
     fs.existsSync(p('store', REMOTE_DIR)) ? fs.readdirSync(p('store', REMOTE_DIR)).sort() : []
   h.remoteFile = (name) => fs.readFileSync(p('store', REMOTE_DIR, name))

@@ -2,14 +2,19 @@
 # Opens an off-site backup copy on the owner's own computer (#1332). Never run on the server: the private key
 # must stay in the owner's password manager and on his computer only.
 #
+# Needs OpenSSL 3.0 or later (AES-GCM in `openssl cms`). macOS's own `openssl` is LibreSSL and will not do: install
+# OpenSSL 3 (`brew install openssl@3`) and name it: OFFSITE_OPENSSL="$(brew --prefix openssl@3)/bin/openssl" bash offsite-restore.sh ...
+# Opening needs about three times the copy's size in free memory (OpenSSL does not stream it): ops/offsite-backup.md.
+#
 # Usage: bash offsite-restore.sh <sealed copy, e.g. sprecher-east-2026-01-04T0815Z.tar.gz.cms> <private key .pem> [<folder for the result>]
 #
 # It writes the plain daily archive (sprecher-east-<time>.tar.gz, holding payload.db, env.local and media/) into
 # the folder (default: the current one), refusing to overwrite a file, after checking that the copy is untouched
 # (AES-GCM's authentication tag) and that the archive reads as a gzip tar. The archive holds residents' emails and
 # the site's secrets: keep it on this computer, and delete it after the restore. The steps that put it back on
-# the server are in ops/README.md, "Restore from an off-site copy".
+# the server are in ops/offsite-backup.md, "Restore from an off-site copy".
 set -euo pipefail
+umask 077 # the opened archive holds residents' emails and the site's secrets: only its owner may read it
 
 . "$(dirname "$0")/offsite-lib.sh"
 
@@ -26,6 +31,9 @@ fail() {
   exit 1
 }
 
+if problem=$(offsite_openssl_problem); then :; else
+  fail "$problem. Install OpenSSL 3 (macOS: brew install openssl@3) and point this script at it: OFFSITE_OPENSSL=\"\$(brew --prefix openssl@3)/bin/openssl\" bash $0 ..."
+fi
 [ -f "$sealed" ] || fail "no such file: $sealed"
 [ -f "$key" ] || fail "no such file: $key"
 [ -d "$out_dir" ] || fail "no such folder: $out_dir"

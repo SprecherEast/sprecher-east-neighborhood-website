@@ -60,7 +60,7 @@ describe('install-offsite-backup.sh while something is missing', () => {
     expect(code).toBe(0)
     expect(out).toContain('public key')
     expect(fs.existsSync(cronFile())).toBe(false)
-    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
+    expect(fs.existsSync(h.p('etc'))).toBe(false) // nothing is made before the key and the credential both exist
     expect(stubLog()).not.toContain('curl')
   })
 
@@ -69,6 +69,7 @@ describe('install-offsite-backup.sh while something is missing', () => {
     expect(code).toBe(0)
     expect(out).toContain('OFFSITE_BACKUP_RCLONE_CONF')
     expect(fs.existsSync(cronFile())).toBe(false)
+    expect(fs.existsSync(h.p('etc'))).toBe(false)
     expect(stubLog()).not.toContain('curl')
   })
 
@@ -84,14 +85,14 @@ describe('install-offsite-backup.sh while something is missing', () => {
   it('refuses a private key in place of the public one, with the reason', async () => {
     fs.copyFileSync(h.keys.key, h.p('code/ops/offsite-backup-cert.pem'))
     const { code, out } = await install()
-    expect(code).toBe(1)
+    expect(code).toBe(0)
     expect(out).toContain('private key must never be here')
     expect(fs.existsSync(cronFile())).toBe(false)
   })
 
   it('refuses to run as anyone but root', async () => {
     const { code, out } = await install({ OFFSITE_ROOT_UID: '99999' })
-    expect(code).toBe(1)
+    expect(code).toBe(0)
     expect(out).toContain('must run as root')
   })
 })
@@ -99,6 +100,24 @@ describe('install-offsite-backup.sh while something is missing', () => {
 describe('the credential', () => {
   it.each([
     ['a wider scope', GOOD.replace('drive.file', 'drive'), 'scope must be drive.file'],
+    ['a wider scope added after the good one', `${GOOD}scope = drive\n`, 'more than once'],
+    ['a local type added after the good one', `${GOOD}type = local\n`, 'more than once'],
+    ['a wider scope with no spaces around the =', `${GOOD}scope=drive\n`, 'more than once'],
+    ['a setting spelled with capitals', `${GOOD}Scope = drive\n`, 'not allowed'],
+    ['a setting with an indent', `${GOOD}  type = local\n`, 'more than once'],
+    ['the client id twice', `${GOOD}client_id = another\n`, 'more than once'],
+    ['the section twice', `${GOOD}[offsite]\ntype = local\n`, 'more than one'],
+    ['a setting before the section', `type = local\n${GOOD}`, 'before the [offsite] section'],
+    [
+      'a local type with Windows line endings',
+      `${GOOD.replaceAll('\n', '\r\n')}type = local\r\n`,
+      'more than once',
+    ],
+    [
+      'a section header with other spacing',
+      GOOD.replace('[offsite]', '[ offsite ]'),
+      'section other than',
+    ],
     ['no scope line', GOOD.replace('scope = drive.file\n', ''), 'scope must be drive.file'],
     ['another type', GOOD.replace('type = drive', 'type = sftp'), 'type drive'],
     ['a second section', `${GOOD}[other]\ntype = local\n`, 'section other than'],
@@ -117,7 +136,7 @@ describe('the credential', () => {
     'is refused with %s, never stored, and no value is printed',
     async (_label, config, message) => {
       const { code, out } = await install({}, config)
-      expect(code).toBe(1)
+      expect(code).toBe(0)
       expect(out).toContain(message)
       expect(out).not.toContain(TOKEN)
       expect(out).not.toContain('fake-client-secret')
@@ -126,22 +145,40 @@ describe('the credential', () => {
     },
   )
 
-  it('is kept root-only, and a deploy with no new credential keeps the old one', async () => {
+  it('is kept root-only, rewritten in one canonical form with only what was validated', async () => {
     seedDrive(1)
-    expect((await install()).code).toBe(0)
+    const config = `# a comment\r\n[offsite]\r\ntype=drive\r\n  client_id =   fake-client.apps.example  \r\nclient_secret = fake-client-secret-5b2e\r\nscope = drive.file\r\ntoken = {"access_token":"${TOKEN}","refresh_token":"fake-refresh"}\r\nteam_drive =\r\n`
+    expect((await install({}, config)).code).toBe(0)
     expect(mode('etc/offsite-rclone.conf')).toBe('600')
     expect(mode('etc')).toBe('700')
-    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).toContain(TOKEN)
+    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).toBe(
+      `[offsite]\ntype = drive\nclient_id = fake-client.apps.example\nclient_secret = fake-client-secret-5b2e\nscope = drive.file\ntoken = {"access_token":"${TOKEN}","refresh_token":"fake-refresh"}\n`,
+    )
+  })
+
+  it('removes the credential, the job and the marker when the secret is empty (the way to undo it without a shell)', async () => {
+    seedDrive(1)
+    expect((await install()).code).toBe(0)
+    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(true)
     const again = await install({}, '')
     expect(again.code).toBe(0)
-    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).toContain(TOKEN)
+    expect(again.out).toContain('removed')
+    expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
+    expect(fs.existsSync(h.p('etc/offsite-tried'))).toBe(false)
+    expect(fs.existsSync(cronFile())).toBe(false)
+  })
+
+  it('leaves no copy of the credential behind when the run is killed in the middle of writing it', async () => {
+    h.stub('mv', 'kill -TERM "$PPID"; sleep 2')
+    await install()
+    expect(fs.readdirSync(h.p('etc')).filter((n) => n.startsWith('.offsite-rclone.'))).toEqual([])
   })
 
   it('takes the empty settings rclone writes for a personal Drive', async () => {
     seedDrive(1)
     const config = `${GOOD}team_drive = \nroot_folder_id =\nservice_account_file = \n`
     expect((await install({}, config)).code).toBe(0)
-    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).toContain('team_drive')
+    expect(fs.readFileSync(h.p('etc/offsite-rclone.conf'), 'utf8')).not.toContain('team_drive') // only the checked values are written
   })
 
   it('never reaches an argument or a log line', async () => {
@@ -164,12 +201,13 @@ describe('rclone', () => {
     expect(log).toContain('curl')
     expect(log).toContain('https://downloads.rclone.org/v1.76.0/rclone-v1.76.0-linux-amd64.deb')
     expect(log).toContain('--proto =https')
+    expect(log).toContain('--tlsv1.2')
     expect(log).toMatch(/dpkg -i .*rclone-v1\.76\.0-linux-amd64\.deb/)
   })
 
   it('is not installed when the checksum differs', async () => {
     const { code, out } = await install(stubs({ sha: '0'.repeat(64) }))
-    expect(code).toBe(1)
+    expect(code).toBe(0)
     expect(out).toContain('does not match its pinned SHA-256')
     expect(stubLog()).not.toContain('dpkg -i')
     expect(fs.existsSync(cronFile())).toBe(false)
@@ -183,19 +221,29 @@ describe('rclone', () => {
     expect((await install(stubs({ sha: arm, arch: 'arm64' }))).code).toBe(0)
     expect(stubLog()).toContain('linux-arm64.deb')
     fs.rmSync(h.p('installed-rclone'))
-    expect((await install(stubs({ sha: PINNED, arch: 'arm64' }))).code).toBe(1) // the amd64 hash is not arm64's
+    expect((await install(stubs({ sha: PINNED, arch: 'arm64' }))).code).toBe(0) // the amd64 hash is not arm64's
   })
 
   it('stops on an unknown architecture, a failed download and a failed install', async () => {
     let result = await install(stubs({ arch: 'riscv64' }))
-    expect(result.code).toBe(1)
+    expect(result.code).toBe(0)
     expect(result.out).toContain('architecture')
     result = await install({ STUB_CURL_FAILS: '1' })
-    expect(result.code).toBe(1)
+    expect(result.code).toBe(0)
     expect(result.out).toContain('downloading')
     result = await install({ STUB_DPKG_FAILS: '1' })
-    expect(result.code).toBe(1)
+    expect(result.code).toBe(0)
     expect(result.out).toContain('installing')
+    expect(fs.existsSync(cronFile())).toBe(false)
+  })
+
+  it('is not accepted when what runs after the install is not the pinned version', async () => {
+    fs.writeFileSync(h.p('wrong-rclone'), '#!/usr/bin/env bash\necho "rclone v1.75.0"\n', {
+      mode: 0o755,
+    })
+    const { code, out } = await install({ STUB_RCLONE_SOURCE: h.p('wrong-rclone') })
+    expect(code).toBe(0)
+    expect(out).toContain('is not what runs after the install')
     expect(fs.existsSync(cronFile())).toBe(false)
   })
 
@@ -291,10 +339,10 @@ describe('the weekly job and the first try', () => {
     expect(copies()).toBe(before)
   })
 
-  it('fails the deploy, with the reason, when the test upload fails, and tries again next time', async () => {
+  it('warns with the reason, without failing the deploy, when the test upload fails, and tries again next time', async () => {
     seedDrive(1)
     const failed = await install({ MOCK_FAIL: 'copyto' })
-    expect(failed.code).toBe(1)
+    expect(failed.code).toBe(0)
     expect(failed.out).toContain('did not pass the test upload')
     expect(fs.existsSync(h.p('etc/offsite-tried'))).toBe(false)
     const again = await install()
@@ -302,13 +350,15 @@ describe('the weekly job and the first try', () => {
     expect(fs.existsSync(h.p('etc/offsite-tried'))).toBe(true)
   })
 
-  it('turns the deploy red when the newest copy in Drive is too old, and not before the first week is over', async () => {
+  it('only warns, and the deploy stays green, when the newest copy in Drive is too old; no warning in the first week', async () => {
     seedDrive(15)
     const stale = await install()
-    expect(stale.code).toBe(1)
+    expect(stale.code).toBe(0)
+    expect(stale.out).toContain('::warning')
     expect(stale.out).toContain('15 days old')
     fs.rmSync(h.p('store'), { recursive: true })
     fs.mkdirSync(h.p('store'))
+    h.makeRemoteDir()
     fs.rmSync(cronFile())
     const first = await install()
     expect(first.code).toBe(0) // a new install waits for its first weekly run

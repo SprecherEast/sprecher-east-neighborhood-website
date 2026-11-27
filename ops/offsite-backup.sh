@@ -5,16 +5,17 @@
 #   run    (default; the weekly cron job) seal the newest daily archive, upload it with rclone, check
 #          the upload's size and checksum, keep the newest OFFSITE_KEEP copies, write the result
 #   test   the same with a tiny made-up file, so a new Drive credential can be tried without a real archive
-#          (the installer runs it once for each new credential)
+#          (the installer runs it once for each new credential); it never writes the result of a run
 #   check  read-only: is there a copy in Drive no older than OFFSITE_MAX_AGE_DAYS, and did the last run
-#          succeed? (run by every deploy, the owner's signal)
+#          succeed? (run by every deploy, which shows the answer as a warning and stays green)
 # Exit status: 0 done, 1 failed (the message says why), 78 not set up yet (no public key or no credential).
 #
 # The daily archive (ops/backup.sh) already holds a consistent copy of the database (VACUUM INTO, ops/backup-db.mjs),
 # the media and .env.local, so this job seals that file rather than copying the live files again.
 # Only the sealed file ever leaves the server, and only ops/offsite-lib.sh seals it (see there). Nothing
 # secret is printed: the deploy log and this job's log are not private. The Drive credential is read by
-# rclone alone, from a root-only file.
+# rclone alone, from a root-only file, and rclone's own messages go to the root-only log (OFFSITE_LOG), never to the
+# output. Every setting is in environment.sh and offsite-lib.sh.
 set -Eeuo pipefail
 
 . "$(dirname "$0")/lib.sh"
@@ -28,28 +29,27 @@ case "$MODE" in
     exit 2
     ;;
 esac
-
-OFFSITE_CERT="${OFFSITE_CERT:-$CODE_DIR/ops/offsite-backup-cert.pem}"
-RCLONE="${RCLONE:-rclone}"
-OFFSITE_STATUS="$BACKUP_ROOT/offsite-status"
-SPARE_KB="${OFFSITE_SPARE_KB:-$((1024 * 1024))}" # keep at least 1 GB free beside the sealed copy
 umask 077
 
 work=""
 cleanup() { [ -z "$work" ] || rm -rf "$work"; }
 trap cleanup EXIT
 
-# Records how the last run went, for `check` and for whoever looks. Fixed words only.
+# Only a weekly run decides the result `check` reads; the cron job is the only one whose failure is an ERROR. A test
+# or a check that fails is a WARNING, because the deploy that shows it stays green.
+level=WARNING
+[ "$MODE" != run ] || level=ERROR
+
+# Records how the last weekly run went, for `check` and for whoever looks. Fixed words only.
 write_status() { # <ok|failed> <fixed text>
-  [ -d "$BACKUP_ROOT" ] || return 0
+  [ "$MODE" = run ] && [ -d "$BACKUP_ROOT" ] || return 0
   printf 'result=%s\ntime=%s\ndetail=%s\n' "$1" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$2" >"$OFFSITE_STATUS.tmp" &&
     mv -f "$OFFSITE_STATUS.tmp" "$OFFSITE_STATUS" || true
 }
 
-# A failure: the message goes to the deploy annotation or the log, and a run (not a check) is recorded.
 fail() { # <message>
-  report "ERROR: off-site backup: $*"
-  [ "$MODE" = check ] || write_status failed "$*"
+  report "$level: off-site backup: $*"
+  write_status failed "$*"
   exit 1
 }
 on_unexpected_error() {
@@ -64,23 +64,37 @@ not_set_up() { # <message>
   exit 78
 }
 
-rc() { "$RCLONE" --config "$OFFSITE_RCLONE_CONF" --retries 3 --low-level-retries 10 --contimeout 60s --timeout 10m "$@"; }
+# One rclone call: its credential is the root-only file, its own messages go to the root-only log, and it is cut off
+# after a time (a run sends a whole archive; the test and the check, which a deploy waits for, must not hang).
+RC_SECONDS=$OFFSITE_QUICK_SECONDS
+RC_RETRIES=1
+[ "$MODE" != run ] || { RC_SECONDS=$OFFSITE_RUN_SECONDS; RC_RETRIES=3; }
+rc() {
+  timeout "$RC_SECONDS" "$RCLONE" --config "$OFFSITE_RCLONE_CONF" --retries "$RC_RETRIES" --low-level-retries 3 \
+    --contimeout 30s --timeout 60s "$@" 2>>"$OFFSITE_LOG"
+}
 
 # What must exist before anything is sealed or sent. A missing piece is "not set up", never an upload without it.
+problem=$(offsite_openssl_problem) || fail "$problem"
 problem=$(offsite_cert_problem "$OFFSITE_CERT") || {
-  [ ! -f "$OFFSITE_CERT" ] && not_set_up "ops/offsite-backup-cert.pem (the public key) is not in the repository yet"
+  [ -f "$OFFSITE_CERT" ] || not_set_up "ops/offsite-backup-cert.pem (the public key) is not in the repository yet"
   fail "$problem"
 }
 [ -f "$OFFSITE_RCLONE_CONF" ] || not_set_up "the Drive credential (the OFFSITE_BACKUP_RCLONE_CONF secret) has not reached the server yet"
 command -v "$RCLONE" >/dev/null 2>&1 || fail "rclone is not installed (the deploy installs it: ops/install-offsite-backup.sh)"
 
-# The copies in Drive whose names match <pattern>, one "<name>;<modification time>" line each, newest name first.
+# The copies in Drive whose names match <pattern> (a bash regular expression), one "<name>;<modification time>" line
+# each, newest name first. The pattern is matched by bash, not awk, so it means the same on every system.
 remote_list() { # <pattern>
-  rc lsf --files-only --format pt --separator ';' "$OFFSITE_REMOTE" | awk -F';' -v re="$1" '$1 ~ re' | sort -r
+  local listing name rest
+  listing=$(rc lsf --files-only --format pt --separator ';' "$OFFSITE_REMOTE") || return 1
+  while IFS=';' read -r name rest; do
+    { [[ "$name" =~ $1 ]] && printf '%s;%s\n' "$name" "$rest"; } || true
+  done <<<"$listing" | sort -r
 }
 
 if [ "$MODE" = check ]; then
-  newest=$(remote_list "$OFFSITE_ARCHIVE_PATTERN" | sed -n 1p) || fail "could not list the copies in Drive"
+  newest=$(remote_list "$OFFSITE_ARCHIVE_PATTERN" | sed -n 1p) || fail "could not list the copies in Drive (rclone's message is in $OFFSITE_LOG)"
   if [ -z "$newest" ]; then
     # Right after the install the first weekly run has not happened yet.
     cron_age=$(($(date +%s) - $(stat -c %Y "$OFFSITE_CRON_FILE" 2>/dev/null || echo 0)))
@@ -106,9 +120,9 @@ fi
 # One run at a time (a run by hand and the weekly job could overlap).
 mkdir -p "$BACKUP_ROOT"
 chmod 700 "$BACKUP_ROOT"
-exec 8>"$BACKUP_ROOT/.offsite.lock"
+exec 8>"$OFFSITE_LOCK"
 flock -n 8 || {
-  report "ERROR: off-site backup: another run is still going; this one did nothing"
+  report "$level: off-site backup: another run is still going; this one did nothing"
   exit 1
 }
 find "$BACKUP_ROOT" -maxdepth 1 -name '.offsite-work-*' -exec rm -rf {} + # leftovers of a killed run
@@ -117,7 +131,7 @@ if [ "$MODE" = test ]; then
   stamp=$(date -u +%Y-%m-%dT%H%MZ)
   name="sprecher-east-test-$stamp.txt$OFFSITE_SUFFIX"
   pattern="$OFFSITE_TEST_PATTERN"
-  keep=1
+  keep=$OFFSITE_TEST_KEEP
   work=$(mktemp -d "$BACKUP_ROOT/.offsite-work-XXXXXX")
   source_file="$work/test.txt"
   echo "A test file from the Sprecher East server, made $stamp. It holds no site data." >"$source_file"
@@ -130,37 +144,39 @@ else
   name="$(basename "$archive")$OFFSITE_SUFFIX"
   [[ "$name" =~ $OFFSITE_ARCHIVE_PATTERN ]] || fail "the daily archive's name is not the expected form"
   pattern="$OFFSITE_ARCHIVE_PATTERN"
-  keep="$OFFSITE_KEEP"
-  need_kb=$(($(du -sk "$archive" | cut -f1) + SPARE_KB))
+  keep=$OFFSITE_KEEP
+  need_kb=$(($(du -sk "$archive" | cut -f1) + OFFSITE_SPARE_KB))
   free_kb=$(df -Pk "$BACKUP_ROOT" | awk 'NR == 2 { print $4 }')
   [ "$free_kb" -ge "$need_kb" ] || fail "needs $((need_kb / 1024)) MB free for the sealed copy but only $((free_kb / 1024)) MB is"
   work=$(mktemp -d "$BACKUP_ROOT/.offsite-work-XXXXXX")
   source_file="$archive"
 fi
 
-# 1. Seal. The sealed file must be new bytes that are not the source (a gzip archive starts 1f 8b), and nothing
-#    but this file is ever handed to rclone.
+# 1. Seal. The sealed file must be new bytes that are not the source (a gzip archive starts 1f 8b), and it is the only
+#    file ever handed to rclone, under a name made here that ends in the suffix of a sealed copy.
 sealed="$work/$name"
 offsite_seal "$OFFSITE_CERT" "$source_file" "$sealed" || fail "sealing to the public key failed"
 [ -s "$sealed" ] && [ "$(head -c 2 "$sealed" | od -An -tx1 | tr -d ' \n')" != 1f8b ] &&
   [ "$(stat -c %s "$sealed")" -gt "$(stat -c %s "$source_file")" ] ||
   fail "the sealed file did not come out right, so nothing was sent"
-[[ "$name" == *"$OFFSITE_SUFFIX" ]] || fail "refusing to send a file that is not sealed"
+local_size=$(stat -c %s "$sealed")
+if [ "$local_size" -gt "$OFFSITE_WARN_BYTES" ]; then
+  report "WARNING: off-site backup: the copy is $((local_size / 1048576)) MB. OpenSSL does not stream the opening, so opening it on the owner's computer needs about $((local_size / 1048576 * OFFSITE_OPEN_MEMORY_FACTOR)) MB of free memory (ops/offsite-backup.md)"
+fi
 
 # 2. Upload, then 3. check the copy in Drive: same size and the same MD5 as the sealed file we hold.
-rc copyto "$sealed" "$OFFSITE_REMOTE/$name" || fail "the upload to Drive failed"
-local_size=$(stat -c %s "$sealed")
+rc copyto "$sealed" "$OFFSITE_REMOTE/$name" || fail "the upload to Drive failed (rclone's message is in $OFFSITE_LOG)"
 local_md5=$(md5sum "$sealed" | cut -d' ' -f1)
-remote=$(rc lsf --files-only --format hsp --hash MD5 --separator ';' "$OFFSITE_REMOTE" | awk -F';' -v n="$name" '$3 == n' | head -n 1) || remote=""
+remote=$(rc lsf --files-only --format hsp --hash MD5 --separator ';' "$OFFSITE_REMOTE" | awk -F';' -v n="$name" '$3 == n' | sed -n 1p) || remote=""
 remote_md5=$(cut -d';' -f1 <<<"$remote") # the format "hsp" prints the hash, the size and the name, in that order
 remote_size=$(cut -d';' -f2 <<<"$remote")
 if [ "$remote_size" != "$local_size" ] || [ -z "$remote_md5" ] || [ "$remote_md5" != "$local_md5" ]; then
-  rc deletefile --drive-use-trash=false "$OFFSITE_REMOTE/$name" >/dev/null 2>&1 || true # never leave a copy we could not vouch for
+  rc deletefile --drive-use-trash=false "$OFFSITE_REMOTE/$name" >/dev/null || true # never leave a copy we could not vouch for
   fail "the copy in Drive does not match what was sent (size or checksum), so it was removed"
 fi
 
-# 4. Retention, only after a verified upload: the newest $keep of this kind stay. Only names this job makes
-#    can match, so nothing else in the folder is ever deleted.
+# 4. Retention, only after a verified upload: the newest $keep of this kind stay. Only names this job makes can
+#    match, so nothing else in the folder is ever deleted.
 removed=0
 while IFS=';' read -r old _; do
   [ -n "$old" ] || continue

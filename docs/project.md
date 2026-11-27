@@ -57,7 +57,7 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
   `/var/backups/sprecher-east` (#148); restore steps in [`ops/README.md`](../ops/README.md)
 - **Off-site backup**: weekly, the newest daily archive sealed to the owner's public key and uploaded to
   Google Drive with rclone, once the public key and the secret `OFFSITE_BACKUP_RCLONE_CONF` exist (#1332;
-  how it works, the signal, restore: [`ops/README.md`](../ops/README.md#off-site-backup))
+  how it works, the signal, restore: [`ops/offsite-backup.md`](../ops/offsite-backup.md))
 - **Hostinger API**: Use `$HOSTINGER_API_KEY` env var for snapshots and management
   - API base: `https://developers.hostinger.com`
   - Snapshot endpoint: `POST /api/vps/v1/virtual-machines/1371281/snapshot`

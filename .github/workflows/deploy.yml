@@ -204,13 +204,14 @@ jobs:
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
           printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
 
-      # The off-site backup (#1332, ops/README.md "Off-site backup"): installs the weekly job once the owner's public key
-      # is in the repository and the Drive credential is set, then reads the state of the copies in Drive, and turns
-      # this deploy red when the newest copy is too old or the last weekly run failed. Like the Umami password, the
-      # credential goes over the SSH session's stdin, never into a command line, file or log; empty while the secret
-      # isn't set, and the script then says what is missing and succeeds.
+      # The off-site backup (#1332, ops/offsite-backup.md): installs the weekly job once the owner's public key is in the
+      # repository and the Drive credential is set, then shows the state of the copies in Drive as warning annotations
+      # (age of the newest copy, how the last run went). It never fails the deploy: a stale or failed backup must not
+      # stall merges. Like the Umami password, the credential goes over the SSH session's stdin, never into a command
+      # line, file or log; an empty secret removes the stored credential and the job.
       - name: Set up the off-site backup (#1332)
         if: steps.order.outputs.skip != 'true'
+        timeout-minutes: 15 # shorter than the job's 20, so a hung Drive call cannot cancel the port and HTTPS checks after it
         env:
           RELEASE: ${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
           OFFSITE_BACKUP_RCLONE_CONF: ${{ secrets.OFFSITE_BACKUP_RCLONE_CONF }}
