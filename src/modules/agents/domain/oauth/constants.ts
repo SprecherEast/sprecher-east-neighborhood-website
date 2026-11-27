@@ -53,7 +53,7 @@ export const FORM_CONTENT_TYPE = 'application/x-www-form-urlencoded'
 
 /** Shown on the site, and by the approve button, when a request or approval cannot be trusted */
 export const CONNECTION_REFUSED =
-  'This connection request is no longer valid. Start it again from the AI tool.'
+  'This connection request is not valid. Start it again from the AI tool.'
 
 /** What an AI tool is told of a refusal: never the library's own message, which can name internals */
 export const REFUSED_DESCRIPTION = 'The request was refused.'

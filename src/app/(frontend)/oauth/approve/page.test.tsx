@@ -33,6 +33,8 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
 
+import { CONNECTION_DESCRIPTION } from '@/modules/agents'
+
 import ApprovePage, { metadata } from './page'
 
 const page = (query: Record<string, string | string[]> = {}) => ({
@@ -83,6 +85,11 @@ describe('/oauth/approve', () => {
       url: 'https://claude.ai/cb?error=invalid_request',
     })
     await expect(ApprovePage(page())).rejects.toThrow('NEXT_REDIRECT https://claude.ai/cb')
+  })
+
+  it('is titled for the tab and the screen reader, with the shared description', () => {
+    expect(metadata.title).toBe('Approve an AI Tool')
+    expect(metadata.description).toBe(CONNECTION_DESCRIPTION)
   })
 
   it('keeps the page out of search and its address out of referrers', () => {

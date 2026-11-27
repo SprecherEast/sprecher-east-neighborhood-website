@@ -217,7 +217,7 @@ describe('pressing a button on the approval page', () => {
     await payload.db.updateOne({ collection: 'users', id: admin.id, data: { role: 'editor' } })
     try {
       expect(await press('approve')).toMatchObject({
-        message: expect.stringContaining('no longer valid'),
+        message: CONNECTION_REFUSED,
       })
     } finally {
       await payload.db.updateOne({ collection: 'users', id: admin.id, data: { role: 'admin' } })
@@ -235,6 +235,6 @@ describe('pressing a button on the approval page', () => {
       ticket: begun.view.ticket,
       decision: 'approve',
     })
-    expect(answer.message).toContain('no longer valid')
+    expect(answer.message).toBe(CONNECTION_REFUSED)
   })
 })

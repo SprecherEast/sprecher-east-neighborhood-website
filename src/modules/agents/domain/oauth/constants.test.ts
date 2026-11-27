@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { OAUTH_ERROR_NAMES } from './constants'
+import { CONNECTION_REFUSED, OAUTH_ERROR_NAMES } from './constants'
 
 describe('OAUTH_ERROR_NAMES', () => {
   it.each([
@@ -20,4 +20,11 @@ describe('OAUTH_ERROR_NAMES', () => {
       expect(OAUTH_ERROR_NAMES.has(name)).toBe(false)
     },
   )
+})
+
+describe('CONNECTION_REFUSED', () => {
+  it('says the request is not valid and where to start again, which the site shows as an alert', () => {
+    expect(CONNECTION_REFUSED).toMatch(/is not valid\./)
+    expect(CONNECTION_REFUSED).toMatch(/Start it again from the AI tool\./)
+  })
 })
