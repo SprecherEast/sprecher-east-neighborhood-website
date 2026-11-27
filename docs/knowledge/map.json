@@ -4,7 +4,10 @@
     "paths": ["src/modules/events/**", "src/app/(frontend)/events/**"]
   },
   { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
-  { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
+  {
+    "note": "src/modules/agents/README.md",
+    "paths": ["src/modules/agents/**", "src/app/(frontend)/oauth/**"]
+  },
   {
     "note": "src/modules/verification/README.md",
     "paths": ["src/modules/verification/**", "src/app/(frontend)/confirm-email/**"]

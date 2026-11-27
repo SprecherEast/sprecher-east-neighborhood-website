@@ -24,6 +24,7 @@ The files that put the modules together. The root layout, home page, error and n
 - **The sitemap is rendered on request** and each list stays in the data cache until a save expires its tag, or 10 minutes, since a scheduled publish runs outside a request and cannot expire tags (`sitemap.ts`, decision 0011, #141).
 - **`next build` skips the type check** (`typescript.ignoreBuildErrors` in `next.config.js`; CI's `tsc --noEmit` does it), so a green build proves nothing about types; stated in [`docs/project.md`](../../docs/project.md).
 - **The home page re-renders every 10 minutes** (`page.tsx`); a failure of the layout itself shows `global-error.tsx`, which brings its own `<html>` and shows no error text (#521).
+- **The OAuth discovery documents answer under `/.well-known/`** through `rewrites` in `next.config.js` (the routes live under `/oauth/discovery/`, owned by the [agents](../modules/agents/README.md) note), and the config lists the OAuth clients and tokens collections (`next.config.js`; `src/app/wellKnownRewrites.test.ts`).
 - **`/api/version`** answers the build's id for `VersionCheck`; `/next/preview` and `/next/exit-preview` start and end draft mode for the admin's preview (`preview` needs `PREVIEW_SECRET`); `/next/seed` runs the demo seed for an admin where it is on ([Seed and preview accounts](../endpoints/seed/README.md)).
 
 ## Shared pieces it uses

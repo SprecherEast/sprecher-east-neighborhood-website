@@ -11381,7 +11381,7 @@
           "label": "Sections",
           "value": "How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/agents/**" }
+        { "label": "Describes", "value": "src/modules/agents/**, src/app/(frontend)/oauth/**" }
       ],
       "watchOuts": [],
       "links": []
