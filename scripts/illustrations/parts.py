@@ -175,13 +175,13 @@ def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False,hatch=False):
         g.append(f'<rect x="78" y="{top-12}" width="42" height="12" rx="3" fill="{RED}" {o}/><rect x="120" y="{top-12}" width="42" height="12" rx="3" fill="{BLUE}" {o}/>')
     g.append(f'<rect x="120" y="-50" width="3" height="40" fill="{NAVY}" opacity=".5"/><rect x="104" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/><rect x="132" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/>')
     g.append(f'<rect x="236" y="-40" width="10" height="9" rx="3" fill="#ffe89a" {o}/><rect x="6" y="-40" width="8" height="9" rx="3" fill="#e0603f" {o}/>')
-    if hatch:  # the rear hatch swung up on a hinge at the rear roof edge, held by a gas strut; the cargo space opens behind the rear seat
-        hx,hy=50,top+21
-        g.append(f'<path d="M8,-50 L34,-50 L{hx},{hy} L44,{top+16} L10,-44 Z" fill="#2b3040" {o}/>')
-        g.append(f'<g transform="translate({hx},{hy}) rotate(-103)"><path d="M0,-5 L60,-9 L60,9 L0,6 Z" fill="{body}" {o}/><path d="M8,-3 L52,-5.5 L52,4.5 L8,3 Z" fill="{GLASS}" {o}/></g>')
-        sx,sy=hx-40*math.cos(math.radians(77)),hy-40*math.sin(math.radians(77))   # a point on the door, 40 units up from the hinge
-        g.append(f'<path d="M24,-58 L{sx:.1f},{sy:.1f}" stroke="{NAVY}" stroke-width="5" stroke-linecap="round"/><path d="M24,-58 L{sx:.1f},{sy:.1f}" stroke="#c9d0dc" stroke-width="2.6" stroke-linecap="round"/>')
-        g.append(f'<circle cx="{hx}" cy="{hy}" r="4.5" fill="#c9d0dc" {o}/><circle cx="24" cy="-58" r="3.4" fill="#c9d0dc" {o}/>')
+    if hatch:  # the rear hatch swung up on a hinge at the back of the roof, clear of the cargo bay it uncovers behind the rear seat
+        bt=top+10   # the bay's ceiling, 30 units above its floor
+        hx,hy=10,bt-3
+        g.append(f'<rect data-part="cargo-bay" x="8" y="{bt}" width="48" height="{-50-bt}" fill="#2b3040" {o}/>')
+        g.append(f'<rect x="6" y="{bt-6}" width="46" height="6" rx="2" fill="{body}" {o}/>')
+        g.append(f'<g data-part="hatch-door" transform="translate({hx},{hy}) rotate(-103)"><path d="M0,-5 L60,-9 L60,9 L0,6 Z" fill="{body}" {o}/><path d="M8,-3 L52,-5.5 L52,4.5 L8,3 Z" fill="{GLASS}" {o}/></g>')
+        g.append(f'<circle cx="{hx}" cy="{hy}" r="4.5" fill="#c9d0dc" {o}/>')
     for cx in (58,196):
         g.append(f'<circle cx="{cx}" cy="-16" r="27" fill="#1a2033" {o}/><circle cx="{cx}" cy="-16" r="13" fill="#c9d0dc" {o}/><circle cx="{cx}" cy="-16" r="4" fill="{NAVY}"/>')
     g.append('</g>'); return "".join(g)

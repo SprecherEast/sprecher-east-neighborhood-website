@@ -30,6 +30,46 @@ const hasFont =
 
 const run = (code) => spawnSync('python3', ['-c', code], { encoding: 'utf8', cwd: process.cwd() })
 
+// Reads where parts are drawn: the corners of every rect and path under a `data-part`, through the
+// transforms above it, as absolute canvas points (translate, scale and rotate are all the parts use).
+const EXTENT = String.raw`
+import re, math, xml.etree.ElementTree as ET
+def _mul(a, b):
+    return [a[0]*b[0]+a[2]*b[1], a[1]*b[0]+a[3]*b[1], a[0]*b[2]+a[2]*b[3], a[1]*b[2]+a[3]*b[3], a[0]*b[4]+a[2]*b[5]+a[4], a[1]*b[4]+a[3]*b[5]+a[5]]
+def _mat(t):
+    m = [1, 0, 0, 1, 0, 0]
+    for n, a in re.findall(r'(\w+)\(([^)]*)\)', t or ''):
+        v = [float(x) for x in re.split(r'[ ,]+', a.strip())]
+        if n == 'translate': k = [1, 0, 0, 1, v[0], v[1] if len(v) > 1 else 0]
+        elif n == 'scale': k = [v[0], 0, 0, v[-1], 0, 0]
+        else:
+            c, s = math.cos(math.radians(v[0])), math.sin(math.radians(v[0])); k = [c, s, -s, c, 0, 0]
+        m = _mul(m, k)
+    return m
+def _corners(el, m):
+    if el.tag == 'rect':
+        x, y, w, h = (float(el.get(k)) for k in ('x', 'y', 'width', 'height')); raw = [(x, y), (x+w, y), (x+w, y+h), (x, y+h)]
+    elif el.tag == 'path':
+        raw = [(float(a), float(b)) for a, b in re.findall(r'(-?[\d.]+),(-?[\d.]+)', el.get('d'))]
+    else:
+        return []
+    return [(m[0]*a+m[2]*b+m[4], m[1]*a+m[3]*b+m[5]) for a, b in raw]
+def _points(el, parent):
+    m = _mul(parent, _mat(el.get('transform')))
+    out = _corners(el, m)
+    for c in el: out += _points(c, m)
+    return out
+def _find(el, name, parent):
+    out = [_points(el, parent)] if el.get('data-part') == name else []
+    m = _mul(parent, _mat(el.get('transform')))
+    for c in el: out += _find(c, name, m)
+    return out
+def extents(svg, name):
+    """The (left, top, right, bottom) of every part drawn with this data-part name, in drawing order."""
+    root = ET.fromstring('<r>' + svg + '</r>')
+    return [(min(x for x, _ in p), min(y for _, y in p), max(x for x, _ in p), max(y for _, y in p)) for p in _find(root, name, [1, 0, 0, 1, 0, 0])]
+`
+
 const FIND = `
 import json
 from scripts.illustrations import build as b
@@ -794,6 +834,60 @@ print(json.dumps([[p['label'], p['focal'] and True] for p in parts.PLACED]))`,
 print([('mesh' in SCENES[n]() or 'chain' in SCENES[n]().lower()) for n in ('thanksgiving_library', 'dropoff_unload', 'youth_garden')])`,
       )
       expect(r.stdout.trim()).toBe('[False, False, False]')
+    })
+
+    it('draws the drop-off picture with the hatch door clear of the boxes, and the boxes inside the cargo bay', () => {
+      const r = run(
+        EXTENT +
+          `import json
+from scripts.illustrations.scenes import SCENES
+svg = SCENES['dropoff_unload']()
+door, bay, bundle = (extents(svg, n)[0] for n in ('hatch-door', 'cargo-bay', 'box-bundle'))   # the first bundle is the one loaded in the car
+print(json.dumps({'door': door, 'bay': bay, 'bundle': bundle}))`,
+      )
+      expect(r.stderr).toBe('')
+      const { door, bay, bundle } = JSON.parse(r.stdout)
+      const [dl, dt, dr, db] = door
+      const [bl, bt, br, bb] = bundle
+      // the door's drawn extent and the bundle's share no area, and the door lies above the bay it uncovers
+      expect(dr <= bl || dl >= br || db <= bt || dt >= bb).toBe(true)
+      expect(db).toBeLessThanOrEqual(bay[1])
+      // the bundle, top face and all, sits inside the bay (to a tenth of a pixel, for rounded coordinates)
+      const EPS = 0.1
+      expect(bundle[0]).toBeGreaterThanOrEqual(bay[0] - EPS)
+      expect(bundle[1]).toBeGreaterThanOrEqual(bay[1] - EPS)
+      expect(bundle[2]).toBeLessThanOrEqual(bay[2] + EPS)
+      expect(bundle[3]).toBeLessThanOrEqual(bay[3] + EPS)
+    })
+
+    it('draws the dumpster lid on the bin: its lower edge on the rim, hinges touching both', () => {
+      const r = run(
+        EXTENT +
+          `import json
+from scripts.illustrations import props
+out = {}
+for flip in (False, True):
+    svg = props.dumpster(0, 800, 100, flip=flip)
+    out[str(flip)] = {n: extents(svg, n) for n in ('bin-lid', 'bin-rim', 'bin-hinge')}
+print(json.dumps(out))`,
+      )
+      expect(r.stderr).toBe('')
+      for (const parts of Object.values(JSON.parse(r.stdout))) {
+        const [lid] = parts['bin-lid']
+        const [rim] = parts['bin-rim']
+        expect(parts['bin-hinge'].length).toBe(2)
+        // the lid's lower edge is the rim's upper edge
+        expect(lid[3]).toBeCloseTo(rim[1], 6)
+        for (const [hl, ht, hr, hb] of parts['bin-hinge']) {
+          // each hinge crosses that edge, so it touches the lid above and the rim below, within both widths
+          expect(ht).toBeLessThan(lid[3])
+          expect(hb).toBeGreaterThan(rim[1])
+          expect(hl).toBeGreaterThanOrEqual(Math.max(lid[0], rim[0]))
+          expect(hr).toBeLessThanOrEqual(Math.min(lid[2], rim[2]))
+        }
+        // the lid stands up from the bin: its top is above the rim
+        expect(lid[1]).toBeLessThan(rim[1])
+      }
     })
 
     it('keeps the wording of the panels the redrawn pictures carry', () => {

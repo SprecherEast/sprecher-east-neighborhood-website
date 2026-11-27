@@ -19,9 +19,11 @@ def h_tree(ppm, m=6):
     """The `h` that draws a tree m metres tall."""
     return m * ppm / .9
 
-def _g(x, y, ppm, flip=False):
-    """Opens a group in metres: origin at (x, y), y down, one unit one metre."""
-    return f'<g transform="translate({x:g},{y:g}) scale({-ppm if flip else ppm:g},{ppm:g})">'
+def _g(x, y, ppm, flip=False, part=""):
+    """Opens a group in metres: origin at (x, y), y down, one unit one metre. `part` names it
+    (`data-part`) so a test can find what it drew."""
+    tag = f' data-part="{part}"' if part else ""
+    return f'<g{tag} transform="translate({x:g},{y:g}) scale({-ppm if flip else ppm:g},{ppm:g})">'
 
 def _o(ppm):
     return f'stroke="{NAVY}" stroke-width="{SW / ppm:.4f}" stroke-linejoin="round"'
@@ -45,7 +47,7 @@ def box(x, y, w, h):
 def box_bundle(x, y, ppm, h=.9, flip=False):
     """A bundle of flattened cardboard boxes standing on its edge, h m tall, 0.28 m thick and 0.6 m
     wide, tied with string; its bottom left corner is at (x, y)."""
-    g = _g(x, y, ppm, flip)
+    g = _g(x, y, ppm, flip, "box-bundle")
     g += _poly([(0, 0), (.6, 0), (.6, -h), (0, -h)], "#c9a06a", ppm)
     g += "".join(f'<path d="M0,{-h * k / 7:g} L.6,{-h * k / 7:g}" stroke="#a9824c" stroke-width=".02"/>' for k in range(1, 7))
     g += _poly([(0, -h), (.28, -h - .1), (.88, -h - .1), (.6, -h)], "#dcb783", ppm)
@@ -54,15 +56,17 @@ def box_bundle(x, y, ppm, h=.9, flip=False):
 
 def dumpster(x, y, ppm, flip=False, bleed=False):
     """A large green waste bin, 3 m wide and 1.8 m tall, its bottom left corner at (x, y), the lid
-    propped open and flattened boxes standing in it. `bleed="sides"` lets a close view crop it at the left edge."""
-    place("bin", x - (3 * ppm if flip else 0), y - 2.1 * ppm, x + (0 if flip else 3 * ppm), y + .08 * ppm, size=1.8 * ppm, bleed=bleed)
+    hinged along the back and swung up, and flattened boxes standing in it. `bleed="sides"` lets a close view crop it at the left edge."""
+    place("bin", x - (3 * ppm if flip else 0), y - 2.5 * ppm, x + (0 if flip else 3 * ppm), y + .08 * ppm, size=1.8 * ppm, bleed=bleed)
     g = _g(x, y, ppm, flip)
     g += '<ellipse cx="1.5" cy=".05" rx="1.7" ry=".1" fill="#000" opacity=".16"/>'
-    g += _poly([(.45, -1.85), (1.15, -2.15), (1.3, -1.95), (.65, -1.7)], "#2c6b46", ppm)   # propped lid
+    g += '<g data-part="bin-lid">' + _poly([(.1, -1.65), (2.9, -1.65), (2.9, -2.45), (.1, -2.45)], "#2c6b46", ppm)   # the lid, hinged along the back and swung up
+    g += _rect(.2, -2.35, 2.6, .1, "#3f8f5a", ppm) + _rect(1.2, -2.2, .6, .1, "#1f4d33", ppm, .03) + '</g>'            # a rim and a handle on its face
+    g += "".join(_rect(k, -1.72, .3, .12, "#c9d0dc", ppm, .03, 'data-part="bin-hinge"') for k in (.35, 2.35))   # where it meets the bin
     g += _poly([(.3, -1.5), (2.7, -1.5), (2.6, -.1), (.4, -.1)], "#d9c49c", ppm)            # boxes inside
     g += f'<path d="M1.1,-1.5 L1.1,-1.0 M1.9,-1.5 L1.9,-1.0" stroke="{NAVY}" stroke-width="{SW / ppm:.4f}"/>'
     g += _poly([(0, -1.5), (3, -1.5), (2.9, -.12), (.1, -.12)], "#3f8f5a", ppm)
-    g += _poly([(0, -1.5), (3, -1.5), (3, -1.65), (0, -1.65)], "#2c6b46", ppm)
+    g += '<g data-part="bin-rim">' + _poly([(0, -1.5), (3, -1.5), (3, -1.65), (0, -1.65)], "#2c6b46", ppm) + '</g>'
     g += _rect(.2, -.75, 2.6, .12, "#fff", ppm, 0, 'opacity=".5"')
     for cx in (.35, 2.65):
         g += _wheel(cx, -.08, .09, ppm)

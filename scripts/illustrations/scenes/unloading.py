@@ -22,7 +22,7 @@ def scene_dropoff_unload():
     b += focal_group(
         dumpster(205, GROUND, PPM, flip=True, bleed="sides")
         + car(car_x, GROUND + 6, body=BLUE, w=wc, suv=True, hatch=True)
-        + box_bundle(car_x + 20 * kc, GROUND + 6 - 46 * kc, PPM, .7)
+        + box_bundle(car_x + 10 * kc, GROUND + 6 - 50 * kc, PPM, .42)   # loaded inside the cargo space, under the open door
         + person(px, py, s, shirt=RED, pants="#2b3556", skin=SKIN_DARKEST, flip=True, arm="reach")
         + box_bundle(hand[0] - .3 * PPM, hand[1] + .55 * PPM, PPM, .7), "unloading at the bin", 3)
     b += calendar_page(540, 60, "SAT", "28", w=190, h=210)
