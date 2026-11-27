@@ -1919,6 +1919,23 @@
     {
       "id": "business-rule:src/platform/lib/README.md#10",
       "type": "business-rule",
+      "name": "**Only Google's keyless embed pages pass** as a map address;…",
+      "summary": "**Only Google's keyless embed pages pass** as a map address; `getMediaUrl` strips the site origin so uploads read as local files; a focal point becomes a CSS `object-position`, the centre when unset (`googleMapsEmbed.ts`, `getMediaUrl.ts`, `focalPoint.ts`, #1013; `googleMapsEmbed.test.ts`, `getMediaUrl.test.ts`, `focalPoint.test.ts`).",
+      "path": "src/platform/lib/googleMapsEmbed.test.ts",
+      "module": "platform-area:lib",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/platform/lib/googleMapsEmbed.test.ts",
+        "src/platform/lib/getMediaUrl.test.ts",
+        "src/platform/lib/focalPoint.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/platform/lib/README.md#11",
+      "type": "business-rule",
       "name": "**Email layout takes fixed paragraphs only,** escaped, with inline…",
       "summary": "**Email layout takes fixed paragraphs only,** escaped, with inline colors (`emailLayout.ts`, decision 0004; `emailLayout.test.ts`).",
       "path": "src/platform/lib/emailLayout.test.ts",
@@ -1930,7 +1947,7 @@
       "links": ["src/platform/lib/emailLayout.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#11",
+      "id": "business-rule:src/platform/lib/README.md#12",
       "type": "business-rule",
       "name": "**A fact says how sure it is:** `confirmed`, `estimate` or `unknown`…",
       "summary": "**A fact says how sure it is:** `confirmed`, `estimate` or `unknown` (`certainty.ts`, #509; `certainty.test.ts`). **A title has one longest length** (`TITLE_MAX_LENGTH` in `contentLimits.ts`, #633). A listing's highest page number is `MAX_PAGE` (`paging.ts`); a chart's limits are `CHART_LIMITS` (`chart/spec.ts`).",
@@ -1943,7 +1960,7 @@
       "links": ["src/platform/lib/certainty.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#12",
+      "id": "business-rule:src/platform/lib/README.md#13",
       "type": "business-rule",
       "name": "Cursors and paging",
       "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.",
@@ -1990,6 +2007,19 @@
     {
       "id": "business-rule:src/platform/lib/README.md#4",
       "type": "business-rule",
+      "name": "**Two compact looks of a chart are plain data (#1503):** a stacked…",
+      "summary": "**Two compact looks of a chart are plain data (#1503):** a stacked chart with `look: 'change'` needs two rows, dollars and at most four parts, and a bar chart with an earlier amount per bar (`previous`, named by `previousLabel`) needs dollars and `density: 'compact'`; `chart/change.ts` works out the signed change (the sign is in the text, \"0%\" under 0.05%), the split into shares and the ranked rows with the first eight shown, and the numbers table and spoken summary carry the change (`chart/chartLooks.ts`, `change.ts`; `chartLooks.test.ts`, `change.test.ts`, `table.test.ts`).",
+      "path": "src/platform/lib/chart/change.test.ts",
+      "module": "platform-area:lib",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/lib/chart/change.test.ts", "src/platform/lib/chart/table.test.ts"]
+    },
+    {
+      "id": "business-rule:src/platform/lib/README.md#5",
+      "type": "business-rule",
       "name": "**A chart passes one gate:** limits shared with the editor's block…",
       "summary": "**A chart passes one gate:** limits shared with the editor's block fields; a `breakdown` has up to seven areas (its ramp; other charts take six parts), and its square value is not needed when `hideSquares` leaves the grid out (`chart/spec.ts`, `chart/breakdown.ts`, #866, #943; `chart/spec.test.ts`, `chart/breakdown.test.ts`, `chart/issues.test.ts`).",
       "path": "src/platform/lib/chart/spec.test.ts",
@@ -2005,7 +2035,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#5",
+      "id": "business-rule:src/platform/lib/README.md#6",
       "type": "business-rule",
       "name": "**A money field is typed as the reader writes it:** digits grouped by…",
       "summary": "**A money field is typed as the reader writes it:** digits grouped by commas after a dollar sign, cents cut, the caret kept; a leading zero is dropped except while deleting (`money.ts`, #1035, #1172; `money.test.ts`).",
@@ -2018,7 +2048,7 @@
       "links": ["src/platform/lib/money.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#6",
+      "id": "business-rule:src/platform/lib/README.md#7",
       "type": "business-rule",
       "name": "**`cn` joins class names** and lets a later Tailwind class win; it…",
       "summary": "**`cn` joins class names** and lets a later Tailwind class win; it knows `bg-hatch` is a background image and that `text-fine` and `text-list-row` are sizes, so they stay beside a text colour (`cn.ts`, #662, #1002, #1163; `cn.test.ts`).",
@@ -2031,7 +2061,7 @@
       "links": ["src/platform/lib/cn.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#7",
+      "id": "business-rule:src/platform/lib/README.md#8",
       "type": "business-rule",
       "name": "**Messages throw on a missing value** and durations come in words in…",
       "summary": "**Messages throw on a missing value** and durations come in words in whole minutes (`messages/message.ts`, `formatDuration.ts`; `messages/message.test.ts`, `messages/catalog.test.ts`, `formatDuration.test.ts`).",
@@ -2048,7 +2078,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/lib/README.md#8",
+      "id": "business-rule:src/platform/lib/README.md#9",
       "type": "business-rule",
       "name": "**One address is one record:** `parseEmailAddress` trims and…",
       "summary": "**One address is one record:** `parseEmailAddress` trims and lowercases; link tokens are stored as hashes (`sha256Hex`), so a database copy holds no working link (`emailAddress.ts`, `sha256.ts`; `emailAddress.test.ts`).",
@@ -2059,23 +2089,6 @@
       "facts": [],
       "watchOuts": [],
       "links": ["src/platform/lib/emailAddress.test.ts"]
-    },
-    {
-      "id": "business-rule:src/platform/lib/README.md#9",
-      "type": "business-rule",
-      "name": "**Only Google's keyless embed pages pass** as a map address;…",
-      "summary": "**Only Google's keyless embed pages pass** as a map address; `getMediaUrl` strips the site origin so uploads read as local files; a focal point becomes a CSS `object-position`, the centre when unset (`googleMapsEmbed.ts`, `getMediaUrl.ts`, `focalPoint.ts`, #1013; `googleMapsEmbed.test.ts`, `getMediaUrl.test.ts`, `focalPoint.test.ts`).",
-      "path": "src/platform/lib/googleMapsEmbed.test.ts",
-      "module": "platform-area:lib",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/platform/lib/googleMapsEmbed.test.ts",
-        "src/platform/lib/getMediaUrl.test.ts",
-        "src/platform/lib/focalPoint.test.ts"
-      ]
     },
     {
       "id": "business-rule:src/platform/payload/README.md#1",
@@ -2281,6 +2294,19 @@
     {
       "id": "business-rule:src/platform/richtext/README.md#1",
       "type": "business-rule",
+      "name": "**A chart block can pick a compact look (#1503):** a stacked chart's…",
+      "summary": "**A chart block can pick a compact look (#1503):** a stacked chart's \"Look\" (big bars, or change first) and a bar chart's \"Density\" with an earlier amount and its name per bar (compact rows); left empty, the usual big bars draw, and the same fields travel in the `<Chart>` tag as `look`, `density` and `previousLabel` (`editorial/chartLookFields.ts`, `chart.ts`, `chartMarkdown.ts`; `editorial/chartLooks.test.ts`).",
+      "path": "src/platform/richtext/editorial/chartLooks.test.ts",
+      "module": "platform-area:richtext",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/richtext/editorial/chartLooks.test.ts"]
+    },
+    {
+      "id": "business-rule:src/platform/richtext/README.md#2",
+      "type": "business-rule",
       "name": "**A chart that fails its rules is left out of the page and logged,**…",
       "summary": "**A chart that fails its rules is left out of the page and logged,** never breaking the article; the editor refuses it on save and each reason shows under its field (`richTextBlocks.tsx`, `editorial/chartValidate.ts`; `editorial/chartValidate.test.ts`, `src/payload.config.chartBlock.test.ts`).",
       "path": "src/platform/richtext/editorial/chartValidate.test.ts",
@@ -2295,7 +2321,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/richtext/README.md#2",
+      "id": "business-rule:src/platform/richtext/README.md#3",
       "type": "business-rule",
       "name": "**A tag that breaks its block's rules is refused with the reasons,**…",
       "summary": "**A tag that breaks its block's rules is refused with the reasons,** and text with quotes, braces or backslashes reads back unchanged; a section tabs block needs two to four tabs, no empty tab and no tabs inside a tab, and cannot be published otherwise (`chartMarkdown.test.ts`, `factTabsMarkdown.test.ts`, `src/payload.config.factTabsMarkdown.test.ts`, `src/payload.config.sectionTabsMarkdown.test.ts`, `src/payload.config.sectionTabs.test.ts`).",
@@ -2314,7 +2340,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/richtext/README.md#3",
+      "id": "business-rule:src/platform/richtext/README.md#4",
       "type": "business-rule",
       "name": "**A fact tab's label stops at one short limit** so it fits its button…",
       "summary": "**A fact tab's label stops at one short limit** so it fits its button down to 320 px; labels already stored are not changed (`FACT_TABS_LIMITS.label`, #1112; `src/payload.config.factTabs.test.ts`).",
@@ -2327,7 +2353,7 @@
       "links": ["src/payload.config.factTabs.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/richtext/README.md#4",
+      "id": "business-rule:src/platform/richtext/README.md#5",
       "type": "business-rule",
       "name": "**A timeline has at most one \"Next up\" milestone,** and status is…",
       "summary": "**A timeline has at most one \"Next up\" milestone,** and status is never shown by colour alone (`editorial/timelineBlockConfig.ts`, `timelineStatus.ts`; `timelineBlockConfig.test.ts`).",
@@ -2340,7 +2366,7 @@
       "links": ["src/platform/richtext/editorial/timelineBlockConfig.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/richtext/README.md#5",
+      "id": "business-rule:src/platform/richtext/README.md#6",
       "type": "business-rule",
       "name": "**List blocks count rows the way Admin sends them:** a number during…",
       "summary": "**List blocks count rows the way Admin sends them:** a number during form building is the count, on a real save it is no rows; a field of only spaces is empty (`editorial/rowCount.ts`, `editorial/filledText.ts`, #676; `src/payload.config.rowCounts.test.ts`).",
@@ -2353,7 +2379,7 @@
       "links": ["src/payload.config.rowCounts.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/richtext/README.md#6",
+      "id": "business-rule:src/platform/richtext/README.md#7",
       "type": "business-rule",
       "name": "**Every fact tab and heading has a link of its own**…",
       "summary": "**Every fact tab and heading has a link of its own** (`editorial/tabAnchors.ts`, #1097); article width: `articleColumn.test.ts`; menu and ids: `articleToc.test.tsx`, `headingAnchors.test.ts`; title split: `splitHeadingFromBody.test.ts`; block lists and renderers: `RichText.test.tsx`, `richTextBlocks.test.tsx`, `src/payload.config.test.ts`.",
@@ -2790,6 +2816,19 @@
       "links": ["src/platform/ui/chart/ChartDataTable.test.tsx"]
     },
     {
+      "id": "business-rule:src/platform/ui/chart/README.md#10",
+      "type": "business-rule",
+      "name": "**A legend's columns** are `auto`, `one` or `fit` (by its own width)…",
+      "summary": "**A legend's columns** are `auto`, `one` or `fit` (by its own width) (`Legend.tsx`, #1333; `Legend.test.tsx`, `chartLegends.test.ts`).",
+      "path": "src/platform/ui/Legend.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/ui/Legend.test.tsx", "src/platform/ui/chart/chartLegends.test.ts"]
+    },
+    {
       "id": "business-rule:src/platform/ui/chart/README.md#2",
       "type": "business-rule",
       "name": "**An adapter passes one contract:** no `style`, no colour literals,…",
@@ -2826,6 +2865,38 @@
     {
       "id": "business-rule:src/platform/ui/chart/README.md#4",
       "type": "business-rule",
+      "name": "**The change-first look is a few lines, not two big bars:** the later…",
+      "summary": "**The change-first look is a few lines, not two big bars:** the later row's total as a `ChangeFigure` (signed dollars, percent and what it is measured from), one slim `ShareStrip` of how it splits and a key with each part's share and dollars. It needs two rows, dollars and at most four parts, which the spec refuses otherwise (`adapters/change/changeAdapter.tsx`, `lib/chart/change.ts`; `changeAdapter.test.tsx`, `change.test.ts`).",
+      "path": "src/platform/ui/chart/adapters/change/changeAdapter.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/platform/ui/chart/adapters/change/changeAdapter.test.tsx",
+        "src/platform/lib/chart/change.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/platform/ui/chart/README.md#5",
+      "type": "business-rule",
+      "name": "**The compact look is ranked rows:** biggest first, a small bar on…",
+      "summary": "**The compact look is ranked rows:** biggest first, a small bar on one shared scale, the figure and, for a bar with an earlier amount (`previous`, named by `previousLabel`), its signed change; the first eight rows show and the rest wait under \"See the smaller pieces\". The sign is in the text and the arrow and a screen reader's \"Up\" or \"Down\" repeat it, so colour is never the cue (`adapters/rows/`, `SignedChange.tsx`; `rowsAdapter.test.tsx`, `SignedChange.test.tsx`).",
+      "path": "src/platform/ui/chart/adapters/rows/rowsAdapter.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/platform/ui/chart/adapters/rows/rowsAdapter.test.tsx",
+        "src/platform/ui/SignedChange.test.tsx"
+      ]
+    },
+    {
+      "id": "business-rule:src/platform/ui/chart/README.md#6",
+      "type": "business-rule",
       "name": "**A bar or stacked chart is drawn large for readers who see poorly:**…",
       "summary": "**A bar or stacked chart is drawn large for readers who see poorly:** text at 18 units in a 320-unit drawing, so 16px or more on a 320px phone; bars share one scale shown as short ticks (`adapters/visx/barLayout.ts`, #1206; `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`).",
       "path": "src/platform/ui/chart/adapters/visx/barLayout.test.ts",
@@ -2840,7 +2911,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/ui/chart/README.md#5",
+      "id": "business-rule:src/platform/ui/chart/README.md#7",
       "type": "business-rule",
       "name": "**A bill's rows line up:** one grid of name, percent and dollars…",
       "summary": "**A bill's rows line up:** one grid of name, percent and dollars shared by the rows and the total, the dollar column wide enough for the widest amount, bars on the largest slice's scale (`ShareBill.tsx`, #1163, #1196; `ShareBill.test.tsx`); a strip is one `role=\"img\"` label naming every part and drawing nothing when no part has a share (`ShareStrip.tsx`, #1266; `ShareStrip.test.tsx`).",
@@ -2853,7 +2924,7 @@
       "links": ["src/platform/ui/ShareBill.test.tsx", "src/platform/ui/ShareStrip.test.tsx"]
     },
     {
-      "id": "business-rule:src/platform/ui/chart/README.md#6",
+      "id": "business-rule:src/platform/ui/chart/README.md#8",
       "type": "business-rule",
       "name": "**An area chart never dips below a flat stretch:** the curve is…",
       "summary": "**An area chart never dips below a flat stretch:** the curve is monotone, a series of zeros or a `max` of 0 is the flat baseline, one value is a dot, and it has a text label listing every value (`AreaChart.tsx`, `src/platform/lib/smoothPath.ts`, #1190; `AreaChart.test.tsx`).",
@@ -2866,7 +2937,7 @@
       "links": ["src/platform/ui/AreaChart.test.tsx"]
     },
     {
-      "id": "business-rule:src/platform/ui/chart/README.md#7",
+      "id": "business-rule:src/platform/ui/chart/README.md#9",
       "type": "business-rule",
       "name": "**A heat map says all of its values in text,** marks today with a…",
       "summary": "**A heat map says all of its values in text,** marks today with a ring, and a day that is not enabled is a muted, slashed square that cannot be pressed (`HeatMap.tsx`, #1191, #1205; `HeatMap.test.tsx`, `HeatMapPeriod.test.tsx`, `HeatMapKey.test.tsx`). `PeriodNav` keeps a direction that cannot go on focusable (`aria-disabled`) (`PeriodNav.test.tsx`, #1218).",
@@ -2882,19 +2953,6 @@
         "src/platform/ui/HeatMapKey.test.tsx",
         "src/platform/ui/PeriodNav.test.tsx"
       ]
-    },
-    {
-      "id": "business-rule:src/platform/ui/chart/README.md#8",
-      "type": "business-rule",
-      "name": "**A legend's columns** are `auto`, `one` or `fit` (by its own width)…",
-      "summary": "**A legend's columns** are `auto`, `one` or `fit` (by its own width) (`Legend.tsx`, #1333; `Legend.test.tsx`, `chartLegends.test.ts`).",
-      "path": "src/platform/ui/Legend.test.tsx",
-      "module": "platform-area:ui",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/platform/ui/Legend.test.tsx", "src/platform/ui/chart/chartLegends.test.ts"]
     },
     {
       "id": "check:ci#build",
@@ -11727,7 +11785,7 @@
         },
         {
           "label": "Describes",
-          "value": "src/platform/ui/chart/**, src/platform/ui/AreaChart*, src/platform/ui/HeatMap*, src/platform/ui/HeatCell*, src/platform/ui/Legend*, src/platform/ui/PeriodNav*, src/platform/ui/ShareBill*, src/platform/ui/ShareStrip*, src/platform/ui/shareTones*"
+          "value": "src/platform/ui/chart/**, src/platform/ui/AreaChart*, src/platform/ui/ChangeFigure*, src/platform/ui/HeatMap*, src/platform/ui/HeatCell*, src/platform/ui/Legend*, src/platform/ui/PeriodNav*, src/platform/ui/ShareBill*, src/platform/ui/ShareStrip*, src/platform/ui/SignedChange*, src/platform/ui/shareTones*"
         }
       ],
       "watchOuts": [],
@@ -12800,7 +12858,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/platform/richtext/*, src/platform/richtext/editorial/DiagramKey.test.tsx, src/platform/richtext/editorial/DiagramKey.tsx, src/platform/richtext/editorial/FactCard.test.tsx, src/platform/richtext/editorial/FactCard.tsx, src/platform/richtext/editorial/FactTabs.test.tsx, src/platform/richtext/editorial/FactTabs.tsx, src/platform/richtext/editorial/FactTabsBill.test.tsx, src/platform/richtext/editorial/FactTabsFigures.test.tsx, src/platform/richtext/editorial/FactTabsLinks.test.tsx, src/platform/richtext/editorial/KeyFacts.test.tsx, src/platform/richtext/editorial/KeyFacts.tsx, src/platform/richtext/editorial/NoteText.test.tsx, src/platform/richtext/editorial/NoteText.tsx, src/platform/richtext/editorial/OutcomeFork.test.tsx, src/platform/richtext/editorial/OutcomeFork.tsx, src/platform/richtext/editorial/README.md, src/platform/richtext/editorial/SectionTabs.test.tsx, src/platform/richtext/editorial/SectionTabs.tsx, src/platform/richtext/editorial/Steps.test.tsx, src/platform/richtext/editorial/Steps.tsx, src/platform/richtext/editorial/Timeline.test.tsx, src/platform/richtext/editorial/Timeline.tsx, src/platform/richtext/editorial/blockTypes.ts, src/platform/richtext/editorial/chart.test.ts, src/platform/richtext/editorial/chart.ts, src/platform/richtext/editorial/chartBaseFields.ts, src/platform/richtext/editorial/chartBlockConfig.test.ts, src/platform/richtext/editorial/chartBlockConfig.ts, src/platform/richtext/editorial/chartBreakdownFields.ts, src/platform/richtext/editorial/chartDataFields.ts, src/platform/richtext/editorial/chartHideSquares.test.ts, src/platform/richtext/editorial/chartKeys.test.ts, src/platform/richtext/editorial/chartKeys.ts, src/platform/richtext/editorial/chartMarkdown.test.ts, src/platform/richtext/editorial/chartMarkdown.ts, src/platform/richtext/editorial/chartValidate.test.ts, src/platform/richtext/editorial/chartValidate.ts, src/platform/richtext/editorial/definitionWithSource.test.ts, src/platform/richtext/editorial/definitionWithSource.ts, src/platform/richtext/editorial/diagramKey.test.ts, src/platform/richtext/editorial/diagramKey.ts, src/platform/richtext/editorial/diagramKeyBlockConfig.test.ts, src/platform/richtext/editorial/diagramKeyBlockConfig.ts, src/platform/richtext/editorial/editorialLimits.ts, src/platform/richtext/editorial/editorialLink.test.ts, src/platform/richtext/editorial/editorialLink.ts, src/platform/richtext/editorial/editorialTag.ts, src/platform/richtext/editorial/factIcons.ts, src/platform/richtext/editorial/factTabs.test.ts, src/platform/richtext/editorial/factTabs.ts, src/platform/richtext/editorial/factTabsBlockConfig.test.ts, src/platform/richtext/editorial/factTabsBlockConfig.ts, src/platform/richtext/editorial/factTabsFixtures.ts, src/platform/richtext/editorial/factTabsMarkdown.test.ts, src/platform/richtext/editorial/factTabsMarkdown.ts, src/platform/richtext/editorial/factTabsTag.ts, src/platform/richtext/editorial/figure.test.ts, src/platform/richtext/editorial/figure.ts, src/platform/richtext/editorial/figureBlockConfig.test.ts, src/platform/richtext/editorial/figureBlockConfig.ts, src/platform/richtext/editorial/filledText.ts, src/platform/richtext/editorial/keyFacts.test.ts, src/platform/richtext/editorial/keyFacts.ts, src/platform/richtext/editorial/keyFactsBlockConfig.test.ts, src/platform/richtext/editorial/keyFactsBlockConfig.ts, src/platform/richtext/editorial/keyFactsFixtures.ts, src/platform/richtext/editorial/linkFields.ts, src/platform/richtext/editorial/outcomeFork.test.ts, src/platform/richtext/editorial/outcomeFork.ts, src/platform/richtext/editorial/outcomeForkBlockConfig.ts, src/platform/richtext/editorial/outcomeTone.ts, src/platform/richtext/editorial/rowCount.ts, src/platform/richtext/editorial/sectionTabs.test.ts, src/platform/richtext/editorial/sectionTabs.ts, src/platform/richtext/editorial/sectionTabsBlockConfig.test.ts, src/platform/richtext/editorial/sectionTabsBlockConfig.ts, src/platform/richtext/editorial/sectionTabsMarkdown.ts, src/platform/richtext/editorial/steps.test.ts, src/platform/richtext/editorial/steps.ts, src/platform/richtext/editorial/stepsBlockConfig.ts, src/platform/richtext/editorial/tabAnchors.test.ts, src/platform/richtext/editorial/tabAnchors.ts, src/platform/richtext/editorial/timeline.test.ts, src/platform/richtext/editorial/timeline.ts, src/platform/richtext/editorial/timelineBlockConfig.test.ts, src/platform/richtext/editorial/timelineBlockConfig.ts, src/platform/richtext/editorial/timelineStatus.ts"
+          "value": "src/platform/richtext/*, src/platform/richtext/editorial/DiagramKey.test.tsx, src/platform/richtext/editorial/DiagramKey.tsx, src/platform/richtext/editorial/FactCard.test.tsx, src/platform/richtext/editorial/FactCard.tsx, src/platform/richtext/editorial/FactTabs.test.tsx, src/platform/richtext/editorial/FactTabs.tsx, src/platform/richtext/editorial/FactTabsBill.test.tsx, src/platform/richtext/editorial/FactTabsFigures.test.tsx, src/platform/richtext/editorial/FactTabsLinks.test.tsx, src/platform/richtext/editorial/KeyFacts.test.tsx, src/platform/richtext/editorial/KeyFacts.tsx, src/platform/richtext/editorial/NoteText.test.tsx, src/platform/richtext/editorial/NoteText.tsx, src/platform/richtext/editorial/OutcomeFork.test.tsx, src/platform/richtext/editorial/OutcomeFork.tsx, src/platform/richtext/editorial/README.md, src/platform/richtext/editorial/SectionTabs.test.tsx, src/platform/richtext/editorial/SectionTabs.tsx, src/platform/richtext/editorial/Steps.test.tsx, src/platform/richtext/editorial/Steps.tsx, src/platform/richtext/editorial/Timeline.test.tsx, src/platform/richtext/editorial/Timeline.tsx, src/platform/richtext/editorial/blockTypes.ts, src/platform/richtext/editorial/chart.test.ts, src/platform/richtext/editorial/chart.ts, src/platform/richtext/editorial/chartBaseFields.ts, src/platform/richtext/editorial/chartBlockConfig.test.ts, src/platform/richtext/editorial/chartBlockConfig.ts, src/platform/richtext/editorial/chartBreakdownFields.ts, src/platform/richtext/editorial/chartDataFields.ts, src/platform/richtext/editorial/chartHideSquares.test.ts, src/platform/richtext/editorial/chartKeys.test.ts, src/platform/richtext/editorial/chartKeys.ts, src/platform/richtext/editorial/chartLookFields.ts, src/platform/richtext/editorial/chartLooks.test.ts, src/platform/richtext/editorial/chartMarkdown.test.ts, src/platform/richtext/editorial/chartMarkdown.ts, src/platform/richtext/editorial/chartValidate.test.ts, src/platform/richtext/editorial/chartValidate.ts, src/platform/richtext/editorial/definitionWithSource.test.ts, src/platform/richtext/editorial/definitionWithSource.ts, src/platform/richtext/editorial/diagramKey.test.ts, src/platform/richtext/editorial/diagramKey.ts, src/platform/richtext/editorial/diagramKeyBlockConfig.test.ts, src/platform/richtext/editorial/diagramKeyBlockConfig.ts, src/platform/richtext/editorial/editorialLimits.ts, src/platform/richtext/editorial/editorialLink.test.ts, src/platform/richtext/editorial/editorialLink.ts, src/platform/richtext/editorial/editorialTag.ts, src/platform/richtext/editorial/factIcons.ts, src/platform/richtext/editorial/factTabs.test.ts, src/platform/richtext/editorial/factTabs.ts, src/platform/richtext/editorial/factTabsBlockConfig.test.ts, src/platform/richtext/editorial/factTabsBlockConfig.ts, src/platform/richtext/editorial/factTabsFixtures.ts, src/platform/richtext/editorial/factTabsMarkdown.test.ts, src/platform/richtext/editorial/factTabsMarkdown.ts, src/platform/richtext/editorial/factTabsTag.ts, src/platform/richtext/editorial/figure.test.ts, src/platform/richtext/editorial/figure.ts, src/platform/richtext/editorial/figureBlockConfig.test.ts, src/platform/richtext/editorial/figureBlockConfig.ts, src/platform/richtext/editorial/filledText.ts, src/platform/richtext/editorial/keyFacts.test.ts, src/platform/richtext/editorial/keyFacts.ts, src/platform/richtext/editorial/keyFactsBlockConfig.test.ts, src/platform/richtext/editorial/keyFactsBlockConfig.ts, src/platform/richtext/editorial/keyFactsFixtures.ts, src/platform/richtext/editorial/linkFields.ts, src/platform/richtext/editorial/outcomeFork.test.ts, src/platform/richtext/editorial/outcomeFork.ts, src/platform/richtext/editorial/outcomeForkBlockConfig.ts, src/platform/richtext/editorial/outcomeTone.ts, src/platform/richtext/editorial/rowCount.ts, src/platform/richtext/editorial/sectionTabs.test.ts, src/platform/richtext/editorial/sectionTabs.ts, src/platform/richtext/editorial/sectionTabsBlockConfig.test.ts, src/platform/richtext/editorial/sectionTabsBlockConfig.ts, src/platform/richtext/editorial/sectionTabsMarkdown.ts, src/platform/richtext/editorial/steps.test.ts, src/platform/richtext/editorial/steps.ts, src/platform/richtext/editorial/stepsBlockConfig.ts, src/platform/richtext/editorial/tabAnchors.test.ts, src/platform/richtext/editorial/tabAnchors.ts, src/platform/richtext/editorial/timeline.test.ts, src/platform/richtext/editorial/timeline.ts, src/platform/richtext/editorial/timelineBlockConfig.test.ts, src/platform/richtext/editorial/timelineBlockConfig.ts, src/platform/richtext/editorial/timelineStatus.ts"
         }
       ],
       "watchOuts": [],
@@ -12887,7 +12945,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/platform/ui/chart/**, src/platform/ui/AreaChart*, src/platform/ui/HeatMap*, src/platform/ui/HeatCell*, src/platform/ui/Legend*, src/platform/ui/PeriodNav*, src/platform/ui/ShareBill*, src/platform/ui/ShareStrip*, src/platform/ui/shareTones*"
+          "value": "src/platform/ui/chart/**, src/platform/ui/AreaChart*, src/platform/ui/ChangeFigure*, src/platform/ui/HeatMap*, src/platform/ui/HeatCell*, src/platform/ui/Legend*, src/platform/ui/PeriodNav*, src/platform/ui/ShareBill*, src/platform/ui/ShareStrip*, src/platform/ui/SignedChange*, src/platform/ui/shareTones*"
         }
       ],
       "watchOuts": [],
@@ -14806,6 +14864,42 @@
       "links": []
     },
     {
+      "id": "shared-component:ChangeFigure",
+      "type": "shared-component",
+      "name": "ChangeFigure",
+      "summary": "One big figure and how it changed (#1503): the label, the figure, then the signed change (`SignedChange`) and what it is measured from. The change is neutral on purpose: more or less money is not good or bad by itself.",
+      "path": "src/platform/ui/ChangeFigure.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": true,
+          "detail": "What the figure is, such as \"2027 adopted\"",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "detail": "The figure, already written: \"$477.7M\"",
+          "notes": []
+        },
+        {
+          "name": "change",
+          "type": "Omit<SignedChangeProps, \"className\"> & { since: string; }",
+          "required": true,
+          "detail": "",
+          "notes": []
+        },
+        { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
+      ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
       "id": "shared-component:Chart",
       "type": "shared-component",
       "name": "Chart",
@@ -14816,7 +14910,7 @@
       "fields": [
         {
           "name": "spec",
-          "type": "{ kind: \"bar\"; orientation: \"horizontal\" | \"vertical\"; data: { key: string; label: string; value: number; pattern?: \"hatch\" | undefined; }[]; title: string; su…",
+          "type": "{ kind: \"bar\"; orientation: \"horizontal\" | \"vertical\"; data: { key: string; label: string; value: number; pattern?: \"hatch\" | undefined; previous?: number | un…",
           "required": true,
           "detail": "",
           "notes": []
@@ -16928,6 +17022,30 @@
       "links": []
     },
     {
+      "id": "shared-component:RankedRow",
+      "type": "shared-component",
+      "name": "RankedRow",
+      "summary": "One compact row: the name and figure on the first line, the bar and the change under them, in a fixed-width right column so every bar starts and ends on the same line; from `sm` it is all one line, with the bar between the name and the figure so the rows line up.",
+      "path": "src/platform/ui/chart/adapters/rows/RankedRow.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        { "name": "name", "type": "string", "required": true, "detail": "", "notes": [] },
+        { "name": "value", "type": "string", "required": true, "detail": "", "notes": [] },
+        {
+          "name": "change",
+          "type": "Omit<SignedChangeProps, \"className\"> | null",
+          "required": true,
+          "detail": "",
+          "notes": []
+        },
+        { "name": "bar", "type": "React.ReactNode", "required": true, "detail": "", "notes": [] }
+      ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
       "id": "shared-component:RatesPanel",
       "type": "shared-component",
       "name": "RatesPanel",
@@ -17469,6 +17587,42 @@
         },
         { "name": "buttonLabel", "type": "string", "required": true, "detail": "", "notes": [] },
         { "name": "buttonHref", "type": "string", "required": true, "detail": "", "notes": [] }
+      ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:SignedChange",
+      "type": "shared-component",
+      "name": "SignedChange",
+      "summary": "A change as an arrow, the signed amount and the percent in brackets (#1503). The sign is in the text, the arrow repeats the direction, and a screen reader hears \"Up\", \"Down\" or \"No change\", so colour is never the cue. It is neutral on purpose: more or less money is not good or bad by itself. `ChangeFigure` and the compact rows both use it, so the two read the same.",
+      "path": "src/platform/ui/SignedChange.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "direction",
+          "type": "ChangeDirection",
+          "required": true,
+          "detail": "",
+          "notes": []
+        },
+        {
+          "name": "amount",
+          "type": "string",
+          "required": true,
+          "detail": "The signed amount, already written: \"+$25.0M\"",
+          "notes": []
+        },
+        {
+          "name": "percent",
+          "type": "string | null",
+          "required": true,
+          "detail": "The signed percent, already written: \"+5.5%\"; left out when there was nothing before",
+          "notes": []
+        },
+        { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
       ],
       "facts": [],
       "watchOuts": [],
@@ -20136,7 +20290,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 47,
+      "count": 48,
       "via": []
     },
     {
@@ -20280,7 +20434,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 144,
+      "count": 145,
       "via": []
     },
     {
@@ -20441,6 +20595,14 @@
       "type": "uses",
       "layer": "ui",
       "count": 2,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "shared-component:ChangeFigure",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
       "via": []
     },
     {
@@ -21301,6 +21463,14 @@
     },
     {
       "from": "feature:platform/ui/chart",
+      "to": "business-rule:src/platform/ui/chart/README.md#10",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/ui/chart",
       "to": "business-rule:src/platform/ui/chart/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -21350,6 +21520,14 @@
     {
       "from": "feature:platform/ui/chart",
       "to": "business-rule:src/platform/ui/chart/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/ui/chart",
+      "to": "business-rule:src/platform/ui/chart/README.md#9",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -21438,6 +21616,14 @@
     {
       "from": "feature:platform/ui/chart",
       "to": "shared-component:ChartZoom",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/ui/chart",
+      "to": "shared-component:RankedRow",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -28589,6 +28775,14 @@
     },
     {
       "from": "platform-area:lib",
+      "to": "business-rule:src/platform/lib/README.md#13",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:lib",
       "to": "business-rule:src/platform/lib/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -28720,7 +28914,7 @@
       "to": "library:zod",
       "type": "uses",
       "layer": "libraries",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -29141,6 +29335,14 @@
     },
     {
       "from": "platform-area:richtext",
+      "to": "business-rule:src/platform/richtext/README.md#7",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:richtext",
       "to": "decision:0013-cms-content-through-mappers",
       "type": "decided-by",
       "layer": "docs",
@@ -29184,7 +29386,7 @@
       "to": "library:payload",
       "type": "uses",
       "layer": "libraries",
-      "count": 22,
+      "count": 24,
       "via": []
     },
     {
@@ -29232,7 +29434,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 73,
+      "count": 74,
       "via": []
     },
     {
@@ -29984,7 +30186,7 @@
       "to": "library:lucide-react",
       "type": "uses",
       "layer": "libraries",
-      "count": 19,
+      "count": 20,
       "via": []
     },
     {
@@ -30000,7 +30202,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 87,
+      "count": 92,
       "via": []
     },
     {
@@ -30040,7 +30242,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 101,
+      "count": 108,
       "via": []
     },
     {
@@ -30238,6 +30440,14 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:CertaintyBadge",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:ChangeFigure",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -30590,6 +30800,14 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:SidebarCTA",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:SignedChange",
       "type": "contains",
       "layer": "structure",
       "count": 1,
