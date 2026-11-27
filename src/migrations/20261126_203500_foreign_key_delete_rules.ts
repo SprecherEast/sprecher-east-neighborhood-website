@@ -428,25 +428,40 @@ const createTable = (spec: Spec, rule: (onDelete: 'set null' | 'cascade') => str
 
 const columnName = (definition: string) => definition.match(/^`([^`]+)`/)![1]
 const indexName = (statement: string) => statement.match(/INDEX `([^`]+)`/)![1]
+const byName = (a: string, b: string) => (indexName(a) < indexName(b) ? -1 : 1)
+
+/** What this migration knows of a column: its name, type, whether it is NOT NULL and its primary key. */
+const specColumn = (definition: string) =>
+  [
+    columnName(definition),
+    definition.split(' ')[1].toLowerCase(),
+    /NOT NULL/.test(definition) ? 1 : 0,
+    /PRIMARY KEY/.test(definition) ? 1 : 0,
+  ].join(':')
 
 /** Throws when a table is not the one this migration was written for: rebuilding it would drop data. */
 const checkTables = async (db: Db) => {
   for (const spec of specs) {
-    const columns = (await rows(db, `SELECT name FROM pragma_table_info('${spec.table}')`)).map(
-      (row) => row.name,
-    )
+    const columns = (
+      await rows(
+        db,
+        `SELECT name, lower(type) AS type, "notnull", pk FROM pragma_table_info('${spec.table}')`,
+      )
+    ).map((row) => [row.name, row.type, row.notnull, row.pk].join(':'))
     const indexes = (
       await rows(
         db,
-        `SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='${spec.table}' AND sql IS NOT NULL`,
+        `SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name='${spec.table}' AND sql IS NOT NULL ORDER BY name`,
       )
-    ).map((row) => row.name)
+    ).map((row) => `${row.sql}`)
     const triggers = await rows(
       db,
       `SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name='${spec.table}'`,
     )
-    const sameColumns = JSON.stringify(columns) === JSON.stringify(spec.columns.map(columnName))
-    const sameIndexes = [...indexes].sort().join() === spec.indexes.map(indexName).sort().join()
+    // Names, types and index definitions, not defaults or the rows: the live database only ever
+    // changes through migrations, and a difference here means one this migration does not know
+    const sameColumns = JSON.stringify(columns) === JSON.stringify(spec.columns.map(specColumn))
+    const sameIndexes = JSON.stringify(indexes) === JSON.stringify([...spec.indexes].sort(byName))
     if (!sameColumns || !sameIndexes || triggers.length > 0) {
       throw new Error(`Table ${spec.table} is not as this migration expects: nothing was changed`)
     }

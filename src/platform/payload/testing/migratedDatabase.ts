@@ -8,7 +8,8 @@ import { vi } from 'vitest'
 
 import { migrations } from '@/migrations'
 
-import { bootPayload } from './inMemoryPayload'
+import { bootPayload, createAccount } from './inMemoryPayload'
+import { rawDb, sqlRows, type RawDb } from './sqlRows'
 
 /**
  * A temporary SQLite database for a test that must see the database production has: built by the
@@ -21,8 +22,6 @@ import { bootPayload } from './inMemoryPayload'
 
 export type Migration = (typeof migrations)[number]
 type Step = Migration['up'] | Migration['down']
-type Rows<T> = { rows: T[] }
-type Drizzle = { run: (query: ReturnType<typeof sql>) => Promise<unknown> }
 
 export type TestDatabase = {
   payload: Payload
@@ -31,8 +30,9 @@ export type TestDatabase = {
   /** Runs one SQL statement and returns its rows (a `SELECT` or a `PRAGMA`). */
   query: <T = Record<string, unknown>>(statement: string) => Promise<T[]>
   /** Runs one migration step as `payload migrate` does: on the adapter's own connection, with no
-   * wrapping transaction (the adapter starts none), so a migration that begins its own works. */
-  run: (step: Step) => Promise<void>
+   * wrapping transaction (the adapter starts none), so a migration that begins its own works.
+   * `wrap` hands the step a stand-in for the connection, to inject a fault into it. */
+  run: (step: Step, wrap?: (db: RawDb) => RawDb) => Promise<void>
   /** Closes Payload and removes the file. */
   cleanup: () => Promise<void>
 }
@@ -47,12 +47,14 @@ async function open(kind: 'migrated' | 'schema'): Promise<TestDatabase> {
   // Payload pushes the schema itself unless it believes it is in production
   if (kind === 'migrated') vi.stubEnv('NODE_ENV', 'production')
   const { payload } = await bootPayload(`file:${file}`)
-  const drizzle = payload.db.drizzle as unknown as Drizzle
-  const query = async <T>(statement: string) =>
-    ((await drizzle.run(sql.raw(statement))) as Rows<T>).rows
-  const run = async (step: Step) => {
+  const query = async <T>(statement: string) => sqlRows<T>(payload, sql.raw(statement))
+  const run = async (step: Step, wrap: (db: RawDb) => RawDb = (db) => db) => {
     const req = await createLocalReq({}, payload)
-    await step({ db: drizzle, payload, req } as unknown as MigrateUpArgs & MigrateDownArgs)
+    await step({
+      db: wrap(rawDb(payload)),
+      payload,
+      req,
+    } as unknown as MigrateUpArgs & MigrateDownArgs)
   }
   return {
     payload,
@@ -104,4 +106,42 @@ export async function listForeignKeys(database: TestDatabase): Promise<ForeignKe
       WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
       ORDER BY m.name, f."from"`,
   )
+}
+
+/** The SQL text of a raw query the migrations send, for a fault-injecting stand-in connection. */
+export const statementOf = (query: Parameters<RawDb['run']>[0]) =>
+  (query.queryChunks as { value: string[] }[]).map((chunk) => chunk.value.join('')).join('')
+
+/** A media row, written the way the database sees it: no file on disk. Returns its id. */
+export async function createMedia(database: TestDatabase, alt: string): Promise<number> {
+  const row = await database.payload.db.create({
+    collection: 'media',
+    data: { alt, filename: `${alt}.png`, mimeType: 'image/png' },
+  })
+  return row.id as number
+}
+
+const lockHolders = new WeakMap<TestDatabase, Awaited<ReturnType<typeof createAccount>>>()
+
+/** An edit lock, as Payload writes it when an editor opens a document. Returns its row id. */
+export async function lockDocument(
+  database: TestDatabase,
+  relationTo: string,
+  value: number,
+): Promise<number> {
+  const { payload } = database
+  let editor = lockHolders.get(database)
+  if (!editor) {
+    editor = await createAccount(payload, 'editor', 'lock-holder')
+    lockHolders.set(database, editor)
+  }
+  const row = await payload.db.create({
+    collection: 'payload-locked-documents',
+    data: {
+      document: { relationTo, value },
+      globalSlug: null,
+      user: { relationTo: 'users', value: editor.id },
+    },
+  })
+  return row.id as number
 }

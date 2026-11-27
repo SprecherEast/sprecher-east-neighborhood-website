@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { RETENTION_QUEUE } from '@/platform/payload/retentionJobs'
-import { createAccount, paragraph } from '@/platform/payload/testing/inMemoryPayload'
+import { NO_REVALIDATE, createAccount, paragraph } from '@/platform/payload/testing/inMemoryPayload'
 import {
+  createMedia,
   createMigratedDatabase,
+  lockDocument,
   type TestDatabase,
 } from '@/platform/payload/testing/migratedDatabase'
 
@@ -14,7 +16,6 @@ import {
  */
 
 let database: TestDatabase
-const ctx = { disableRevalidate: true }
 const count = async (statement: string) => (await database.query(statement)).length
 
 beforeAll(async () => {
@@ -25,14 +26,7 @@ afterAll(async () => {
   await database?.cleanup()
 })
 
-/** A media row, written the way the database sees it: no file on disk. */
-const media = async (alt: string) =>
-  (
-    await database.payload.db.create({
-      collection: 'media',
-      data: { alt, filename: `${alt}.png`, mimeType: 'image/png' },
-    })
-  ).id as number
+const media = (alt: string) => createMedia(database, alt)
 
 describe('deleting a media file used as a backdrop', () => {
   it('empties the title band photo of a post and its versions', async () => {
@@ -40,7 +34,7 @@ describe('deleting a media file used as a backdrop', () => {
     const [phone, tablet, desktop] = [await media('a'), await media('b'), await media('c')]
     const post = await payload.create({
       collection: 'posts',
-      context: ctx,
+      context: NO_REVALIDATE,
       data: {
         title: 'Walk',
         slug: 'walk-post',
@@ -52,7 +46,7 @@ describe('deleting a media file used as a backdrop', () => {
     await payload.update({
       collection: 'posts',
       id: post.id,
-      context: ctx,
+      context: NO_REVALIDATE,
       data: { title: 'Walk 2', _status: 'published' },
     })
     expect(await count('SELECT 1 FROM _posts_v WHERE version_backdrop_phone_id IS NOT NULL')).toBe(
@@ -74,7 +68,7 @@ describe('deleting a media file used as a backdrop', () => {
     const [phone, tablet, desktop] = [await media('d'), await media('e'), await media('f')]
     const event = await payload.create({
       collection: 'events',
-      context: ctx,
+      context: NO_REVALIDATE,
       data: {
         title: 'Fair',
         slug: 'fair-event',
@@ -98,7 +92,7 @@ describe('deleting a media file used as a backdrop', () => {
     const backdrop = await media('g')
     const page = await payload.create({
       collection: 'pages',
-      context: ctx,
+      context: NO_REVALIDATE,
       data: {
         title: 'About',
         slug: 'about-page',
@@ -118,18 +112,8 @@ describe('deleting a media file used as a backdrop', () => {
 })
 
 describe('deleting a document an editor has open', () => {
-  let editor: Awaited<ReturnType<typeof createAccount>> | undefined
   const lock = async (relationTo: string, id: number) => {
-    const { payload } = database
-    editor ??= await createAccount(payload, 'editor', 'lock-holder')
-    await payload.db.create({
-      collection: 'payload-locked-documents',
-      data: {
-        document: { relationTo, value: id },
-        globalSlug: null,
-        user: { relationTo: 'users', value: editor.id },
-      },
-    })
+    await lockDocument(database, relationTo, id)
     expect(
       await count(
         `SELECT 1 FROM payload_locked_documents_rels WHERE ${relationTo.replace(/-/g, '_')}_id = ${id}`,

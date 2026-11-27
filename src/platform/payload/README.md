@@ -44,7 +44,7 @@ The helpers every collection is built from (`src/platform/payload/`). The rules 
 - **Titles stop at one shared limit when publishing,** not when saving a draft (`src/payload.config.titleLimit.test.ts`, `contentCollection.test.ts`).
 - **A fact tab's label stops at one short limit** so it fits its button (`src/payload.config.factTabs.test.ts`, `testing/factTabsRequests.ts`).
 - **Links, paging, cursors:** `resolveLink.test.ts`, `documentHref.test.ts`, `keyset.test.ts`, `src/platform/lib/cursor.test.ts`.
-- **A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it (#1559).
+- **A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it; the migration's `up`, `down` and refusals are in `src/payload.config.deleteRulesMigration.test.ts` and `src/payload.config.deleteRulesGuards.test.ts`, on a database `testing/productionLikeData.ts` fills like production (#1559).
 - **The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.
 
 ## Boundaries

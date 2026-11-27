@@ -43,7 +43,7 @@ Also present, added by Payload or its plugins rather than defined here: `payload
 
 Each of these has its own generated page, listed in the [reference README](../reference/content-types/README.md).
 
-**Delete rules of migrated relationship columns.** A migration that adds a relationship column carries the delete rule the schema gives it (`ON UPDATE no action ON DELETE set null` or `cascade`): a bare `REFERENCES x(id)` is NO ACTION and blocks deleting the row it points at, on the live database only. `src/payload.config.foreignKeyRules.test.ts` fails on any foreign key whose rule differs between a database built by the real migrations and one built from the schema (#1559).
+**Delete rules of migrated relationship columns.** A migration that adds a relationship column carries the delete rule the schema gives it (`ON UPDATE no action ON DELETE set null` or `cascade`): a bare `REFERENCES x(id)` is NO ACTION and blocks deleting the row it points at, on the live database only. `src/payload.config.foreignKeyRules.test.ts` fails on any foreign key whose rule differs between a database built by the real migrations and one built from the schema (#1559). The migration `20261126_203500_foreign_key_delete_rules` rebuilds `posts`, `events`, their version tables, `payload_locked_documents_rels` and `payload_preferences_rels`, and checks their columns, types and indexes first: a migration that adds columns to one of them must sort after it and give each new key its delete rule itself.
 
 ## Notes by content type
 

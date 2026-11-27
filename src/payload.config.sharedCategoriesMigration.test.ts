@@ -7,7 +7,8 @@ import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { down, up } from '@/migrations/20261025_195057_shared_categories'
-import { bootPayload } from '@/platform/payload/testing/inMemoryPayload'
+import { NO_REVALIDATE, bootPayload } from '@/platform/payload/testing/inMemoryPayload'
+import { sqlRows } from '@/platform/payload/testing/sqlRows'
 
 /**
  * The shared-categories migration (#362) rolls back and applies again on SQLite with foreign keys
@@ -18,20 +19,17 @@ import { bootPayload } from '@/platform/payload/testing/inMemoryPayload'
 let payload: Payload
 // A file, not memory: each transaction below needs the same database (see `bootPayload`)
 const folder = mkdtempSync(path.join(tmpdir(), 'shared-categories-'))
-type Rows<T> = { rows: T[] }
 type Db = { run: (query: ReturnType<typeof sql>) => Promise<unknown> }
 type Drizzle = Db & { transaction: <T>(fn: (tx: Db) => Promise<T>) => Promise<T> }
 
 const drizzle = () => payload.db.drizzle as unknown as Drizzle
-const rows = async <T>(query: ReturnType<typeof sql>): Promise<T[]> =>
-  ((await drizzle().run(query)) as Rows<T>).rows
+const rows = <T>(query: ReturnType<typeof sql>) => sqlRows<T>(payload, query)
 const inTransaction = async (step: typeof up | typeof down) => {
   const req = await createLocalReq({}, payload)
   await drizzle().transaction((tx) =>
     step({ db: tx, payload, req } as unknown as MigrateUpArgs & MigrateDownArgs),
   )
 }
-const ctx = { disableRevalidate: true }
 const ids: Record<string, number> = {}
 
 beforeAll(async () => {
@@ -47,7 +45,7 @@ beforeAll(async () => {
   const event = (title: string, slug: string, categories: number[]) =>
     payload.create({
       collection: 'events',
-      context: ctx,
+      context: NO_REVALIDATE,
       data: { title, slug, date: '2026-11-01T00:00:00.000Z', categories, _status: 'published' },
     })
   // A new category first, then an old one: the old value comes back on rollback
@@ -58,7 +56,7 @@ beforeAll(async () => {
   ids.post = (
     await payload.create({
       collection: 'posts',
-      context: ctx,
+      context: NO_REVALIDATE,
       data: {
         title: 'A post',
         slug: 'a-post',

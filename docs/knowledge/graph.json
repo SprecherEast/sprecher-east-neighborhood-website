@@ -2194,7 +2194,7 @@
       "id": "business-rule:src/platform/payload/README.md#8",
       "type": "business-rule",
       "name": "**A migrated database keeps the schema's delete rules:**…",
-      "summary": "**A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it (#1559).",
+      "summary": "**A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it; the migration's `up`, `down` and refusals are in `src/payload.config.deleteRulesMigration.test.ts` and `src/payload.config.deleteRulesGuards.test.ts`, on a database `testing/productionLikeData.ts` fills like production (#1559).",
       "path": "src/payload.config.foreignKeyRules.test.ts",
       "module": "platform-area:payload",
       "aliases": [],
@@ -2203,7 +2203,9 @@
       "watchOuts": [],
       "links": [
         "src/payload.config.foreignKeyRules.test.ts",
-        "src/payload.config.deleteRules.test.ts"
+        "src/payload.config.deleteRules.test.ts",
+        "src/payload.config.deleteRulesMigration.test.ts",
+        "src/payload.config.deleteRulesGuards.test.ts"
       ]
     },
     {
