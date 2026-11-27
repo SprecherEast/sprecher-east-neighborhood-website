@@ -1,8 +1,8 @@
 import { Button } from '@/platform/ui'
 import { Card } from '@/platform/ui/Card'
-import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
+import { ConnectionFacts } from './ConnectionFacts'
 import type { Continuing } from '../use-cases/oauth/beginAuthorization'
 
 type Props = { view: Extract<Continuing, { kind: 'continue' }> }
@@ -15,26 +15,7 @@ type Props = { view: Extract<Continuing, { kind: 'continue' }> }
 export function ContinueCard({ view }: Props) {
   return (
     <Card variant="elevated" padding="lg" className="space-y-6">
-      <MetaList
-        items={[
-          {
-            label: 'AI tool',
-            value: (
-              <Text variant="subsection" as="p">
-                {view.clientName}
-              </Text>
-            ),
-          },
-          {
-            label: 'Returns to',
-            value: (
-              <Text variant="lead" as="p" className="break-all">
-                {view.redirectHost}
-              </Text>
-            ),
-          },
-        ]}
-      />
+      <ConnectionFacts clientName={view.clientName} redirectHost={view.redirectHost} />
       <Text variant="small">
         This tool would like to use our AI agent address. An admin approves it on the next step.
       </Text>
