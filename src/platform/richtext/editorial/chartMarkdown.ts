@@ -32,8 +32,8 @@ const COMMON = [
 ]
 /** The props each kind takes, in the order they are written (the long arrays last) */
 const PROPS: Record<ChartKind, readonly string[]> = {
-  bar: [...COMMON, 'scaleMax', 'data'],
-  stacked: [...COMMON, 'scaleMax', 'x', 'series', 'rowNotes'],
+  bar: [...COMMON, 'scaleMax', 'density', 'previousLabel', 'data'],
+  stacked: [...COMMON, 'scaleMax', 'look', 'x', 'series', 'rowNotes'],
   units: [...COMMON, 'mode', 'unitNote', 'groups'],
   breakdown: [...COMMON, 'squareValue', 'hideSquares', 'areas'],
 }

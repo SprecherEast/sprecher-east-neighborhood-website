@@ -34,6 +34,8 @@ paths:
   - 'src/platform/richtext/editorial/chartHideSquares.test.ts'
   - 'src/platform/richtext/editorial/chartKeys.test.ts'
   - 'src/platform/richtext/editorial/chartKeys.ts'
+  - 'src/platform/richtext/editorial/chartLookFields.ts'
+  - 'src/platform/richtext/editorial/chartLooks.test.ts'
   - 'src/platform/richtext/editorial/chartMarkdown.test.ts'
   - 'src/platform/richtext/editorial/chartMarkdown.ts'
   - 'src/platform/richtext/editorial/chartValidate.test.ts'

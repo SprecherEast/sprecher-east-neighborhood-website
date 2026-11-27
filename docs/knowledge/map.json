@@ -66,12 +66,14 @@
     "exclude": [
       "src/platform/ui/chart/**",
       "src/platform/ui/AreaChart*",
+      "src/platform/ui/ChangeFigure*",
       "src/platform/ui/HeatMap*",
       "src/platform/ui/HeatCell*",
       "src/platform/ui/Legend*",
       "src/platform/ui/PeriodNav*",
       "src/platform/ui/ShareBill*",
       "src/platform/ui/ShareStrip*",
+      "src/platform/ui/SignedChange*",
       "src/platform/ui/shareTones*"
     ]
   },
@@ -80,12 +82,14 @@
     "paths": [
       "src/platform/ui/chart/**",
       "src/platform/ui/AreaChart*",
+      "src/platform/ui/ChangeFigure*",
       "src/platform/ui/HeatMap*",
       "src/platform/ui/HeatCell*",
       "src/platform/ui/Legend*",
       "src/platform/ui/PeriodNav*",
       "src/platform/ui/ShareBill*",
       "src/platform/ui/ShareStrip*",
+      "src/platform/ui/SignedChange*",
       "src/platform/ui/shareTones*"
     ]
   },

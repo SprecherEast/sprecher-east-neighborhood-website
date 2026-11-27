@@ -54,6 +54,7 @@ function partsOf(
     label?: string | null
     value?: number | null
     hatch?: boolean | null
+    previous?: number | null
   }[],
 ) {
   const keys = keysOf(items)
@@ -62,6 +63,8 @@ function partsOf(
     label: item.label ?? '',
     value: item.value ?? NaN,
     ...hatch(item.hatch),
+    // An earlier amount, for the compact rows' change column (#1503)
+    ...(typeof item.previous === 'number' ? { previous: item.previous } : {}),
   }))
 }
 
@@ -72,6 +75,7 @@ function stackedOf(stored: StoredChart) {
   return {
     orientation: 'horizontal',
     scaleMax: stored.scaleMax ?? undefined,
+    look: stored.look ?? undefined,
     x: rows.map((row) => row.label ?? ''),
     series: list(stored.series).map((series, i) => ({
       key: keys[i],
@@ -152,6 +156,8 @@ export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
         ...base,
         orientation: 'horizontal',
         scaleMax: stored.scaleMax ?? undefined,
+        density: stored.density ?? undefined,
+        previousLabel: blank(stored.previousLabel),
         data: partsOf(list(stored.bars)),
       })
     case 'stacked':
@@ -214,14 +220,27 @@ export function fromChartSpec(spec: ChartSpec): StoredChart {
     sources: spec.sources?.map(({ label, href }) => ({ linkLabel: label, linkUrl: href })),
   }
   const parts = (data: Extract<ChartSpec, { kind: 'bar' }>['data']): Stored<'bars'> =>
-    data.map((d) => ({ key: d.key, label: d.label, value: d.value, hatch: isHatched(d) }))
+    data.map((d) => ({
+      key: d.key,
+      label: d.label,
+      value: d.value,
+      hatch: isHatched(d),
+      previous: d.previous,
+    }))
   switch (spec.kind) {
     case 'bar':
-      return { ...base, scaleMax: spec.scaleMax, bars: parts(spec.data) }
+      return {
+        ...base,
+        scaleMax: spec.scaleMax,
+        density: spec.density,
+        previousLabel: spec.previousLabel,
+        bars: parts(spec.data),
+      }
     case 'stacked':
       return {
         ...base,
         scaleMax: spec.scaleMax,
+        look: spec.look,
         series: spec.series.map((s) => ({
           key: s.key,
           label: s.label,

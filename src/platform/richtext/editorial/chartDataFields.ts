@@ -4,6 +4,7 @@ import { array, number, select, text } from 'payload/shared'
 import { CHART_LIMITS } from '@/platform/lib/chart/spec'
 
 import { chartBreakdownFields } from './chartBreakdownFields'
+import { barLookFields, previousField, stackedLookFields } from './chartLookFields'
 import { checked } from './chartValidate'
 
 /** Shown only when the block's `kind` is one of these */
@@ -71,6 +72,7 @@ const scaleMaxField = (): Field => ({
 })
 
 const barFields = (): Field[] => [
+  ...barLookFields(),
   {
     name: 'bars',
     type: 'array',
@@ -78,11 +80,12 @@ const barFields = (): Field[] => [
     maxRows: CHART_LIMITS.rows,
     admin: { condition: forKinds('bar'), description: 'One to twelve bars, top to bottom.' },
     validate: checked('bars', array),
-    fields: partFields(),
+    fields: [...partFields(), { type: 'row', fields: [previousField()] }],
   },
 ]
 
 const stackedFields = (): Field[] => [
+  ...stackedLookFields(),
   {
     name: 'series',
     type: 'array',

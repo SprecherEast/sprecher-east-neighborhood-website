@@ -79,3 +79,39 @@ Source: `src/platform/ui/ShareStrip.tsx`
 
 - Modules: `site`
 - Routes: `/dev/gallery`
+- Platform: `platform/ui`
+
+## `ChangeFigure`
+
+One big figure and how it changed (#1503): the label, the figure, then the signed change (`SignedChange`) and what it is measured from. The change is neutral on purpose: more or less money is not good or bad by itself.
+
+Source: `src/platform/ui/ChangeFigure.tsx`
+
+| Prop        | Type                                                        | Required | Description                                |
+| ----------- | ----------------------------------------------------------- | -------- | ------------------------------------------ |
+| `label`     | `string`                                                    | yes      | What the figure is, such as "2027 adopted" |
+| `value`     | `string`                                                    | yes      | The figure, already written: "$477.7M"     |
+| `change`    | `Omit<SignedChangeProps, "className"> & { since: string; }` | yes      |                                            |
+| `className` | `string`                                                    | no       |                                            |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/ui`
+
+## `SignedChange`
+
+A change as an arrow, the signed amount and the percent in brackets (#1503). The sign is in the text, the arrow repeats the direction, and a screen reader hears "Up", "Down" or "No change", so colour is never the cue. It is neutral on purpose: more or less money is not good or bad by itself. `ChangeFigure` and the compact rows both use it, so the two read the same.
+
+Source: `src/platform/ui/SignedChange.tsx`
+
+| Prop        | Type              | Required | Description                                                                          |
+| ----------- | ----------------- | -------- | ------------------------------------------------------------------------------------ |
+| `direction` | `ChangeDirection` | yes      |                                                                                      |
+| `amount`    | `string`          | yes      | The signed amount, already written: "+$25.0M"                                        |
+| `percent`   | `string \| null`  | yes      | The signed percent, already written: "+5.5%"; left out when there was nothing before |
+| `className` | `string`          | no       |                                                                                      |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`

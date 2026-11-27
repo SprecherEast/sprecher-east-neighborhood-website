@@ -1,3 +1,5 @@
+import { COMPACT_FIXTURES } from './fixturesCompact'
+import { part, PROPOSAL } from './fixtureParts'
 import type { ChartSpec } from './spec'
 
 /*
@@ -14,9 +16,6 @@ const EXEC_CAPITAL = {
   label: 'City of Madison, 2027 Executive Capital Budget, page 34',
   href: 'https://www.cityofmadison.com/finance/documents/capital/executive/2027ExecutiveCapitalBudgetFinal.pdf',
 }
-const PROPOSAL = "Mayor's proposal, October 2026"
-
-const part = (key: string, label: string, value: number) => ({ key, label, value })
 
 const MONTHS = [
   'January',
@@ -255,4 +254,5 @@ export const FIXTURES = {
       ]),
     ],
   },
+  ...COMPACT_FIXTURES,
 } satisfies Record<string, ChartSpec>

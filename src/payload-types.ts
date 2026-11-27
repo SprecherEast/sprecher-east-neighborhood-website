@@ -3532,6 +3532,14 @@ export interface ChartBlock {
       }[]
     | null
   /**
+   * Leave empty for big bars.
+   */
+  density?: ('full' | 'compact') | null
+  /**
+   * What the earlier amounts are: "2026 adopted". Needed when a bar has one.
+   */
+  previousLabel?: string | null
+  /**
    * One to twelve bars, top to bottom.
    */
   bars?:
@@ -3549,9 +3557,17 @@ export interface ChartBlock {
          * Stripes mark an amount that is only proposed.
          */
         hatch?: boolean | null
+        /**
+         * Optional: what this was before, such as the 2026 amount. Shows its change in the compact rows.
+         */
+        previous?: number | null
         id?: string | null
       }[]
     | null
+  /**
+   * Leave empty for big bars.
+   */
+  look?: ('bars' | 'change') | null
   /**
    * The parts each bar splits into, such as “Borrowed” and “Other sources”.
    */

@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { CERTAINTIES } from '@/platform/lib/certainty'
 import { isLinkAddress, LINK_ADDRESS_HINT } from '@/platform/lib/linkAddress'
 
+import { refineChangeLook, refineCompactBars } from './chartLooks'
+
 /*
  * What a chart is, as plain data (#639, #592): no React and no chart library, so any adapter can
  * draw it, a module's domain can build one, and an editor's block can store one. `parseChartSpec`
@@ -89,9 +91,14 @@ const baseShape = {
 
 const orientation = z.enum(['horizontal', 'vertical'])
 
-const dataList = (max: number) =>
+/** A bar's value, and optionally what it was the period before, so a change can be shown (#1503) */
+const barDatumSchema = datumSchema.extend({
+  previous: z.number().finite().nonnegative().optional(),
+})
+
+const dataList = <T extends z.ZodType<{ key: string; label: string }>>(max: number, item: T) =>
   z
-    .array(datumSchema)
+    .array(item)
     .min(1)
     .max(max)
     .superRefine((data, ctx) => {
@@ -113,7 +120,7 @@ const groupSchema = z.object({
   label: text(CHART_LIMITS.label),
   /** The whole the parts add up to, if the chart states it */
   total: z.number().finite().nonnegative().optional(),
-  data: dataList(MAX_ROWS),
+  data: dataList(MAX_ROWS, datumSchema),
 })
 
 const unitsSchema = z
@@ -241,12 +248,17 @@ const barSchema = z
     orientation,
     /** The scale's end: charts with the same scaleMax draw the same value the same length */
     scaleMax: z.number().positive().optional(),
-    data: dataList(MAX_ROWS),
+    /** `compact`: ranked rows with a small bar, the figure and the change from `previous` (#1503) */
+    density: z.enum(['full', 'compact']).optional(),
+    /** What `previous` is, such as "2026 adopted": needed when any bar has one */
+    previousLabel: text(CHART_LIMITS.label).optional(),
+    data: dataList(MAX_ROWS, barDatumSchema),
   })
   .refine((spec) => fitsScale(spec.scaleMax, Math.max(...spec.data.map((d) => d.value))), {
     message: SCALE_MAX_MESSAGE,
     path: ['scaleMax'],
   })
+  .superRefine(refineCompactBars)
 
 const seriesSchema = z.object({
   key: text(CHART_LIMITS.key),
@@ -266,11 +278,14 @@ const stackedSchema = z
     x: z.array(text(CHART_LIMITS.label)).min(1).max(MAX_ROWS),
     series: z.array(seriesSchema).min(1).max(CHART_LIMITS.parts),
     scaleMax: z.number().positive().optional(),
+    /** `bars`: the big stacked bars. `change`: the latest figure, its change, then a slim strip of the split (#1503) */
+    look: z.enum(['bars', 'change']).optional(),
     /** One short note per row, such as "$66 of every $100 is borrowed" */
     rowNotes: z.array(text(CHART_LIMITS.rowNote)).max(MAX_ROWS).optional(),
   })
   .superRefine((spec, ctx) => {
     const add = (message: string) => ctx.addIssue({ code: 'custom', message })
+    refineChangeLook(spec, add)
     if (spec.series.some((s) => s.values.length !== spec.x.length)) {
       add('Every series needs one value for each of the rows')
     }

@@ -11,7 +11,7 @@ export function ChartGallery() {
   return (
     <GalleryEntry
       name="Chart"
-      description="The one chart, shown as a thumbnail (the drawing 20rem wide, its title, takeaway, key and caption beside it where there is room) with an Enlarge button; the button or a click on the drawing opens the same chart at 40rem in a dialog. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); the text adapter, words and a table, is the fallback. The 2027 figures are the Mayor's proposal."
+      description="The one chart, shown as a thumbnail (the drawing 20rem wide, its title, takeaway, key and caption beside it where there is room) with an Enlarge button; the button or a click on the drawing opens the same chart at 40rem in a dialog. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); a stacked chart with `look: change` and a bar chart with `density: compact` are plain HTML (the change and rows adapters, #1503); the text adapter, words and a table, is the fallback. The 2027 figures are the Mayor's proposal."
     >
       <GalleryVariant
         label="units · perHundred, two groups: 2026 adopted next to 2027 proposed"
@@ -60,6 +60,30 @@ export function ChartGallery() {
         className="block"
       >
         <Chart spec={FIXTURES.borrowed} />
+      </GalleryVariant>
+      <GalleryVariant
+        label="stacked · look change: the adopted day-to-day budget as a figure, its change and a slim strip of the split (#1503)"
+        className="block"
+      >
+        <Chart spec={FIXTURES.operatingChange} />
+      </GalleryVariant>
+      <GalleryVariant
+        label="stacked · look change: the big-project budget, a smaller part of it borrowed more (#1503)"
+        className="block"
+      >
+        <Chart spec={FIXTURES.capitalChange} />
+      </GalleryVariant>
+      <GalleryVariant
+        label="bar · compact rows: ranked areas with a small bar, the figure and the change from 2026 (#1503)"
+        className="block"
+      >
+        <Chart spec={FIXTURES.operatingRows} />
+      </GalleryVariant>
+      <GalleryVariant
+        label="bar · compact rows with a fall: borrowed up, other sources down (#1503)"
+        className="block"
+      >
+        <Chart spec={FIXTURES.capitalRows} />
       </GalleryVariant>
       <GalleryVariant
         label="bar · zoom off: the same thumbnail without the Enlarge button (gallery and tests only)"
