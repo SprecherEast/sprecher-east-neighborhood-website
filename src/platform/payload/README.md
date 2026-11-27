@@ -1,7 +1,7 @@
 ---
 name: 'Shared Payload code'
 type: platform-area
-summary: 'roles, drafts, queue, jobs, link and site-address helpers, keyset paging.'
+summary: 'roles, drafts, queue, jobs, link, site-address helpers, keyset paging.'
 aliases: ['review queue', 'access policy']
 relationships: []
 ---

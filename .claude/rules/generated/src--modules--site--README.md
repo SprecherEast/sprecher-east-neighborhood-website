@@ -29,7 +29,7 @@ paths:
 ---
 name: 'Site pages'
 type: module
-summary: 'CMS pages, blocks and layout (header: Site navigation).'
+summary: 'CMS pages, blocks, layout (header: Site navigation).'
 aliases: ['pages', 'page builder', 'hero']
 relationships: []
 ---

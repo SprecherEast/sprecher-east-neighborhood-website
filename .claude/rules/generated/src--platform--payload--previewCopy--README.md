@@ -8,7 +8,7 @@ paths:
 ---
 name: 'Preview copy'
 type: feature
-summary: 'what a preview copies.'
+summary: 'what previews copy.'
 aliases: ['preview content']
 relationships: []
 ---

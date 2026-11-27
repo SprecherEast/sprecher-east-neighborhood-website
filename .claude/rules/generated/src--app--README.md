@@ -15,7 +15,7 @@ paths:
 ---
 name: 'Site shell'
 type: feature
-summary: 'layout, sitemap, proxy, headers, Payload config.'
+summary: 'layout, sitemap, proxy (bounded paging), headers, Payload config.'
 aliases: ['app shell', 'composition root', 'payload config', 'proxy']
 relationships: []
 ---
@@ -29,6 +29,7 @@ The files that put the modules together. The root layout, home page, error and n
 - **The config** lists the collections of [events](/src/modules/events/README.md), [news](/src/modules/news/README.md), [directory](/src/modules/directory/README.md), [accounts](/src/modules/accounts/README.md), [verification](/src/modules/verification/README.md), [agents](/src/modules/agents/README.md), [site](/src/modules/site/README.md) and `media`, the plugins (SEO, redirects, nested docs, search, form builder, MCP), the SQLite adapter, the email adapter, the jobs and their access, and the GraphQL rule that refuses the account verify mutation (`src/payload.config.ts`). It then restricts edit locks and job stats ([Shared Payload code](/src/platform/payload/README.md)).
 - **The layout** joins the header and footer, the account slots, the theme (`InitTheme`, `Providers`, `ThemeDecoration`), the visit counter and `VersionCheck` ([theme](/src/platform/theme/README.md), [platform services](/src/platform/service/README.md), [UI kit](/src/platform/ui/README.md)); the page-builder's block registry is `[slug]/pageBlocks.tsx` ([site](/src/modules/site/README.md)).
 - **The sitemap** reads each module's slug list under its own cache tag and leaves out account pages (`sitemap.ts`).
+- **Response headers** come from `next.config.js`: the `/api/` ones are in the [Payload routes note](/src/app/<(payload)/README.md>), the pages that refuse framing in the [accounts note](/src/modules/accounts/README.md).
 - **Libraries doing real work:** Next.js (routing, caching, metadata) and Payload.
 
 ## Behaviors and events

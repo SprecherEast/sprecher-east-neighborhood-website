@@ -1,7 +1,7 @@
 ---
 name: 'Whole tax bill'
 type: feature
-summary: 'the tax-bill tab: counting, notes, notices, limits.'
+summary: 'tax-bill tab: counting, notes, notices, limits.'
 aliases: ['bill share', 'Rough Estimator', 'property tax bill']
 relationships: []
 ---
