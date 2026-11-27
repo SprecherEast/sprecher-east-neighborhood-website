@@ -1248,6 +1248,19 @@
     {
       "id": "business-rule:src/modules/events/README.md#4",
       "type": "business-rule",
+      "name": "**A post's picked events show on the post at their own date, past…",
+      "summary": "**A post's picked events show on the post at their own date, past ones too, in the editor's order; a draft or deleted one never shows, and a cancelled one shows marked as cancelled.** The post's \"Upcoming Events\" leaves them out (`data/queries.ts` `findEventsByIds`, `use-cases/findUpcomingEvents.ts`; `data/queries.related.test.ts`, #1496).",
+      "path": "src/modules/events/data/queries.related.test.ts",
+      "module": "module:events",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/events/data/queries.related.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/events/README.md#5",
+      "type": "business-rule",
       "name": "**An event with `officialBody` is an official meeting** (the bodies,…",
       "summary": "**An event with `officialBody` is an official meeting** (the bodies, City of Madison and Dane County, are `OFFICIAL_BODIES` in `domain/officialMeetings.ts`): labelled wherever it shows, with the body's `https://` agenda link on its page and the body as organizer in structured data; an agenda link that is not `https://` is refused (`domain/officialMeetings.ts`, `ui/OfficialAgenda.tsx`; `domain/officialMeetings.test.ts`).",
       "path": "src/modules/events/domain/officialMeetings.test.ts",
@@ -1259,7 +1272,7 @@
       "links": ["src/modules/events/domain/officialMeetings.test.ts"]
     },
     {
-      "id": "business-rule:src/modules/events/README.md#5",
+      "id": "business-rule:src/modules/events/README.md#6",
       "type": "business-rule",
       "name": "**The \"this week\" strip:** a row is `all`, `official` or one…",
       "summary": "**The \"this week\" strip:** a row is `all`, `official` or one category; a window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`; `domain/thisWeek.test.ts`, `use-cases/findEventsThisWeek.test.ts`, `data/mappers.thisWeek.test.ts`).",
@@ -1276,7 +1289,7 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/events/README.md#6",
+      "id": "business-rule:src/modules/events/README.md#7",
       "type": "business-rule",
       "name": "**A title band photo with no crop for a screen size uses the nearest…",
       "summary": "**A title band photo with no crop for a screen size uses the nearest crop that is set;** none set keeps the plain band (`src/platform/payload/bandBackdrop.ts`, `src/platform/ui/BandBackdrop.tsx`, #1024).",
@@ -1289,7 +1302,7 @@
       "links": []
     },
     {
-      "id": "business-rule:src/modules/events/README.md#7",
+      "id": "business-rule:src/modules/events/README.md#8",
       "type": "business-rule",
       "name": "**Every event states a place:** the venue name, else the address;…",
       "summary": "**Every event states a place:** the venue name, else the address; \"Online\" for a virtual event (the editor hides its venue fields); \"Location to be confirmed\" when an in-person or hybrid event has none. The map link is the editor's `mapsUrl`, else a Google Maps search of the address (`domain/place.ts`, `domain/maps.ts`, #873; `domain/place.test.ts`, `ui/EventCard.test.tsx`, `ui/eventHeader.test.tsx`).",
@@ -1306,7 +1319,7 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/events/README.md#8",
+      "id": "business-rule:src/modules/events/README.md#9",
       "type": "business-rule",
       "name": "**Category filters are pages, not query strings,** and counts and…",
       "summary": "**Category filters are pages, not query strings,** and counts and \"Load more\" keep the filter (`data/queries.filter.test.ts`, `domain/filters.test.ts`, `actions.test.ts`; `src/proxy.test.ts`). Revalidation names only routes that exist (`cms/revalidateEvent.test.ts`); suggestions are held (`src/payload.config.reviewQueue.test.ts`).",
@@ -1400,6 +1413,22 @@
     {
       "id": "business-rule:src/modules/news/README.md#6",
       "type": "business-rule",
+      "name": "**`relatedEvents` is the events an editor picked for a post,**…",
+      "summary": "**`relatedEvents` is the events an editor picked for a post,** published events only in the picker; the post page lists the ones a visitor may see as \"Related Events\" under \"Related Posts\", none picked shows nothing, and an event's page asks for its posts with `findPostsByIds`, published only (`cms/posts.ts`, `data/queries.ts`, `posts/[slug]/page.tsx`; `data/queries.related.test.ts`, `src/payload.config.relatedEvents.test.ts`, #1496).",
+      "path": "src/modules/news/data/queries.related.test.ts",
+      "module": "module:news",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/news/data/queries.related.test.ts",
+        "src/payload.config.relatedEvents.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/news/README.md#7",
+      "type": "business-rule",
       "name": "**\"Top issues\" shows one to five items,** title up to 80 and summary…",
       "summary": "**\"Top issues\" shows one to five items,** title up to 80 and summary up to 200 characters, most important first with the day it was last reviewed; an item with no title, or whose link the visitor cannot read or is unsafe (not http(s) or a path on this site), is left out, and with none left nothing is drawn (`domain/topIssues.ts`, `data/mappers.ts`, `ui/TopIssuesBlock.tsx`; `data/mappers.topIssues.test.ts`, `ui/TopIssuesBlock.test.tsx`).",
       "path": "src/modules/news/data/mappers.topIssues.test.ts",
@@ -1414,7 +1443,7 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/news/README.md#7",
+      "id": "business-rule:src/modules/news/README.md#8",
       "type": "business-rule",
       "name": "**Categories form one tree shared with events:** the nested-docs…",
       "summary": "**Categories form one tree shared with events:** the nested-docs plugin adds `parent` and `breadcrumbs`; `defaultImage` is the image an agent's suggestion gets, from the nearest category up the parents (`cms/categories.ts`, `src/modules/agents/domain/suggestion.ts`).",
@@ -1427,7 +1456,7 @@
       "links": []
     },
     {
-      "id": "business-rule:src/modules/news/README.md#8",
+      "id": "business-rule:src/modules/news/README.md#9",
       "type": "business-rule",
       "name": "**Text keeps the reading width** unless the post holds a row-of-cards…",
       "summary": "**Text keeps the reading width** unless the post holds a row-of-cards block (the four listed in the [rich text note](../../platform/richtext/README.md)) (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774). Refreshing names only routes that exist (`cms/revalidatePost.test.ts`); suggestions are held (`src/payload.config.reviewQueue.test.ts`); posts sit on the shared categories (`src/payload.config.sharedCategoriesMigration.test.ts`); cards and header: `ui/PostCard.test.tsx`, `ui/postHeader.test.tsx`, `ui/SearchBox.client.test.tsx`, `ui/postJsonLd.test.ts`.",
@@ -1945,6 +1974,19 @@
     {
       "id": "business-rule:src/platform/lib/README.md#12",
       "type": "business-rule",
+      "name": "**Picked order is kept:** `inPickedOrder` puts documents read in one…",
+      "summary": "**Picked order is kept:** `inPickedOrder` puts documents read in one query back in the order an editor picked their ids, leaving out ids that were not found (`inPickedOrder.ts`; `inPickedOrder.test.ts`, #1496).",
+      "path": "src/platform/lib/inPickedOrder.test.ts",
+      "module": "platform-area:lib",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/lib/inPickedOrder.test.ts"]
+    },
+    {
+      "id": "business-rule:src/platform/lib/README.md#13",
+      "type": "business-rule",
       "name": "Cursors and paging",
       "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.",
       "path": "src/platform/lib/cursor.test.ts",
@@ -2248,6 +2290,19 @@
     {
       "id": "business-rule:src/platform/payload/previewCopy/README.md#4",
       "type": "business-rule",
+      "name": "**Links between posts and events survive the copy:** a post's…",
+      "summary": "**Links between posts and events survive the copy:** a post's `relatedEvents` is kept, so a preview's posts keep their links to the events copied with them; an event's `relatedPosts` is a join, never stored, and left empty (`classification.ts`, #1496).",
+      "path": "src/platform/payload/previewCopy/README.md",
+      "module": "platform-area:payload",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/platform/payload/previewCopy/README.md#5",
+      "type": "business-rule",
       "name": "**A preview's own accounts are not copied;** they come from their own…",
       "summary": "**A preview's own accounts are not copied;** they come from their own step (#1400, `src/endpoints/seed/preview-database.ts`).",
       "path": "src/platform/payload/previewCopy/README.md",
@@ -2259,7 +2314,7 @@
       "links": []
     },
     {
-      "id": "business-rule:src/platform/payload/previewCopy/README.md#5",
+      "id": "business-rule:src/platform/payload/previewCopy/README.md#6",
       "type": "business-rule",
       "name": "Export, import and file checks",
       "summary": "Export, import and file checks: `export.test.ts`, `import.test.ts`, `relativeMediaUrls.test.ts`, `references.test.ts`, `file.test.ts`, `run.test.ts`.",
@@ -4214,6 +4269,13 @@
           "type": "relationship",
           "required": false,
           "detail": "→ categories (many)",
+          "notes": []
+        },
+        {
+          "name": "relatedPosts",
+          "type": "join",
+          "required": false,
+          "detail": "← posts.relatedEvents",
           "notes": []
         },
         {
@@ -7279,6 +7341,13 @@
           "notes": []
         },
         {
+          "name": "relatedEvents",
+          "type": "relationship",
+          "required": false,
+          "detail": "→ events (many)",
+          "notes": ["indexed"]
+        },
+        {
           "name": "categories",
           "type": "relationship",
           "required": false,
@@ -7402,7 +7471,7 @@
         { "label": "Unique fields", "value": "slug, externalId, contentHash" },
         {
           "label": "Indexed fields",
-          "value": "slug, moderationStatus, externalId, contentHash, updatedAt, createdAt, _status"
+          "value": "relatedEvents, slug, moderationStatus, externalId, contentHash, updatedAt, createdAt, _status"
         },
         {
           "label": "Versions",
@@ -13146,7 +13215,7 @@
         },
         {
           "label": "Module entry points",
-          "value": "@/modules/events, @/modules/events/server, @/modules/site/server"
+          "value": "@/modules/events, @/modules/events/server, @/modules/news/server, @/modules/site/server"
         }
       ],
       "watchOuts": [],
@@ -18554,6 +18623,14 @@
     },
     {
       "from": "collection:events",
+      "to": "collection:posts",
+      "type": "joins",
+      "layer": "data",
+      "count": 1,
+      "via": ["relatedPosts ← posts.relatedEvents"]
+    },
+    {
+      "from": "collection:events",
       "to": "library:@payloadcms/db-sqlite",
       "type": "uses",
       "layer": "libraries",
@@ -19132,6 +19209,14 @@
       "layer": "data",
       "count": 1,
       "via": ["categories (many)"]
+    },
+    {
+      "from": "collection:posts",
+      "to": "collection:events",
+      "type": "references",
+      "layer": "data",
+      "count": 1,
+      "via": ["relatedEvents (many)"]
     },
     {
       "from": "collection:posts",
@@ -20192,7 +20277,7 @@
       "to": "module:news",
       "type": "uses",
       "layer": "code",
-      "count": 8,
+      "count": 9,
       "via": []
     },
     {
@@ -21046,6 +21131,14 @@
     {
       "from": "feature:platform/payload/previewCopy",
       "to": "business-rule:src/platform/payload/previewCopy/README.md#5",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/payload/previewCopy",
+      "to": "business-rule:src/platform/payload/previewCopy/README.md#6",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -25197,6 +25290,14 @@
     },
     {
       "from": "module:events",
+      "to": "business-rule:src/modules/events/README.md#9",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:events",
       "to": "collection:events",
       "type": "contains",
       "layer": "structure",
@@ -25328,7 +25429,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 19,
+      "count": 20,
       "via": []
     },
     {
@@ -25336,7 +25437,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 13,
+      "count": 17,
       "via": []
     },
     {
@@ -25581,6 +25682,14 @@
     },
     {
       "from": "module:news",
+      "to": "business-rule:src/modules/news/README.md#9",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:news",
       "to": "collection:categories",
       "type": "contains",
       "layer": "structure",
@@ -25736,7 +25845,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 9,
+      "count": 10,
       "via": []
     },
     {
@@ -25744,7 +25853,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 18,
+      "count": 22,
       "via": []
     },
     {
@@ -28589,6 +28698,14 @@
     },
     {
       "from": "platform-area:lib",
+      "to": "business-rule:src/platform/lib/README.md#13",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:lib",
       "to": "business-rule:src/platform/lib/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -29048,7 +29165,7 @@
       "to": "library:next",
       "type": "uses",
       "layer": "libraries",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -29056,7 +29173,7 @@
       "to": "library:payload",
       "type": "uses",
       "layer": "libraries",
-      "count": 30,
+      "count": 31,
       "via": []
     },
     {
@@ -33909,6 +34026,14 @@
     },
     {
       "from": "screen:/events/[slug]",
+      "to": "module:news",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/events/[slug]",
       "to": "module:site",
       "type": "uses",
       "layer": "code",
@@ -34520,7 +34645,7 @@
       "to": "library:@payloadcms/db-sqlite",
       "type": "uses",
       "layer": "libraries",
-      "count": 35,
+      "count": 36,
       "via": []
     },
     {

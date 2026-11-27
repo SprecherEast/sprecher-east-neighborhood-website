@@ -48,6 +48,7 @@ The pure, framework-free helpers every module and the UI kit use (`src/platform/
 - **Only Google's keyless embed pages pass** as a map address; `getMediaUrl` strips the site origin so uploads read as local files; a focal point becomes a CSS `object-position`, the centre when unset (`googleMapsEmbed.ts`, `getMediaUrl.ts`, `focalPoint.ts`, #1013; `googleMapsEmbed.test.ts`, `getMediaUrl.test.ts`, `focalPoint.test.ts`).
 - **Email layout takes fixed paragraphs only,** escaped, with inline colors (`emailLayout.ts`, decision 0004; `emailLayout.test.ts`).
 - **A fact says how sure it is:** `confirmed`, `estimate` or `unknown` (`certainty.ts`, #509; `certainty.test.ts`). **A title has one longest length** (`TITLE_MAX_LENGTH` in `contentLimits.ts`, #633). A listing's highest page number is `MAX_PAGE` (`paging.ts`); a chart's limits are `CHART_LIMITS` (`chart/spec.ts`).
+- **Picked order is kept:** `inPickedOrder` puts documents read in one query back in the order an editor picked their ids, leaving out ids that were not found (`inPickedOrder.ts`; `inPickedOrder.test.ts`, #1496).
 - Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.
 
 ## Boundaries
