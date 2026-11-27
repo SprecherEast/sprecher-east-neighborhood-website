@@ -10,14 +10,14 @@ The one chart (#639): the only component the app uses to draw one. A figure with
 
 Source: `src/platform/ui/chart/Chart.tsx`
 
-| Prop        | Type                                                                                                                                                                  | Required | Description                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`      | `{ kind: "bar"; orientation: "horizontal" \| "vertical"; data: { key: string; label: string; value: number; pattern?: "hatch" \| undefined; previous?: number \| un…` | yes      |                                                                                                                                                                             |
-| `adapter`   | `ChartAdapter`                                                                                                                                                        | no       | Draws with this adapter instead of the registry's choice: for the gallery and the contract tests                                                                            |
-| `zoom`      | `boolean`                                                                                                                                                             | no       | Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686)                                                                   |
-| `numbers`   | `"disclosure" \| "screen-reader"`                                                                                                                                     | no       | Where the numbers table goes: under a closed "Show the numbers" box (default), or kept for screen readers only, for a chart whose drawing already prints every value (#980) |
-| `heading`   | `"screen-reader" \| "visible"`                                                                                                                                        | no       | Whether the title and takeaway show: kept for screen readers only when the heading above the chart already says it, so two headings never sit one after another (#980)      |
-| `className` | `string`                                                                                                                                                              | no       |                                                                                                                                                                             |
+| Prop        | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`      | `{ kind: "bar"; orientation: "horizontal" \| "vertical"; data: { key: string; label: string; value: number; pattern?: "hatch" \| undefined; }[]; title: string; su…` | yes      |                                                                                                                                                                             |
+| `adapter`   | `ChartAdapter`                                                                                                                                                       | no       | Draws with this adapter instead of the registry's choice: for the gallery and the contract tests                                                                            |
+| `zoom`      | `boolean`                                                                                                                                                            | no       | Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686)                                                                   |
+| `numbers`   | `"disclosure" \| "screen-reader"`                                                                                                                                    | no       | Where the numbers table goes: under a closed "Show the numbers" box (default), or kept for screen readers only, for a chart whose drawing already prints every value (#980) |
+| `heading`   | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title and takeaway show: kept for screen readers only when the heading above the chart already says it, so two headings never sit one after another (#980)      |
+| `className` | `string`                                                                                                                                                             | no       |                                                                                                                                                                             |
 
 **Used by** (direct imports):
 
@@ -100,23 +100,6 @@ Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
 | `descId`      | `string`         | yes      |                                                        |
 | `compact`     | `boolean`        | no       | Thinner bars, for a breakdown inside a bill (#1163)    |
 | `fill`        | `boolean`        | no       | Grow the bars when drawn rather than on scroll (#1163) |
-
-**Used by** (direct imports):
-
-- Platform: `platform/ui`
-
-## `RankedRow`
-
-One compact row: the name and figure on the first line, the bar and the change under them, in a fixed-width right column so every bar starts and ends on the same line; from `sm` it is all one line, with the bar between the name and the figure so the rows line up.
-
-Source: `src/platform/ui/chart/adapters/rows/RankedRow.tsx`
-
-| Prop     | Type                                           | Required | Description |
-| -------- | ---------------------------------------------- | -------- | ----------- |
-| `name`   | `string`                                       | yes      |             |
-| `value`  | `string`                                       | yes      |             |
-| `change` | `Omit<SignedChangeProps, "className"> \| null` | yes      |             |
-| `bar`    | `React.ReactNode`                              | yes      |             |
 
 **Used by** (direct imports):
 

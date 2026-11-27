@@ -147,34 +147,3 @@ describe('a breakdown chart', () => {
     expect(toScaleNote(spec)).toBeNull()
   })
 })
-
-describe('the compact looks in the numbers (#1503)', () => {
-  it('adds what each bar was and how it changed, signed and in words', () => {
-    const spec = parseChartSpec(FIXTURES.capitalRows)
-    const table = toChartTable(spec)
-    expect(table.head).toEqual(['Item', 'Amount (US dollars)', '2026 adopted', 'Change'])
-    expect(table.rows[0]).toEqual(['Borrowed', '$184,782,375', '$171,688,393', '+$13.1M (+7.6%)'])
-    expect(table.rows[1][3]).toBe('−$3.4M (−2.9%)')
-    expect(toChartSummary(spec)).toContain(
-      'Change from 2026 adopted: Borrowed up $13.1M (7.6%) and Other sources down $3.4M (2.9%).',
-    )
-  })
-
-  it('keeps the plain table for bars with no earlier amount', () => {
-    expect(toChartTable(parseChartSpec(FIXTURES.bars)).head).toEqual([
-      'Item',
-      'Amount (US dollars)',
-    ])
-  })
-
-  it('opens the summary of a change-first chart with its change', () => {
-    expect(toChartSummary(parseChartSpec(FIXTURES.operatingChange))).toMatch(
-      /^2027 adopted \$477\.7M, up \$25M \(5\.5%\) from 2026 adopted\. Stacked bars/,
-    )
-  })
-
-  it('still lists every stacked number once in the table', () => {
-    const table = toChartTable(parseChartSpec(FIXTURES.operatingChange))
-    expect(table.rows[1]).toEqual(['2027 adopted', '$452,723,152', '$25,026,546', '$477,749,698'])
-  })
-})

@@ -9,7 +9,6 @@ import { Text } from '@/platform/ui/Text'
 
 import { ActionsGallery } from './ActionsGallery.client'
 import { BrandLogoGallery } from './BrandLogoGallery'
-import { ChangeFigureGallery } from './ChangeFigureGallery'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
@@ -78,7 +77,6 @@ export default function GalleryPage() {
         <BarTrackGallery />
         <ShareStripGallery />
         <ShareBillGallery />
-        <ChangeFigureGallery />
         <AreaChartGallery />
         <HeatMapGallery />
         <PeriodNavGallery />

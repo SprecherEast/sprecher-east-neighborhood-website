@@ -34,7 +34,6 @@ How an article's text is drawn, the blocks an editor can put inside it (banner, 
 
 ## Rules and the tests that protect them
 
-- **A chart block can pick a compact look (#1503):** a stacked chart's "Look" (big bars, or change first) and a bar chart's "Density" with an earlier amount and its name per bar (compact rows); left empty, the usual big bars draw, and the same fields travel in the `<Chart>` tag as `look`, `density` and `previousLabel` (`editorial/chartLookFields.ts`, `chart.ts`, `chartMarkdown.ts`; `editorial/chartLooks.test.ts`).
 - **A chart that fails its rules is left out of the page and logged,** never breaking the article; the editor refuses it on save and each reason shows under its field (`richTextBlocks.tsx`, `editorial/chartValidate.ts`; `editorial/chartValidate.test.ts`, `src/payload.config.chartBlock.test.ts`).
 - **A tag that breaks its block's rules is refused with the reasons,** and text with quotes, braces or backslashes reads back unchanged; a section tabs block needs two to four tabs, no empty tab and no tabs inside a tab, and cannot be published otherwise (`chartMarkdown.test.ts`, `factTabsMarkdown.test.ts`, `src/payload.config.factTabsMarkdown.test.ts`, `src/payload.config.sectionTabsMarkdown.test.ts`, `src/payload.config.sectionTabs.test.ts`).
 - **A fact tab's label stops at one short limit** so it fits its button down to 320 px; labels already stored are not changed (`FACT_TABS_LIMITS.label`, #1112; `src/payload.config.factTabs.test.ts`).

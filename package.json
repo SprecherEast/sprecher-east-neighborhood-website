@@ -27,6 +27,8 @@
     "knowledge:map": "tsx --tsconfig tsconfig.json scripts/knowledge-map/cli.mjs",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check",
+    "developer:dev": "cross-env NODE_OPTIONS=--no-deprecation next dev developer -p 3200",
+    "developer:build": "cross-env NODE_OPTIONS=--no-deprecation next build developer",
     "storybook": "storybook dev -p 6006 --disable-telemetry",
     "storybook:build": "storybook build -o storybook-static --disable-telemetry",
     "typecheck:storybook": "tsc -p .storybook/tsconfig.json --noEmit"

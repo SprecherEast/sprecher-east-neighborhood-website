@@ -38,18 +38,16 @@ export function coloursWithText(root: ParentNode) {
  *  - draws one mark per datum or cell, in the server's HTML (not only in a browser);
  *  - has no `style` attribute and no colour literal, and uses only palette classes for colour;
  *  - gives every label and value as real text;
- *  - names any `img` it draws by ids that exist (or a label of its own), and passes axe;
+ *  - names any `img` it draws by ids that exist, and passes axe;
  *  - sets no width of its own (`Chart` sizes the drawing);
  *  - for `svg` output, scales with its container (a `viewBox`, no fixed size) and puts no text
  *    inside a mark.
  */
 export function describeChartAdapter(adapter: ChartAdapter, { markCount }: ContractOptions) {
-  const fixtures = Object.entries(FIXTURES).filter(
-    ([, spec]) => adapter.kinds.has(spec.kind) && (adapter.accepts?.(parseChartSpec(spec)) ?? true),
-  )
+  const fixtures = Object.entries(FIXTURES).filter(([, spec]) => adapter.kinds.has(spec.kind))
 
   describe(`chart adapter contract: ${adapter.name}`, () => {
-    it('supports at least one kind, and the fixtures cover each kind it draws', () => {
+    it('supports at least one kind, and the fixtures cover each kind it supports', () => {
       for (const kind of adapter.kinds) {
         expect(fixtures.some(([, spec]) => spec.kind === kind)).toBe(true)
       }
@@ -101,8 +99,6 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
       it('names any img it draws by ids that exist, and draws an svg as an img', () => {
         const images = [...document.querySelectorAll('[role="img"]')]
         for (const image of images) {
-          // Named by the chart's title and description, or by a label of its own (a slim strip)
-          if (image.getAttribute('aria-label')?.trim()) continue
           const ids = image.getAttribute('aria-labelledby')?.split(' ') ?? []
           expect(ids).toHaveLength(2)
           for (const id of ids)

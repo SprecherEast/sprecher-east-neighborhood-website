@@ -6,11 +6,11 @@ import { rampAt } from './chart/chartPalette'
  * The colors of a whole's slices, in one place so a bar and the line a nested row sets under its slice can
  * never differ (#1111, #1196, #1263). Each tone is one step of the breakdown chart's ramp, so a slice reads
  * as the same color as the chart beside it: `rust` the darkest, then `amber`, `mint` and `green`. Each has
- * the bar's fill, the color of that line (`edge`) and a plain background for a swatch (`bg`).
+ * the bar's fill and the color of that line (`edge`).
  */
 const tone = (step: number) => {
-  const { fill, border, bg } = rampAt(step)
-  return { fill, edge: border, bg }
+  const { fill, border } = rampAt(step)
+  return { fill, edge: border }
 }
 
 export const SHARE_TONES = {
@@ -21,14 +21,6 @@ export const SHARE_TONES = {
 } as const
 
 export type ShareTone = keyof typeof SHARE_TONES
-
-/** The tones in the order a chart's parts take them, darkest first (#1503) */
-export const SHARE_TONE_ORDER = [
-  'rust',
-  'amber',
-  'mint',
-  'green',
-] as const satisfies readonly ShareTone[]
 
 /** The tone of each body of a property tax bill: the City amber, the schools dark red-orange, the County green, Madison College light green (#1263) */
 export const BILL_BODY_TONES: Record<BillBody, ShareTone> = {

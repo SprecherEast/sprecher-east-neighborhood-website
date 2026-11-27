@@ -23,11 +23,6 @@ export interface ChartAdapter {
   /** `svg`: the adapter draws one `<svg role="img">`. `html`: it draws markup, text or HTML marks. */
   readonly output: 'svg' | 'html'
   readonly kinds: ReadonlySet<ChartKind>
-  /**
-   * Narrows a kind to the specs this adapter draws, such as one look of a kind (#1503). Left out,
-   * it draws every spec of its kinds. The contract test only holds it to the specs it accepts.
-   */
-  readonly accepts?: (spec: ChartSpec) => boolean
   /** True when marks take the palette's colours, so `Chart` draws the colour key under them */
   readonly usesColour: boolean
   /** True when the drawing gains from a bigger size, so `Chart` shows it small with an Enlarge button (#681); words don't */

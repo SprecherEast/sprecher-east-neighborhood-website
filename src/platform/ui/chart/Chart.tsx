@@ -76,7 +76,7 @@ export function Chart({
   const id = useId()
   const titleId = `${id}-title`
   const descId = `${id}-description`
-  const adapter = chosen ?? adapterFor(spec)
+  const adapter = chosen ?? adapterFor(spec.kind)
   const legends = adapter.usesColour ? toChartLegends(spec, CHART_PALETTE) : []
 
   // A drawing is a thumbnail with its text beside it; `zoom` adds the Enlarge button and its dialog

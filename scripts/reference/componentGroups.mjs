@@ -132,7 +132,6 @@ export const COMPONENT_GROUPS = [
       'SquareGrid',
       'TileGrid',
       'BreakdownChart',
-      'RankedRow',
       'Amount',
       'BarChartSvg',
       'BarSegment',
@@ -151,14 +150,7 @@ export const COMPONENT_GROUPS = [
     slug: 'shares',
     title: 'Shares of a whole',
     intro: 'One whole drawn as a bar, or as a bill with a receipt.',
-    components: [
-      'BarTrack',
-      'ShareBill',
-      'SliceName',
-      'ShareStrip',
-      'ChangeFigure',
-      'SignedChange',
-    ],
+    components: ['BarTrack', 'ShareBill', 'SliceName', 'ShareStrip'],
   },
   {
     slug: 'rich-text',

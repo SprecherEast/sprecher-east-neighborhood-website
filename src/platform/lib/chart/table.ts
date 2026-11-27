@@ -1,5 +1,4 @@
 import { toBreakdown } from './breakdown'
-import { formatChangeAmount, formatChangePercent, toChange, toChangeView } from './change'
 import { formatValue, UNIT_HEADERS } from './format'
 import { SQUARES_PER_HUNDRED, type ChartSpec, type ChartUnit } from './spec'
 import { toUnitCounts } from './unitCells'
@@ -50,33 +49,13 @@ export function toChartTable(spec: ChartSpec): ChartTable {
   const caption = `${spec.title}: ${UNIT_HEADERS[spec.unit]}`
   const money = (value: number) => formatValue(value, spec.unit)
   switch (spec.kind) {
-    case 'bar': {
-      // The compact rows carry what each was before and how it changed (#1503)
-      if (!spec.data.some((d) => d.previous !== undefined)) {
-        return {
-          caption,
-          rowHeaders: 1,
-          head: ['Item', UNIT_HEADERS[spec.unit]],
-          rows: spec.data.map((d) => [d.label, money(d.value)]),
-        }
-      }
+    case 'bar':
       return {
         caption,
         rowHeaders: 1,
-        head: ['Item', UNIT_HEADERS[spec.unit], spec.previousLabel ?? 'Before', 'Change'],
-        rows: spec.data.map((d) => {
-          if (d.previous === undefined) return [d.label, money(d.value), '', '']
-          const change = toChange(d.previous, d.value)
-          const percent = formatChangePercent(change.percent)
-          return [
-            d.label,
-            money(d.value),
-            money(d.previous),
-            `${formatChangeAmount(change.amount)}${percent ? ` (${percent})` : ''}`,
-          ]
-        }),
+        head: ['Item', UNIT_HEADERS[spec.unit]],
+        rows: spec.data.map((d) => [d.label, money(d.value)]),
       }
-    }
     case 'stacked': {
       const notes = spec.rowNotes
       return {
@@ -153,38 +132,11 @@ export function toChartTable(spec: ChartSpec): ChartTable {
   }
 }
 
-type Bar = Extract<ChartSpec, { kind: 'bar' }>
-type Stacked = Extract<ChartSpec, { kind: 'stacked' }>
-
 const list = (items: string[]) =>
   items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
 
 /** Dollars short ($194.8M), so a sentence reads aloud easily */
 const say = (value: number, unit: ChartUnit) => formatValue(value, unit, { compact: true })
-
-const WORDS = { up: 'up', down: 'down', same: 'no change' } as const
-
-/** What a change is in words: "up $8.5M (4.6%)", "down $3.4M (2.9%)" or "no change" */
-function changeWords(before: number, after: number, unit: ChartUnit): string {
-  const { amount, percent, direction } = toChange(before, after)
-  if (direction === 'same') return WORDS.same
-  const share = percent === null ? '' : ` (${Math.abs(percent).toFixed(1)}%)`
-  return `${WORDS[direction]} ${say(Math.abs(amount), unit)}${share}`
-}
-
-/** The compact rows' change sentence, or nothing when no bar has an earlier amount */
-function barChanges(spec: Bar): string {
-  const compared = spec.data.filter((d) => d.previous !== undefined)
-  if (compared.length === 0) return ''
-  return ` Change from ${spec.previousLabel}: ${list(compared.map((d) => `${d.label} ${changeWords(d.previous ?? 0, d.value, spec.unit)}`))}.`
-}
-
-/** The change-first look says its headline change first, in a sentence */
-function stackedChange(spec: Stacked): string {
-  if (spec.look !== 'change') return ''
-  const { latest, earlier } = toChangeView(spec)
-  return `${latest.label} ${say(latest.total, spec.unit)}, ${changeWords(earlier.total, latest.total, spec.unit)} from ${earlier.label}. `
-}
 
 /**
  * A short description of the chart's shape and what is in it, for assistive technology and the
@@ -193,9 +145,9 @@ function stackedChange(spec: Stacked): string {
 export function toChartSummary(spec: ChartSpec): string {
   switch (spec.kind) {
     case 'bar':
-      return `${spec.data.length} bars: ${list(spec.data.map((d) => `${d.label} ${say(d.value, spec.unit)}`))}.${barChanges(spec)}`
+      return `${spec.data.length} bars: ${list(spec.data.map((d) => `${d.label} ${say(d.value, spec.unit)}`))}.`
     case 'stacked':
-      return `${stackedChange(spec)}Stacked bars for ${list(spec.x)}, each split into ${list(spec.series.map((s) => s.label))}. ${spec.x
+      return `Stacked bars for ${list(spec.x)}, each split into ${list(spec.series.map((s) => s.label))}. ${spec.x
         .map(
           (row, i) =>
             `${row}: ${list(spec.series.map((s) => `${s.label} ${say(s.values[i], spec.unit)}`))}.`,

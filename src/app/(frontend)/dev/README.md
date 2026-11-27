@@ -17,7 +17,6 @@ One page, `/dev/gallery`, that draws each shared component, variant and state be
 
 ## Behaviors and events
 
-- **The compact chart looks and `ChangeFigure` are shown too** (#1503): the Chart entry has the change-first and compact-rows variants from the adopted budget figures, and `ChangeFigureGallery.tsx` shows a figure going up, down and unchanged, wide and narrow.
 - **The page is off outside development** and, when it is on, asks search engines not to index it (`isGalleryEnabled.ts`, `page.tsx`).
 
 ## Shared pieces it uses
