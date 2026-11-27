@@ -3,7 +3,9 @@
 Part of the [UI inventory](inventory.md) (#170), for epic #163.
 
 To see every component and variant at once, run `npm run dev` and open `/dev/gallery`
-(`src/app/(frontend)/dev/gallery/`, development only, #466).
+(`src/app/(frontend)/dev/gallery/`, development only, #466). Each component's own examples, the
+source of the component showcase that replaces it (epic #1528), are described under
+[Showcase examples](#showcase-examples).
 
 > **Status: approved.** The owner approved this set on 2026-10-21, with the merges he asked for
 > that day (fewer components, each composed from the others, never a second button). Components
@@ -203,6 +205,12 @@ without one is unchanged. Its test checks these with axe.
 ## Rich text (`src/platform/richtext/`)
 
 Components: [rich text](../reference/components/rich-text.md) (`src/platform/richtext/`).
+
+## Showcase examples
+
+Each component has an examples file beside it, which is the one source of what the showcase shows,
+what the tests render and what the generated index lists (#1532, epic #1528). The format and the
+limits on what an example may do are in [showcase-examples.md](showcase-examples.md).
 
 ## How many, and what to build first
 
