@@ -6,6 +6,7 @@ import type { ComponentProps } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { readExamples } from '../../../scripts/reference/examplesReader.mjs'
+import { safeKitFilesIn } from '../../../scripts/reference/kitFiles.mjs'
 import { defaultSettings, type Example } from './example'
 import { expectAccessible } from './testing/expectAccessible'
 import { settingVariations } from './testing/exampleSettings'
@@ -24,6 +25,10 @@ const FILES = FOLDERS.flatMap((folder) =>
     .filter((file) => /\.examples(\.client)?\.tsx$/.test(file))
     .map((file) => `${folder}/${file}`),
 ).sort()
+
+// The same safe list the generator reads an examples file with, so this test and `docs:check` agree
+const KIT_FILES = safeKitFilesIn(ROOT) as Set<string>
+const POLICY = { isKitFile: (file: string) => KIT_FILES.has(file) }
 
 const loaded = await Promise.all(
   FILES.map(
@@ -45,7 +50,7 @@ describe('showcase examples (#1532)', () => {
   })
 
   describe.each(loaded)('%s', (file, module) => {
-    const read = readExamples(readFileSync(join(ROOT, file), 'utf8'), file)
+    const read = readExamples(readFileSync(join(ROOT, file), 'utf8'), file, POLICY)
 
     it('exports exactly the examples the showcase index lists, as the index reads them', () => {
       expect(Object.keys(module)).toEqual(read.map((example) => example.name))

@@ -1,10 +1,8 @@
-import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 
-import { resolverFor, safeKitFiles } from './kitFiles.mjs'
+import { safeKitFiles, safeKitFilesIn } from './kitFiles.mjs'
 
 const UI = 'src/platform/ui'
 /** A made-up repository: file name to text. A module of ours resolves by name; the rest are packages. */
@@ -87,6 +85,22 @@ describe('safeKitFiles: the kit files an example may import', () => {
     expect([...safe(repo)].sort()).toEqual([`${UI}/D.tsx`, `${UI}/E.tsx`])
   })
 
+  it('gives the same list whatever order the files come in, when imports go round in a circle', () => {
+    // A imports B and C, B imports A, C imports payload: B reaches payload through A and C
+    const repo = {
+      [`${UI}/A.tsx`]: "import { b } from './B'\nimport { c } from './C'",
+      [`${UI}/B.tsx`]: "import { a } from './A'",
+      [`${UI}/C.tsx`]: "import payload from 'payload'",
+      [`${UI}/D.tsx`]: "import { e } from './E'",
+      [`${UI}/E.tsx`]: "import { d } from './D'",
+    }
+    const names = Object.keys(repo)
+    for (const files of [names, [...names].reverse(), [names[1], names[0], ...names.slice(2)]]) {
+      const list = safeKitFiles({ files, readFile: (f) => repo[f], resolve: resolver(repo) })
+      expect([...list].sort(), files.join()).toEqual([`${UI}/D.tsx`, `${UI}/E.tsx`])
+    }
+  })
+
   it('drops a file that imports a server folder, and one it cannot find', () => {
     for (const path of [
       '@/modules/news/data/posts',
@@ -114,20 +128,7 @@ describe('safeKitFiles: the kit files an example may import', () => {
 })
 
 describe('safeKitFiles: on this repository', () => {
-  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-  const config = ts.readConfigFile(path.join(root, 'tsconfig.json'), ts.sys.readFile)
-  const options = ts.parseJsonConfigFileContent(config.config, ts.sys, root).options
-  const files = fs
-    .readdirSync(path.join(root, 'src/platform'), { recursive: true })
-    .map((file) => `src/platform/${String(file).split(path.sep).join('/')}`)
-  const safe = safeKitFiles({
-    files,
-    readFile: (file) =>
-      fs.existsSync(path.join(root, file))
-        ? fs.readFileSync(path.join(root, file), 'utf8')
-        : undefined,
-    resolve: resolverFor(root, options),
-  })
+  const safe = safeKitFilesIn(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))
 
   it('keeps the plain components and drops the ones that reach the admin, live preview or the URL helpers', () => {
     expect(safe.has('src/platform/ui/Button.tsx')).toBe(true)

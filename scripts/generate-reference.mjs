@@ -40,7 +40,7 @@ import {
 } from './reference/componentPages.mjs'
 import { renderApi } from './reference/endpointsPage.mjs'
 import { renderJobs } from './reference/jobsPage.mjs'
-import { resolverFor, safeKitFiles } from './reference/kitFiles.mjs'
+import { safeKitFilesIn } from './reference/kitFiles.mjs'
 import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
@@ -72,11 +72,7 @@ function buildComponentPages({ program, fileNames }) {
     users,
     readFile: readIfThere,
     exampleFiles: examplesSourceFiles(fileNames, ROOT),
-    kitFiles: safeKitFiles({
-      files: fileNames.map((file) => path.relative(ROOT, file).split(path.sep).join('/')),
-      readFile: readIfThere,
-      resolve: resolverFor(ROOT, program.getCompilerOptions()),
-    }),
+    kitFiles: safeKitFilesIn(ROOT),
   })
   const pages = new Map([
     ['components/README.md', renderComponentIndex(groups, index.coverage)],

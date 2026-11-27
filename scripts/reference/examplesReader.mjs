@@ -142,6 +142,9 @@ function readExample(statement, declaration, sourceFile, fail, helpers) {
  * `isComponentFile` says which paths are component files, the only relative imports allowed;
  * `isKitFile` says which kit files may be imported by `@/platform/ui/…` (`kitFiles.mjs`; none by default).
  * Every export must be `defineExample({ purpose, render, settings?, of? })`; anything else fails.
+ * @param {string} text
+ * @param {string} file
+ * @param {{ isComponentFile?: (file: string) => boolean, isKitFile?: (file: string) => boolean }} [policy]
  */
 export function readExamples(
   text,
@@ -192,7 +195,7 @@ export function readExamples(
         PACKAGES_ALLOWED.has(specifier) ||
         FORMAT.has(specifier) ||
         kitAllowed(specifier, isKitFile) ||
-        (specifier.startsWith('./') && relativeAllowed(specifier, file, isComponentFile))
+        (specifier.startsWith('./') && relativeAllowed(specifier, file, isComponentFile, isKitFile))
       if (!allowed) {
         fail(
           `imports ${specifier}; an examples file may import only react, lucide-react, the kit components on the safe list (@/platform/ui/<name>) and the component files beside it`,
@@ -221,6 +224,9 @@ export function readExamples(
       ts.forEachChild(node, visit)
     }
     visit(statement)
+    if (ts.isExportDeclaration(statement) && statement.moduleSpecifier) {
+      fail('re-exports are not a defineExample')
+    }
     if (ts.isExportAssignment(statement)) fail('a default export is not a defineExample')
     if (ts.isExportDeclaration(statement) && !statement.moduleSpecifier)
       fail('export lists are not a defineExample')

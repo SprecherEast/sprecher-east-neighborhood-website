@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { readExamples as readWith } from './examplesReader.mjs'
 import { FILE, IMPORTS, read, readExamples, withBody } from './examplesFixture.mjs'
 
 describe('readExamples: what an example may import', () => {
@@ -69,6 +70,54 @@ describe('readExamples: what an example may import', () => {
       "export { x } from '@/platform/ui/../lib/foo'",
     ]) {
       expect(importing(line), line).toThrow(/imports .*; an examples file may import only/)
+    }
+  })
+
+  it('refuses a relative import of a component file that is not on the safe list', () => {
+    for (const line of [
+      "import { AdminBar } from './AdminBar.client'",
+      "import { Media } from './Media'",
+      "import type { MediaProps } from './Media'",
+    ]) {
+      expect(importing(line), line).toThrow(/imports .*; an examples file may import only/)
+    }
+  })
+
+  it('refuses a relative import that leaves the folder, even for a component file', () => {
+    expect(importing("import { BarTrack } from './chart/BarTrack'")).toThrow(
+      /imports \.\/chart\/BarTrack/,
+    )
+    expect(importing("import { BarTrack } from '../ui/chart/BarTrack'")).toThrow(/imports/)
+  })
+
+  it('judges a kit specifier by its steps alone: no step may be empty, a dot or a double dot', () => {
+    // With every file counted as safe, only the shape of the specifier can refuse these
+    const everything = (line) => () =>
+      readWith(`${line}\n${IMPORTS}${withBody('render: () => null')}`, FILE, {
+        isComponentFile: () => true,
+        isKitFile: () => true,
+      })
+    for (const line of [
+      "import x from '@/platform/ui/../lib/foo'",
+      "import x from '@/platform/ui/./Button'",
+      "import x from '@/platform/ui//Button'",
+      "import x from '@/platform/ui/Button/'",
+      "import x from '@/platform/ui/.hidden'",
+      "import x from '@/platform/ui/chart/..'",
+    ]) {
+      expect(everything(line), line).toThrow(/imports .*; an examples file may import only/)
+    }
+    expect(everything("import x from '@/platform/ui/Tabs.client'")).not.toThrow()
+  })
+
+  it('refuses a re-export, from anywhere: an example file exports only examples', () => {
+    for (const line of [
+      "export * from './Button'",
+      "export { Button } from './Button'",
+      "export * as X from 'react'",
+      "export type { ButtonProps } from '@/platform/ui/Button'",
+    ]) {
+      expect(importing(line), line).toThrow(/re-exports are not a defineExample/)
     }
   })
 

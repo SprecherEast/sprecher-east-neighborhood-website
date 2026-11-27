@@ -4,7 +4,9 @@
  * reaches the Payload admin, the server or the environment. The list is computed from the import
  * graph, never written by hand: a component that gains such an import drops off it by itself.
  */
+import fs from 'node:fs'
 import { builtinModules } from 'node:module'
+import path from 'node:path'
 import ts from 'typescript'
 
 import { isNameOnly } from './examplesChecks.mjs'
@@ -66,31 +68,42 @@ export function readImports(text, file) {
  * repository path of a module of ours, or `null` for a package.
  */
 export function safeKitFiles({ files, readFile, resolve }) {
-  const verdicts = new Map()
-  const unsafe = (file, seen = new Set()) => {
-    if (verdicts.has(file)) return verdicts.get(file)
-    if (seen.has(file)) return false
-    seen.add(file)
+  // The graph first: for each file, whether it is unsafe on its own and which files it imports
+  const graph = new Map()
+  const visit = (file) => {
+    if (graph.has(file)) return
     const text = readFile(file)
-    let result = text === undefined
-    if (!result) {
-      const { specifiers, usesProcess } = readImports(text, file)
-      result =
-        usesProcess ||
-        specifiers.some((specifier) => {
-          const target = resolve(specifier, file)
-          if (target === null) return isServerPackage(specifier)
-          return target === undefined || SERVER_FOLDER.test(target) || unsafe(target, seen)
-        })
+    const node = { unsafe: text === undefined, imports: [] }
+    graph.set(file, node)
+    if (text === undefined) return
+    const { specifiers, usesProcess } = readImports(text, file)
+    node.unsafe = usesProcess
+    for (const specifier of specifiers) {
+      const target = resolve(specifier, file)
+      if (target === null) node.unsafe ||= isServerPackage(specifier)
+      else if (target === undefined || SERVER_FOLDER.test(target)) node.unsafe = true
+      else {
+        node.imports.push(target)
+        visit(target)
+      }
     }
-    verdicts.set(file, result)
-    return result
   }
-  return new Set(
-    files
-      .filter((file) => file.startsWith(KIT_FOLDER) && isComponentSourceFile(file))
-      .filter((file) => !unsafe(file)),
+  const candidates = files.filter(
+    (file) => file.startsWith(KIT_FOLDER) && isComponentSourceFile(file),
   )
+  candidates.forEach(visit)
+  // Then spread "unsafe" to every importer until nothing changes, so the answer cannot depend on
+  // the order of the files or on where a circle is entered
+  for (let changed = true; changed; ) {
+    changed = false
+    for (const node of graph.values()) {
+      if (!node.unsafe && node.imports.some((target) => graph.get(target).unsafe)) {
+        node.unsafe = true
+        changed = true
+      }
+    }
+  }
+  return new Set(candidates.filter((file) => !graph.get(file).unsafe))
 }
 
 /** `resolve` for the real repository: the TypeScript compiler's own module resolution. */
@@ -104,4 +117,26 @@ export function resolverFor(root, options) {
       ? found.slice(prefix.length)
       : null
   }
+}
+
+/**
+ * The safe kit files of the repository at `root`, read from disk: the one policy the generator and
+ * the examples test both judge an examples file by.
+ */
+export function safeKitFilesIn(root) {
+  const config = ts.readConfigFile(path.join(root, 'tsconfig.json'), ts.sys.readFile)
+  const options = ts.parseJsonConfigFileContent(config.config, ts.sys, root).options
+  const folder = path.join(root, KIT_FOLDER)
+  const names = fs.existsSync(folder)
+    ? fs.readdirSync(folder, { recursive: true, encoding: 'utf8' })
+    : []
+  const files = names.map((file) => `${KIT_FOLDER}${file.split(path.sep).join('/')}`)
+  return safeKitFiles({
+    files,
+    readFile: (file) =>
+      fs.existsSync(path.join(root, file))
+        ? fs.readFileSync(path.join(root, file), 'utf8')
+        : undefined,
+    resolve: resolverFor(root, options),
+  })
 }

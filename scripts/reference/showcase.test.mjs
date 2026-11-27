@@ -69,7 +69,7 @@ const build = (overrides = {}) =>
     users,
     readFile: (file) => files.get(file),
     exampleFiles: [THING, THING_CLIENT],
-    kitFiles: new Set(['src/platform/ui/Button.tsx']),
+    kitFiles: new Set(['src/platform/ui/Button.tsx', THING_C.file, 'src/platform/ui/Other.tsx']),
     ...overrides,
   })
 
@@ -169,6 +169,10 @@ describe('buildShowcaseIndex', () => {
     expect(() => build({ readFile: (f) => (f === THING ? outside : files.get(f)) })).toThrow(
       /imports \.\/Elsewhere/,
     )
+  })
+
+  it('refuses a relative import of a component that is not on the safe list', () => {
+    expect(() => build({ kitFiles: new Set() })).toThrow(/imports \.\/Thing/)
   })
 
   it('lets an example import a kit component only when it is on the safe list', () => {

@@ -144,12 +144,20 @@ export function kitAllowed(specifier, isKitFile) {
   )
 }
 
-/** Whether a relative import reaches a component file in the same folder, or the format's own file. */
-export function relativeAllowed(specifier, file, isComponentFile) {
+/**
+ * Whether a relative import reaches a component file in the same folder, or the format's own file.
+ * A target in the kit must also be on the safe list (`isKitFile`): the examples files sit in the
+ * kit's folder, so a relative path is as much a way to `AdminBar` or `Media` as an alias is.
+ */
+export function relativeAllowed(specifier, file, isComponentFile, isKitFile) {
   const folder = path.posix.dirname(file)
   const target = path.posix.normalize(path.posix.join(folder, specifier))
   if (path.posix.dirname(target) !== folder) return false
-  return isComponentFile(`${target}.tsx`) || target === 'src/platform/ui/example'
+  if (target === 'src/platform/ui/example') return true
+  return (
+    isComponentFile(`${target}.tsx`) &&
+    (!target.startsWith('src/platform/ui/') || isKitFile(`${target}.tsx`))
+  )
 }
 
 /** The line of a node, counted from 1. */
