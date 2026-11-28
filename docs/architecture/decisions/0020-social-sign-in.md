@@ -156,6 +156,11 @@ again when it finishes. At the callback Google must have verified the email (the
 started the flow, and the Google identity must be on no account; otherwise nothing changes and
 `/account` shows a fixed message.
 
+_Note (2026-11-28, #1597):_ the start ignores the session on a request from another site
+(`isFromAnotherSite`), because from Payload 3.94 Payload reads the cookie on a top-level visit from
+another site. The finish relies on that same change: on Google's return, a cross-site visit, 3.91
+gave no session, so the connect answered "sign in again"; from 3.94 it is read.
+
 **Afterwards** the Google button signs that neighbor in to the same account, `/account` says
 Google is connected, and a note goes to the account's address with the time and no link
 (`toGoogleConnectedEmail`), like the passkey note. There is no way to disconnect yet (#1353); the note

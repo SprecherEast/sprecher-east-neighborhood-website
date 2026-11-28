@@ -113,8 +113,14 @@ describe('startSocialSignIn', () => {
     data.newSocialFlow.mockReturnValue({ ...flow, linkAccountId: 7 })
     data.authorizationUrl.mockResolvedValue(new URL('https://accounts.google.com/o/oauth2/auth?x'))
     await startSocialSignIn('google', '10.2.2.2', { link: true })
+    expect(data.beginGoogleLink.mock.calls[0]?.[2]).toEqual({ fromAnotherSite: false })
     expect(data.newSocialFlow).toHaveBeenCalledWith('google', 7)
     expect(data.saveSocialFlow).toHaveBeenCalledOnce()
+  })
+
+  it('tells the link start when the request came from another site', async () => {
+    await startSocialSignIn('google', '10.2.2.6', { link: true, fromAnotherSite: true })
+    expect(data.beginGoogleLink.mock.calls[0]?.[2]).toEqual({ fromAnotherSite: true })
   })
 
   it('sends a link start that is refused where the module says, starting nothing', async () => {
