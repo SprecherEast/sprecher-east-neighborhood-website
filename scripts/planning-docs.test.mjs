@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import { parseLoadMap } from './agent-context-maps.mjs'
+import { buildRules } from './agent-context-rules.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
@@ -328,11 +329,10 @@ describe('what points at the playbook', () => {
     }
   })
 
-  it('has the generated copies the load map produces', () => {
+  it('produces a generated rule for each, since the rules are built, not committed', () => {
+    const { rules } = buildRules(root)
     for (const name of ['planning-model', 'grooming-playbook']) {
-      expect(
-        fs.existsSync(path.join(root, `.claude/rules/generated/docs--process--${name}.md`)),
-      ).toBe(true)
+      expect(rules.has(`.claude/rules/generated/docs--process--${name}.md`)).toBe(true)
     }
   })
 

@@ -77,3 +77,18 @@ Claude Code.
   `paths` loads at session start. An `@import` inside a rule loads at session start whatever the
   rule's `paths` say, so the generated rules carry the text itself. Symlinked rules work, but git
   on Windows checks symlinks out as plain text unless symlinks are enabled, so they aren't used.
+- **Generated rules are build output, not in git** (#1593): `.claude/rules/generated/` is ignored, so
+  an edit to a guideline or note is one edit and conflicts once. The `session-start.mjs` hook builds
+  the folder with `scripts/agent-context-rules.mjs`, which needs no `npm ci`, for the project
+  directory and for the checkout the session works in (the hook input's `cwd`), so a fresh clone and
+  a worktree have the rules before the first file is read; it rewrites only a file that changed, so a
+  pull refreshes them. `npm run agent-context -- --write` builds them by hand. CI (`Agent context`)
+  builds them in memory, keeps the load maps sound and keeps the session-start budget. What Claude
+  Code resolves in a worktree, from its [worktree](https://code.claude.com/docs/en/worktrees)
+  docs: a subagent with `isolation: worktree` takes the instructions it starts with from the main
+  conversation, and in the default location (`.claude/worktrees/`) it does not load that worktree's
+  own `CLAUDE.md` or `.claude/rules/` as it reads files there, so it uses the rules of the checkout
+  the session started in, which the hook refreshed at session start. Hooks keep
+  `${CLAUDE_PROJECT_DIR}` at the project root, so the hook also builds for the `cwd` it is given. A
+  worktree made by hand (`git worktree add`) is covered when a session starts in it; a worker that
+  makes one mid-session runs `npm run agent-context -- --write` there once.
