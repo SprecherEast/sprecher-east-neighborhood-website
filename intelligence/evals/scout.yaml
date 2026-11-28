@@ -103,8 +103,6 @@ cases:
       responses:
         - { via: direct, status: 503 }
         - { via: retry, status: 503 }
-    given:
-      sources: [{ id: madison-parks-events, result: valid, pilotRank: 6, cadence: daily }]
     expected: { fetchStrategy: direct, runStatus: error, retries: 1, candidateCount: 0 }
     why: A 5xx is retried once, never sent to Playwright; fetchStrategy is direct, the last tried. The source waits for the next run.
   - id: scout-restricted-not-fetched
@@ -159,3 +157,53 @@ cases:
       - check: model
         rubric: Exactly one of the three candidates, 2026-11-10, has sourceStatus cancelled; the other two are scheduled and each instance has its own externalId.
     why: Each instance is its own candidate, so only the cancelled one is withheld downstream.
+  - id: scout-parks-event-eight-weeks-ahead
+    ref: X2
+    stage: scout
+    tags: [look-ahead, parks, multi-page]
+    input:
+      sourceId: madison-parks-events
+      responses:
+        - via: direct
+          status: 200
+          contentType: text/html
+          body: '<ol class="list--items"><li><h2 class="event-heading"><a href="/parks/events/2026-12-18/groove-glide-door-creek">Groove &amp; Glide | Door Creek</a></h2><div class="field-smart-date--standard"><time class="start-date" datetime="2026-12-18T18:00:00-06:00"></time> &ndash; <time class="end-date" datetime="2026-12-18T20:00:00-06:00"></time></div><div class="event-venues"><address><strong>Door Creek Park</strong><span>7035 Littlemore Drive</span></address></div></li></ol>'
+        - via: direct
+          status: 200
+          contentType: text/html
+          body: '<ol class="list--items"></ol>'
+    expected: { fetchStrategy: direct, runStatus: ok, candidateCount: 1 }
+    graders:
+      - { check: equals, field: $.kind, value: event }
+      - { check: equals, field: $.startsAt, value: '2026-12-18T18:00:00-06:00' }
+      - { check: contains, field: $.locationText, value: Door Creek Park }
+    why: A park event two months out is read the day it is listed, from the item's own venue field, and the second list page is read too.
+  - id: scout-park-closed-for-season-says-nothing
+    ref: X3
+    stage: scout
+    tags: [parks, status]
+    input:
+      sourceId: door-creek-park-ski
+      responses:
+        - via: direct
+          status: 200
+          contentType: text/html
+          body: '<div class="geolocation-location"><h2 class="location-title">Door Creek Park Cross-Country Skiing</h2><div class="location-content"><div><a href="/parks/find-a-park/door-creek/cross-country-skiing">Door Creek Park Cross-Country Skiing</a> <span class="tag tag--gray">Closed for Season</span></div><address><span>7035 Littlemore Dr.</span></address></div></div>'
+    expected: { fetchStrategy: direct, runStatus: ok, candidateCount: 0 }
+    why: A park still closed for the season is no news; only a change of status is.
+  - id: scout-park-opening-is-an-item
+    ref: X4
+    stage: scout
+    tags: [parks, status]
+    input:
+      sourceId: door-creek-park-ski
+      responses:
+        - via: direct
+          status: 200
+          contentType: text/html
+          body: '<div class="geolocation-location"><h2 class="location-title">Door Creek Park Cross-Country Skiing</h2><div class="location-content"><div><a href="/parks/find-a-park/door-creek/cross-country-skiing">Door Creek Park Cross-Country Skiing</a> <span class="tag tag--green">Open</span></div><address><span>7035 Littlemore Dr.</span></address></div></div><div class="geolocation-location"><h2 class="location-title">Elver Park Cross-Country Skiing</h2><div class="location-content"><div><a href="/parks/find-a-park/elver/cross-country-skiing">Elver Park Cross-Country Skiing</a> <span class="tag tag--green">Open</span></div><address><span>1250 McKenna Blvd.</span></address></div></div>'
+    expected: { fetchStrategy: direct, runStatus: ok, candidateCount: 1 }
+    graders:
+      - { check: equals, field: $.title, value: 'Door Creek Park Cross-Country Skiing: Open' }
+      - { check: isNull, field: $.startsAt }
+    why: A park in the area opening is one item for the winter; another park's status stays out, because the area words don't name it.

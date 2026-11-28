@@ -3,6 +3,7 @@
 # Faqs (`faq`)
 
 - Kind: collection
+- Owner: module `directory`, defined in `src/modules/directory/cms/faq.ts`
 - Drafts: yes (no autosave)
 - Versions: the last 100 of each document
 

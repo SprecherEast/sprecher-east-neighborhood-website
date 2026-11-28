@@ -1,6 +1,7 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
 import { gateItem } from './gate.mjs'
+import { readReportPage, unreadReport } from './pageRead.mjs'
 import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
 import { sendReport } from './submit.mjs'
@@ -13,8 +14,8 @@ const MAX_FAILURES_IN_A_ROW = 3
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
 export async function processRun(run) {
   // What the run reads, then what it records into
-  const { contract, cms, submit, ask, state, http, robots, budgets } = run
-  const { startedAt, runId, log, calls, addError, deferredSources } = run
+  const { contract, cms, submit, place, ask, state, http, robots, budgets } = run
+  const { startedAt, runId, log, calls, addError, deferredSources, background } = run
   const { counts, cost } = log
   // Measured on the real clock, whatever `now` says (tests pin it)
   const deadline = Date.now() + (budgets.maxMinutesPerRun ?? 15) * 60_000
@@ -53,6 +54,7 @@ export async function processRun(run) {
       robots,
       budgets,
       validate: validateCandidate,
+      lookAheadDays: contract.pipeline.lookAheadDays,
       area: contract.area,
       now: startedAt,
     })
@@ -111,10 +113,18 @@ export async function processRun(run) {
     const item = { candidate, source: sourceFacts.get(candidate.sourceId), taxonomy }
     try {
       item.known = await cms.known(candidate.externalId)
+      // The models have no tools, so an item from an always-held source goes to verify with its own
+      // page's text in it, read here once (pageRead.mjs); the gate holds a reject or duplicate without it
+      if (unreadReport(contract.safety, item)) {
+        const source = contract.registry.sources.find((s) => s.id === candidate.sourceId)
+        const page = await readReportPage(candidate, { source, http, robots })
+        if (page) item.reportPage = page
+      }
       modelItems++
-      const verify = await runVerify(contract, ask, item, { deadline })
-      item.verification = verify.output
-      const curate = await runStage(contract, ask, 'curate', item, { deadline })
+      const verify = await runVerify(contract, ask, item, { deadline, tally: background })
+      // Code places the item by the City's boundary when it can, and says how (place.mjs)
+      item.verification = await place(verify.output, candidate, { deadline })
+      const curate = await runStage(contract, ask, 'curate', item, { deadline, tally: background })
       item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)
       // Code, not the prompt, decides what may be accepted and where it goes (gate.mjs); submit

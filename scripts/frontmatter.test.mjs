@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { frontmatterText, parseFrontmatter } from './frontmatter.mjs'
+import { frontmatterText, parseFrontmatter, splitFrontmatter } from './frontmatter.mjs'
 
 describe('frontmatter', () => {
   it('reads the block between the dashes', () => {
@@ -38,5 +38,18 @@ describe('frontmatter', () => {
 
   it('throws on invalid YAML instead of hiding it', () => {
     expect(() => parseFrontmatter('---\ndescription: Does one: thing\n---\n')).toThrow()
+  })
+
+  it('splits the file at the same closing line the text was read up to', () => {
+    expect(splitFrontmatter('---\nname: a\n---  \nbody\n')).toEqual({
+      text: 'name: a',
+      rest: '  \nbody\n',
+    })
+    expect(splitFrontmatter('---\n---\nname: a\n---\nbody')).toEqual({
+      text: '---\nname: a',
+      rest: '\nbody',
+    })
+    expect(splitFrontmatter('no front matter\n')).toEqual({ text: null, rest: 'no front matter\n' })
+    expect(frontmatterText('---\r\nname: a\r\n---')).toBe('name: a')
   })
 })

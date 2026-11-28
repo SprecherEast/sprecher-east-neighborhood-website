@@ -7,7 +7,7 @@ import { AdapterError, childEnv, openclawAdapter } from '../lib/model.mjs'
 import { runPipeline } from '../lib/pipeline.mjs'
 import { scoutSource } from '../lib/scout.mjs'
 import { accepting, FEEDS, feedsHttp } from './fixtures.mjs'
-import { atNoon, budgets, contract } from './helpers.mjs'
+import { atNoon, budgets, contract, contractOn } from './helpers.mjs'
 
 // What happens when things go wrong: the CMS or the model is down mid-run, a follow-up report
 // fails, a feed has more items than the cap, a redirect leads somewhere it shouldn't.
@@ -16,7 +16,7 @@ const run = async (cms, { ask = accepting, state = { sources: {}, seen: {} } } =
   cms.taxonomy ??= async () => [{ slug: 'community', title: 'Community', parent: null }]
   const http = feedsHttp()
   const result = await runPipeline({
-    contract,
+    contract: contractOn('2026-10-25'),
     cms,
     ask,
     state,
@@ -50,8 +50,8 @@ describe('when the CMS fails', () => {
       Object.keys(state.sources).filter((id) => withItems.includes(id)),
       [],
     )
-    // ...while the four HTML pages, with nothing pending, do
-    assert.equal(Object.keys(state.sources).length, 4)
+    // ...while the ten HTML pages and the police feed, with nothing pending, do (#390, #993, #995, #994)
+    assert.equal(Object.keys(state.sources).length, 11)
     assert.ok(cms.writes.some((w) => w.tool === 'updateAgentRuns'))
   })
 
@@ -157,6 +157,7 @@ describe('the per-source cap', () => {
   const options = {
     budgets: { ...budgets, maxItemsPerSource: 3 },
     validate: contract.validator('schemas/candidate.schema.json'),
+    lookAheadDays: contract.pipeline.lookAheadDays,
     now: atNoon('2026-10-25'),
   }
 

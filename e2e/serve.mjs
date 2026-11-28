@@ -26,7 +26,7 @@ mkdirSync(path.join(dataDir, 'mail'), { recursive: true })
 // Every value the site reads to reach a service or shape its answers is set here, so none comes
 // from a developer's .env.local (Next keeps a value that's already set, even an empty one)
 // E2E_DEV=1 runs `next dev` instead of a production build: for writing tests on a machine that
-// can't build (next/font fetches Poppins from Google Fonts at build time). CI always builds.
+// can't build. CI always builds.
 const dev = passkeys || Boolean(process.env.E2E_DEV)
 const env = {
   ...process.env,

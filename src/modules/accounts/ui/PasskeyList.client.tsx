@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { message } from '@/platform/lib'
 import { Alert, Button } from '@/platform/ui'
+import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { DateTime } from '@/platform/ui/DateTime'
 import { Dialog } from '@/platform/ui/Dialog.client'
 import { MetaList } from '@/platform/ui/MetaList'
@@ -73,14 +74,14 @@ function RemoveDialog({ passkey, open, removing, onOpenChange, onConfirm }: Remo
       <div className="space-y-4 p-6">
         <PasskeyName label={passkey.label} />
         <Text variant="small">{message('accounts.passkey.removeConfirm')}</Text>
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <ButtonRow align="end">
           <Button variant="secondary" loading={removing} onClick={onConfirm}>
             Remove passkey
           </Button>
           <Button disabled={removing} onClick={() => onOpenChange(false)}>
             Keep it
           </Button>
-        </div>
+        </ButtonRow>
       </div>
     </Dialog>
   )

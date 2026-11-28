@@ -1,12 +1,29 @@
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 
+import { copyIntelligence } from '../../../scripts/check-intelligence-harness.mjs'
 import { loadContract } from '../lib/contract.mjs'
+
+/** A temporary folder that goes when the test process ends (nothing is left in the machine's temp folder). */
+export function tempDir(prefix) {
+  const dir = mkdtempSync(path.join(tmpdir(), prefix))
+  process.once('exit', () => rmSync(dir, { recursive: true, force: true }))
+  return dir
+}
+/** `copyIntelligence` (the check's harness), which removes its copies when the test process ends. */
+export const intelligenceCopy = copyIntelligence
 
 export const intelligenceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const contract = loadContract(intelligenceDir)
+
+/** The contract for a run on a fixed day: the boundary copy is dated that day, never in its future. */
+export const contractOn = (day) => ({
+  ...contract,
+  boundary: { ...contract.boundary, fetchedAt: day },
+})
 
 /** One evals file's cases. */
 export const evalCases = (stage) =>

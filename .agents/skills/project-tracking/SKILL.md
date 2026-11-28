@@ -177,7 +177,9 @@ For each issue:
 
 - **Claim the issue first.** The dispatcher (the chief of staff) does this, in order; a worker started by it only checks that the claim
   names its branch and never claims anything itself
-  ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
+  ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)). First look for changes other sessions made since your last look
+  ([chief of staff §8](../chief-of-staff/SKILL.md#8-look-for-changes-made-elsewhere)); a task
+  another session has claimed is never started. Then:
   1. Overlap check, if anything is already In progress: list it with
      `gh project item-list 1 --owner SprecherEast --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**

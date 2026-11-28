@@ -1,0 +1,35 @@
+# Verify eval cases: the neighborhood background (#1434). One item judged without the summary and
+# with it (`background` on each case); the `-without-background` case records the result a stage
+# reaches when it can't tell where the plan put a place or whether it was built. Synthetic item;
+# the placement of the school, park and town center is in background.md, "The planning area".
+version: 1
+asOf: '2026-11-26'
+stage: verify
+cases:
+  - id: planned-school-without-background
+    stage: verify
+    tags: [background, baseline]
+    background: { summary: false }
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Long-planned school and town center set to open next fall
+      sourceText: The neighborhood's long-planned school and town center are set to open next fall.
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    expected: { decision: accept, coverage: core, route: submitSuggestion }
+    why: Without the background, a school on Sprecher Road reads as inside the area and as built.
+  - id: planned-school-with-background
+    stage: verify
+    tags: [background]
+    background: { summary: true }
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Long-planned school and town center set to open next fall
+      sourceText: The neighborhood's long-planned school and town center are set to open next fall.
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    expected:
+      { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
+    why: The plan draws the school, park and town center mostly west of Sprecher Road, outside the core area, and a plan is not proof anything was built.

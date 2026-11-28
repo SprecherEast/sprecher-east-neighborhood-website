@@ -18,7 +18,7 @@ describe('toGoogleMapsEmbedUrl (#764)', () => {
   })
 
   it('accepts the plain My Maps embed address built from a shared map id', () => {
-    const plain = 'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
+    const plain = 'https://www.google.com/maps/d/embed?mid=1s01PqINuXETUwDSf1dd2_n_8EeikgDU'
     expect(toGoogleMapsEmbedUrl(plain)).toBe(plain)
   })
 

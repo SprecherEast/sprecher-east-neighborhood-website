@@ -94,7 +94,7 @@ Source: `src/platform/ui/VideoMedia.client.tsx`
 
 ## `MapEmbed`
 
-A map picture with its text under it, and a live Google map in a dialog when a neighbor taps either button (#764, docs/ui/component-set.md). It fills the width it is given: the section it sits in decides how wide and where it goes (#884), and the picture sits beside the text when that width allows (#1419). The frame is created only once the dialog is open, so the page asks Google for nothing until then. A missing or unsafe address leaves the picture and the text, with no button.
+A map picture with its text under it, and a live Google map in a dialog when a neighbor taps the picture, its expand icon (#1426) or the text button (#764, docs/ui/component-set.md); the picture is for mouse and touch only, so the keyboard reaches two controls. It fills the width it is given: the section it sits in decides how wide and where it goes (#884), and the picture sits beside the text when that width allows (#1419). The frame is created only once the dialog is open, so the page asks Google for nothing until then. A missing or unsafe address leaves the picture and the text, with no button.
 
 Source: `src/platform/ui/MapEmbed.client.tsx`
 

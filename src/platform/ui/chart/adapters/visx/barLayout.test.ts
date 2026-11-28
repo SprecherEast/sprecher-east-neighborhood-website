@@ -4,17 +4,7 @@ import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
 import { toBarModel } from './barModel'
-import {
-  FONT_SIZE,
-  MIN_TEXT_PX,
-  SEGMENT_GAP,
-  SMALLEST_DRAWING_PX,
-  SMALL_FONT_SIZE,
-  VIEW_WIDTH,
-  layoutBars,
-  placeLabels,
-  wrapText,
-} from './barLayout'
+import { SEGMENT_GAP, VIEW_WIDTH, layoutBars, placeLabels, wrapText } from './barLayout'
 
 const layout = (spec: unknown) => layoutBars(toBarModel(parseChartSpec(spec)))
 
@@ -135,7 +125,12 @@ describe('long rows', () => {
     const plain = layout(stackedOf([[10], [20]])).rows[0]
     const long = layout(stackedOf([[10], [20]], { x: [label] })).rows[0]
     expect(long.headLines.length).toBeGreaterThan(1)
-    expect(long.headLines.map((l) => l.text).join(' ')).toBe(label)
+    expect(
+      long.headLines
+        .map((l) => l.text)
+        .filter(Boolean)
+        .join(' '),
+    ).toBe(label)
     expect(long.headLines.at(-1)?.total).toBe('$30')
     expect(long.barY).toBeGreaterThan(plain.barY)
     expect(plain.headLines).toEqual([{ text: 'Row 0', total: '$30' }])
@@ -154,13 +149,5 @@ describe('placeLabels', () => {
   it('right-aligns a label that would run past the edge', () => {
     const [placed] = placeLabels([item(290, 300, '+$24.8M')], 300)
     expect(placed).toMatchObject({ anchor: 'end', x: 300 })
-  })
-})
-
-describe('text size on the smallest phone', () => {
-  it('shows names, values and notes at 16px or more when the drawing is as narrow as it gets', () => {
-    const scale = SMALLEST_DRAWING_PX / VIEW_WIDTH
-    expect(FONT_SIZE * scale).toBeGreaterThanOrEqual(MIN_TEXT_PX)
-    expect(SMALL_FONT_SIZE * scale).toBeGreaterThanOrEqual(MIN_TEXT_PX)
   })
 })

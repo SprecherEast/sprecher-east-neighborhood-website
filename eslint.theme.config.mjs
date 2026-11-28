@@ -14,10 +14,11 @@ const message = (what) =>
   `${what} ignores the theme: use a token class (src/platform/theme/tokens.ts, decision 0012)`
 
 export const themeTokensConfig = {
-  files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+  files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}', 'developer/**/*.{ts,tsx}'],
   ignores: [
     'src/**/*.test.{ts,tsx}',
     '.storybook/**/*.test.{ts,tsx}',
+    'developer/**/*.test.{ts,tsx}',
     'src/payload-types.ts',
     'src/migrations/**',
     'src/app/(payload)/**',

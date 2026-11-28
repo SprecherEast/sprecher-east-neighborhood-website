@@ -43,9 +43,9 @@ PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most on
 # The most previews that may exist at once (folders, and Caddy blocks): the cap, defined here and nowhere
 # else (#1076). The preview workflow reads it from this file, the wrapper and the Caddy script enforce it on
 # the server. It is also bounded by the certificate budget: each block orders a certificate from a weekly
-# budget production shares (ops/previews.md, "Certificate budget"). One until the server's memory and disk
-# are measured with a preview running (ops/previews.md, "The cap"): raise it in one line, here, afterwards.
-PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"
+# budget production shares (ops/previews.md, "Certificate budget"). Two, as measured on the server
+# with previews running (ops/previews.md, "The cap"); change it in this one line.
+PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-2}"
 # The free disk space a preview may never take the server below, in KiB: production's own floor. The production
 # deploy's preflight refuses to start with less than this (a test keeps this equal to the number in
 # .github/workflows/deploy.yml), so a preview that left less would stop the next production deploy.
@@ -77,6 +77,16 @@ PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
 # Production's private places and Caddy's admin port: what the preview account must not reach (#1346,
 # ops/preview-isolation-check.sh proves it after every preview deploy; ops/preview-host-guards.sh makes it so).
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
+# The off-site backup's files (#1332, ops/offsite-backup.md): root-only, outside the app's folders. The folder holds the
+# Drive credential, so the preview isolation check proves a preview account can neither enter it nor read its log.
+OFFSITE_DIR="${OFFSITE_DIR:-/etc/sprecher-east}"
+OFFSITE_RCLONE_CONF="${OFFSITE_RCLONE_CONF:-$OFFSITE_DIR/offsite-rclone.conf}"
+OFFSITE_TRIED_MARK="${OFFSITE_TRIED_MARK:-$OFFSITE_DIR/offsite-tried}" # fingerprint of the credential and key last tried
+OFFSITE_LOG="${OFFSITE_LOG:-/var/log/sprecher-east-offsite-backup.log}"
+OFFSITE_CRON_FILE="${OFFSITE_CRON_FILE:-/etc/cron.d/sprecher-east-offsite-backup}"
+OFFSITE_STATUS="${OFFSITE_STATUS:-$BACKUP_ROOT/offsite-status}" # how the last run went, for `check`
+OFFSITE_LOCK="${OFFSITE_LOCK:-$BACKUP_ROOT/.offsite.lock}"
+OFFSITE_SHA_LIST="${OFFSITE_SHA_LIST:-$BACKUP_ROOT/offsite-sha256}" # the SHA-256 of each sealed copy in Drive, "<hash>  <name>"
 PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state
 # Where PM2 writes production's logs (sprecher-east-out.log and -error.log). ecosystem.config.cjs falls
 # back to the same folder when PM2_LOG_DIR is not set, and a test ties the two. A preview's logs go in its
@@ -84,8 +94,27 @@ PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 stat
 PRODUCTION_PM2_LOG_DIR="${PRODUCTION_PM2_LOG_DIR:-/var/log/pm2}"
 CADDY_STORAGE_DIR="${CADDY_STORAGE_DIR:-/var/lib/caddy}" # Caddy's data: certificates and their private keys
 CADDY_ADMIN_PORT="${CADDY_ADMIN_PORT:-2019}"             # Caddy's admin endpoint, on localhost
+# How long, in seconds, the site gets to answer through Caddy after a start or a switch, and after a Caddy
+# change (one definition for every script that waits; the tests shorten them).
+SITE_UP_WAIT="${UP_WAIT:-90}"
+SITE_UP_WAIT_AFTER="${UP_WAIT_AFTER:-20}"
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
 RESERVED_PORTS="3000 3100"
+
+# The developer site (#1459, ops/developer-site.sh): the showcase and an index page, static files that Caddy
+# serves at the name every preview address hangs from (dev.sprechereast.com). Its folder is a sibling of
+# production's and the previews', never inside either; its Caddy block is one more file in the previews'
+# folder, named so that the preview scripts (which count and list `pr-*.caddy`) never see it.
+DEVELOPER_ROOT="${DEVELOPER_ROOT:-/var/www/sprecher-east-developer}"
+DEVELOPER_HOST="$PREVIEW_DOMAIN"
+DEVELOPER_CADDY_FILE="${PREVIEW_CADDY_DIR%/}/developer.caddy" # never taken from the caller: only this file, in this folder
+DEVELOPER_KEEP_RELEASES="${DEVELOPER_KEEP_RELEASES:-2}"
+DEVELOPER_MAX_BYTES="${DEVELOPER_MAX_BYTES:-104857600}" # the most the served folder may hold (the showcase is about 15 MB)
+# How long the address gets to answer after the script loads its block for the first time (Caddy orders the
+# certificate then), and when only the files changed.
+DEVELOPER_UP_SECONDS_NEW="${DEVELOPER_UP_SECONDS_NEW:-120}"
+DEVELOPER_UP_SECONDS="${DEVELOPER_UP_SECONDS:-20}"
+DEVELOPER_LOCK_WAIT="${DEVELOPER_LOCK_WAIT:-30}" # a skip costs nothing, so the script waits less than the 300 s other Caddy scripts do
 
 PREVIEW_NUMBER="${PREVIEW_NUMBER:-}"
 if [ -z "$PREVIEW_NUMBER" ]; then

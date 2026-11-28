@@ -3,7 +3,9 @@
 Part of the [UI inventory](inventory.md) (#170), for epic #163.
 
 To see every component and variant at once, run `npm run dev` and open `/dev/gallery`
-(`src/app/(frontend)/dev/gallery/`, development only, #466).
+(`src/app/(frontend)/dev/gallery/`, development only, #466). Each component's own examples, the
+source of the component showcase that replaces it (epic #1528), are described under
+[Showcase examples](#showcase-examples).
 
 > **Status: approved.** The owner approved this set on 2026-10-21, with the merges he asked for
 > that day (fewer components, each composed from the others, never a second button). Components
@@ -20,6 +22,11 @@ belong to one business area, what isn't needed yet, and the coverage table.
   `src/platform/richtext/`, area components in a module's `ui/`
   ([architecture](../architecture/README.md#where-does-it-go)). One component per file, under 250
   lines.
+- **A component of a split area** (a chart's files, say) is described by that area's own note,
+  not the UI kit's: add it to its note's map entry and the parent's `exclude` in
+  `docs/knowledge/map.json`. A parent's generated rule lists its folders and files one by
+  one, so a new file in such a folder is picked up when the rules are next built (session start, or
+  `npm run agent-context -- --write`).
 - **Variants with `cva`**, named by purpose (`primary`, `muted`), never by colour. Colours come
   from semantic tokens only ([rule 9](../architecture/README.md#dependency-rules)).
 - **Plain typed props.** No component imports Payload; it gets `ImageRef`, `RichTextValue` or the
@@ -59,17 +66,21 @@ buttons by position (H2, H3, B14, B15).
 
 ## Form fields
 
-Components: [form fields](../reference/components/form-fields.md).
+Components: [form fields](../reference/components/form-fields.md) and [switches](../reference/components/switches.md).
 
 **`Field` controls.** A field holds exactly one control, a part of `Field` like `CardBody` is a part
-of `Card`: `Field.Input`, `Field.Money` (a whole-dollar box that groups digits with commas as the reader types and keeps a number's size when its first digit is replaced, #1035, #1172), `Field.TextArea`, `Field.Select` and `Field.Checkbox` (the field switches to
+of `Card`: `Field.Input`, `Field.Money` (a whole-dollar box that groups digits with commas as the reader types and keeps a number's size when its first digit is replaced, #1035, #1172), `Field.TextArea`, `Field.Select` and `Field.Checkbox` and `Field.Switch` (the field switches to
 `layout: inline`; `layout: bar` puts the label above, then the control and an `action` button (a compact Estimate or Search button) on one line, the control taking the room the button leaves, with the hint and error under both, #1087; `actionPlacement: inside` puts the action inside the box at its trailing end, with one border and one focus ring around both, an equal 6 px inset above, below and at the end, and the border taking the accent while the action is not disabled, #1110). The frame passes the control its `id`, `aria-describedby` and `aria-invalid`, so
 no control repeats that wiring. Each control works with a controlled value or react-hook-form's
 `register`. In the coverage table, `Field · email` means a field holding `Field.Input type="email"`.
 
+**`Switch`** (#1529) is an on or off switch with its label beside it, for a setting that takes effect at once, such as the light and dark choice of the developer site's header. It is Radix's switch (`@radix-ui/react-switch`) on a native button with the `switch` role, so Space and Enter turn it and a screen reader hears "on" or "off" with the label as its name; pressing the label works too. `hideLabel` keeps the label for screen readers only. The track is 44 px wide and 24 px tall; the shared `TOUCH_TARGET` class (`touchTarget.ts`, also on the checkbox) gives it a 44 x 44 px tap area, centred, which a browser measures in `e2e/touchTargets.spec.ts` (the checkbox stands for both, as no page uses the switch yet); the thumb is 20 px, and both come from theme tokens (the same border, fill and focus ring as the checkbox, every pair above 3:1 in both modes); the thumb slides the other way in a right-to-left page, and neither moves under reduced motion. It is controlled (`checked`, `onCheckedChange`) or left to itself (`defaultChecked`), and `name` and `value` take part in a form. `Field.Switch` is the same switch inside a `Field`, for a choice saved with a form: the field supplies the label, hint and error and lays out inline. Its test covers the name, both states, click, label, Space, Enter, a held value, disabled, the hidden label, the form value, the shared tap-area class and axe; the gallery shows each.
+
 ## Display
 
 Components: [cards](../reference/components/cards.md), [display](../reference/components/display.md), [badges](../reference/components/badges.md), [sections and page headers](../reference/components/sections.md) and [media](../reference/components/media.md).
+
+**`ButtonRow`** (#1501) holds the buttons of one decision: stacked on a phone, side by side from the wider layout up, with the same gap and order everywhere (`align="end"` puts them at the right, as a dialog's are). The account offers, the passkey list and the connection approval use it. Its test covers the order, the layout classes and axe; the gallery shows both alignments.
 
 **`TextDivider`** (#1365) is a short line of words between two groups, with a rule on each side, such as "Or use your email and password" between the quick ways to log in and the form. The rules are decoration; screen readers read only the words, and colours are theme tokens. Its test covers the words, the hidden rules, tokens only and axe; the gallery shows it.
 
@@ -91,7 +102,7 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`MapEmbed`** (#764, #884, #1419) is a small map picture with its text, filling the width it is given: the page's Section decides how wide it is and where it sits. It reads its own width (a container query): below 48rem the picture sits over the text; from 48rem the text is on the left (62.5%) and the picture on the right (37.5%), centred on each other. It opens
 a live Google map in a `Dialog`
-when a neighbor taps the picture or the "View the larger map" button. The frame is created only
+when a neighbor taps the picture (mouse and touch only; the keyboard uses the next two), the expand icon over its top-right corner (#1426, the look `Zoom`'s icon has, one shared definition) or the "View the larger map" button. The frame is created only
 after that tap, so the page asks Google for nothing before it, and then Google receives the visit
 (the page's origin only, `strict-origin-when-cross-origin`). Only Google's keyless embed addresses
 ("Embed a map" and My Maps) are accepted (`toGoogleMapsEmbedUrl`); with none, the picture and text
@@ -197,6 +208,12 @@ without one is unchanged. Its test checks these with axe.
 ## Rich text (`src/platform/richtext/`)
 
 Components: [rich text](../reference/components/rich-text.md) (`src/platform/richtext/`).
+
+## Showcase examples
+
+Each component has an examples file beside it, which is the one source of what the showcase shows,
+what the tests render and what the generated index lists (#1532, epic #1528). The format and the
+limits on what an example may do are in [showcase-examples.md](showcase-examples.md).
 
 ## How many, and what to build first
 

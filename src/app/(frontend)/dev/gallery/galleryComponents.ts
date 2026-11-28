@@ -4,11 +4,13 @@
  */
 export const GALLERY_COMPONENTS = [
   'Button',
+  'ButtonRow',
   'Link',
   'SegmentedControl',
   'BrandLogo',
   'TextDivider',
   'Field',
+  'Switch',
   'Form',
   'Badge',
   'Card',

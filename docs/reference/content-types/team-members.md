@@ -3,6 +3,7 @@
 # Team Members (`team-members`)
 
 - Kind: collection
+- Owner: module `directory`, defined in `src/modules/directory/cms/teamMembers.ts`
 - Drafts: no
 - Versions: none kept
 

@@ -1,4 +1,7 @@
 import type { StorybookConfig } from '@storybook/nextjs-vite'
+import { mergeConfig } from 'vite'
+
+import { neverInlineFonts } from './inlineLimit'
 
 /**
  * The component showcase (#1424): every story sits beside its component. `react-docgen-typescript`
@@ -10,6 +13,8 @@ const config: StorybookConfig = {
   addons: ['@storybook/addon-docs'],
   // No telemetry, release notices or onboarding checklist in a project's own showcase
   core: { disableTelemetry: true, disableWhatsNewNotifications: true },
+  // The site's font faces are files in the build, never data URLs (see inlineLimit.ts)
+  viteFinal: (config) => mergeConfig(config, { build: { assetsInlineLimit: neverInlineFonts } }),
   features: { sidebarOnboardingChecklist: false },
   typescript: {
     reactDocgen: 'react-docgen-typescript',

@@ -3,6 +3,8 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import * as yaml from 'js-yaml'
 
+import { loadBackground } from './background.mjs'
+import { loadBoundary } from './boundary.mjs'
 import { safetyRules, unregisteredSafetySources } from './safety.mjs'
 
 // Everything a run reads from intelligence/ (README.md, "How a runtime loads it", step 3): the
@@ -82,8 +84,13 @@ ${safetyText.trim()}
   if (unknown.length) throw new Error(`${safetyFile}: no registered source ${unknown.join(', ')}`)
   const safety = safetyRules(safetyDefinition)
 
+  // The summary and topic notes, within the budget, are read once at the start (background.mjs)
+  const background = loadBackground(dir, pipeline.background)
+
   const areaErrors = validator('schemas/area.schema.json')(area)
   if (areaErrors.length) throw new Error(`${areaFile}: ${areaErrors.join('; ')}`)
+  // A copy of the City's boundary that can't be used stops the start (#1009)
+  const boundary = loadBoundary(dir, area.boundary, validator('schemas/boundary.schema.json'))
 
   return {
     dir,
@@ -91,6 +98,8 @@ ${safetyText.trim()}
     registry,
     coverage,
     area,
+    boundary,
+    background,
     safety,
     schemas,
     prompts,
