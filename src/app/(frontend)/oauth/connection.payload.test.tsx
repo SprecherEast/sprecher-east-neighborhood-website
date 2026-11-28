@@ -4,7 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createHash, randomBytes } from 'node:crypto'
 
-import { CONNECTION_REFUSED } from '@/modules/agents'
+import { CONNECTION_REFUSED, MINIMAL_SCOPES } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 import {
   bootPayload,
@@ -86,7 +86,12 @@ beforeAll(async () => {
   const agent = await createAccount(payload, 'agent', 'scout')
   const client = await payload.create({
     collection: 'oauth-clients',
-    data: { name: 'Claude', agent: agent.id, redirectUris: [{ uri: REDIRECT }] },
+    data: {
+      name: 'Claude',
+      agent: agent.id,
+      redirectUris: [{ uri: REDIRECT }],
+      scopes: [...MINIMAL_SCOPES],
+    },
     user: admin,
     overrideAccess: false,
   })

@@ -2,7 +2,7 @@
 
 - **Date:** 2026-11-26
 - **Status:** Proposed. It becomes Accepted when a real connection from Claude works end to end (#1500, after the Caddy path-through #1508): unit tests alone missed that the first review's browser case failed, so a fixed head's review is not enough.
-- **Issues and PRs:** #1501, under the epic #1498; #1508 (Caddy path-through).
+- **Issues and PRs:** #1501, under the epic #1498; #1499 (scopes); #1508 (Caddy path-through).
 
 ## Context
 
@@ -59,6 +59,16 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
    `WWW-Authenticate` through Payload's `req.responseHeaders`.
 7. Only an admin sees the approval; a signed ticket binds it to that admin and request.
 8. Two pages, because of the browser: the tool sends the admin's browser from its own site, where Payload's CSRF check (kept as it is) ignores the session cookie, so `/oauth/authorize` reads no session and shows no account, and its link to `/oauth/approve` is opened from this site, where the session is read (Payload reads it on a same-origin or same-site request). Both pages send `frame-ancestors 'none'`, `/oauth/approve` included, so a page on a sibling subdomain cannot frame the approval. The link carries the checked request and no secret; it is read again from scratch. A visitor is sent to log in and back to the same request, only to that path.
+9. Per-client scopes (#1499): the scope names (`read`, `suggest`, and the reserved `publish` that grants
+   nothing) and what each lets through are pure rules in `domain/scopes.ts`; `cms/scopes.ts` applies them
+   in `overrideAuth` to OAuth clients and API keys alike, from fields on both records. A scope only
+   narrows what the plugin's boxes and the agent account's access already allow. A token's effective
+   scopes are its client's record now, overlapped with what the token was given.
+10. Scope choices: `suggest` includes the agent's run log because both of its tools need a run; the
+    discovery documents and the `401` list every scope so a standard client can ask for what it needs (recorded on #1499, 2026-11-28), a request gets `read` when it names none, and the client's record caps any token; a request for more
+    than the record allows is narrowed before either page (the approval lists only what is granted), and refused only when
+    nothing is left; one agent account per client is recommended in Admin, not enforced, since a key that
+    already shares an account would then be impossible to edit or revoke.
 
 ## Consequences
 
@@ -66,7 +76,7 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
   client once and presses Allow once, and the tool renews in the background.
 - One more dependency (four packages with its own). A later security advisory means an update.
 - Expired token rows stay until a cleanup job exists. After Google sign-in (which lands on the
-  account page) the admin starts again from the tool. Per-client scopes are #1499.
+  account page) the admin starts again from the tool. Per-client scopes are #1499 (decisions 9 and 10).
 - Caddy must pass `/.well-known/` to the site (#1508).
 
 ## Links

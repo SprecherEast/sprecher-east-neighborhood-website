@@ -1,3 +1,4 @@
+import type { Scope } from '../scopes'
 import type { TokenKind } from './constants'
 
 /** An AI tool an admin registered, as the sign-in rules need it. */
@@ -11,6 +12,10 @@ export type OAuthClient = {
   enabled: boolean
   /** The agent account every token of this client acts as */
   agentId: number
+  /** What it may be given: a token carries at most these, and a change applies on the next call */
+  scopes: Scope[]
+  /** After this moment the client is refused, with every token it holds; null for none */
+  expiresAt: Date | null
 }
 
 /**
@@ -21,7 +26,7 @@ export type Credential = {
   id: number
   kind: TokenKind
   family: string
-  client: Pick<OAuthClient, 'id' | 'clientId' | 'enabled' | 'agentId'>
+  client: Pick<OAuthClient, 'id' | 'clientId' | 'enabled' | 'agentId' | 'scopes' | 'expiresAt'>
   agentId: number
   consentedBy: number | null
   resource: string

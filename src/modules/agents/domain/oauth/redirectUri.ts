@@ -4,6 +4,7 @@
  * one a client sends is one of them. Threat: an attacker's address receiving a code.
  */
 
+import { clientIsOn } from './client'
 import type { OAuthClient } from './types'
 
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '[::1]', 'localhost'])
@@ -33,14 +34,16 @@ export function checkRegisteredRedirectUri(uri: string): string | null {
 }
 
 /**
- * Whether this client may be sent this redirect address: it is registered, switched on, and the
- * address is one of its own. The one place both pages and the approval decide it (#1501).
+ * Whether this client may be sent this redirect address: it is registered, on now (switched on and
+ * not past its expiry, #1499), and the address is one of its own. The one place both pages and the
+ * approval decide it (#1501).
  */
 export function clientAccepts(
   client: OAuthClient | null,
   redirectUri: string,
+  now: Date,
 ): client is OAuthClient {
-  return client !== null && client.enabled && redirectUriMatches(client.redirectUris, redirectUri)
+  return clientIsOn(client, now) && redirectUriMatches(client.redirectUris, redirectUri)
 }
 
 /**

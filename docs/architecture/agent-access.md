@@ -10,8 +10,10 @@ they suggest waits in the [review queue](review-queue.md) until staff publish it
 An admin creates an account with the `agent` role, then an API key for it in Admin (Agents → API
 Keys). Each MCP request sends the key (`Authorization: Bearer <key>`) and acts as that account,
 so collection access decides, and the key's checkboxes can only narrow it. An AI tool such as
-Claude can instead sign in with OAuth (#1501): it acts as the agent account its client is bound to,
-with the same tools ([agent OAuth](agent-oauth.md)). An agent has these
+Claude can instead sign in with OAuth (#1501): it acts as the agent account its client is bound to
+([agent OAuth](agent-oauth.md)). Every key and client holds named scopes (`read`, `suggest`) and an
+optional expiry (#1499), which narrow the tools below: a tool outside them is not offered, and a call to
+one is refused with `insufficient_scope` ([scopes](agent-oauth.md#scopes)). An agent has these
 tools and nothing else:
 
 | Tool                                                  | What it does                                                               |
@@ -83,7 +85,8 @@ own runs.
 ## Safeguards
 
 - **Keys** (`cms/apiKeys.ts`): admin-only, and bound only to `agent` accounts. A key stops
-  working when its account is no longer an agent (`checkAgentKey` in `cms/mcp.ts`).
+  working when its account is no longer an agent or it has passed its expiry (`checkAgentKey` in
+  `cms/mcp.ts`); its scopes narrow its boxes (`cms/scopes.ts`).
 - **No personal data to the model** (`domain/agentView.ts`): every find answer is rebuilt from
   an allowlist of fields per collection (`cms/agentViews.ts`, checked against the generated
   types, so a renamed field fails `tsc`); related documents become ids; no authors, emails or

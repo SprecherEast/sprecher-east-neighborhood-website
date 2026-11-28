@@ -10,6 +10,7 @@ import type { Account } from '@/platform/payload/testing/inMemoryPayload'
 import { OAUTH_CLIENTS } from '../domain/oauth/constants'
 import { mcpResource } from '../domain/oauth/resource'
 import type { Viewer } from '../domain/oauth/types'
+import { SCOPES, type Scope } from '../domain/scopes'
 import type { beginAuthorization } from '../use-cases/oauth/beginAuthorization'
 import type { decideConsent } from '../use-cases/oauth/decideConsent'
 
@@ -55,7 +56,13 @@ export async function registerClient(
   payload: Payload,
   admin: Account,
   agent: Account,
-  over: { redirectUris?: string[]; enabled?: boolean; name?: string } = {},
+  over: {
+    redirectUris?: string[]
+    enabled?: boolean
+    name?: string
+    scopes?: Scope[]
+    expiresAt?: string
+  } = {},
 ): Promise<string> {
   const client = await payload.create({
     collection: OAUTH_CLIENTS,
@@ -63,6 +70,9 @@ export async function registerClient(
       name: over.name ?? 'Claude',
       agent: agent.id,
       enabled: over.enabled ?? true,
+      // Every scope unless a test narrows it, so the flow tests see what a key has
+      scopes: over.scopes ?? [...SCOPES],
+      expiresAt: over.expiresAt,
       redirectUris: (over.redirectUris ?? [REDIRECT]).map((uri) => ({ uri })),
     },
     user: admin,
@@ -124,9 +134,14 @@ export const exchange = async (
 }
 
 /** Runs the whole flow for a registered client: approve, then trade the code. */
-export async function signIn(payload: Payload, admin: Account, clientId: string) {
+export async function signIn(
+  payload: Payload,
+  admin: Account,
+  clientId: string,
+  scope: string = SCOPES.join(' '),
+) {
   const { verifier, challenge } = pkce()
-  const decided = await approve(authorizeParams(clientId, challenge), admin)
+  const decided = await approve(authorizeParams(clientId, challenge, { scope }), admin)
   if (decided.kind !== 'redirect') throw new Error('The approval was refused')
   const code = codeFrom(decided.url)
   const answer = await exchange({

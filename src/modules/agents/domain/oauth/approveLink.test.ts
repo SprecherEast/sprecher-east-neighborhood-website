@@ -11,7 +11,7 @@ const request: ConsentRequest = {
   state: 'state-1&x=2',
   codeChallenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
   resource: 'https://sprechereast.com/api/mcp',
-  scope: 'mcp',
+  scope: 'read',
 }
 
 describe('approvePath', () => {

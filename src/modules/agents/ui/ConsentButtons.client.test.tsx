@@ -16,7 +16,7 @@ const input = {
     state: 's',
     codeChallenge: 'c'.repeat(43),
     resource: 'https://example.com/api/mcp',
-    scope: 'mcp',
+    scope: 'read',
   },
   ticket: '123.abc',
 }

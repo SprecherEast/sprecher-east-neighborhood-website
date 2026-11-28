@@ -10,7 +10,7 @@ const valid = {
     state: 's',
     codeChallenge: 'a'.repeat(43),
     resource: 'https://sprechereast.com/api/mcp',
-    scope: 'mcp',
+    scope: 'read',
   },
   ticket: '123.abc',
   decision: 'approve',

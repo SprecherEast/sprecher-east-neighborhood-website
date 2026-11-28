@@ -14,6 +14,7 @@ import {
   registerClient,
   signIn,
 } from '../../testing/oauthFlow'
+import { SCOPES } from '../../domain/scopes'
 
 /**
  * Renewing and replaying (#1501): a refresh rotates the refresh token, a replay of a refresh token
@@ -43,9 +44,9 @@ describe('refreshing', () => {
     expect(renewed.body.access_token).toMatch(/^sea_/)
     expect(renewed.body.access_token).not.toBe(first.access_token)
     expect(renewed.body.refresh_token).not.toBe(first.refresh_token)
-    // The one scope is carried through a renewal, as it is through the first sign-in
-    expect(renewed.body.scope).toBe('mcp')
-    expect(first.scope).toBe('mcp')
+    // What the sign-in granted is carried through a renewal, never widened or lost
+    expect(renewed.body.scope).toBe(first.scope)
+    expect(first.scope).toBe(SCOPES.join(' '))
 
     const again = await exchange({
       grant_type: 'refresh_token',

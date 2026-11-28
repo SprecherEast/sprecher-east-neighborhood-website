@@ -98,18 +98,22 @@ describe('clientAccepts', () => {
     redirectUris: [CALLBACK],
     enabled: true,
     agentId: 9,
+    scopes: ['read'],
+    expiresAt: null,
   }
+  const NOW = new Date('2026-11-27T12:00:00Z')
 
   it('accepts a client that is on and a redirect address that is one of its own', () => {
-    expect(clientAccepts(client, CALLBACK)).toBe(true)
+    expect(clientAccepts(client, CALLBACK, NOW)).toBe(true)
   })
 
   it.each([
     ['no client', null, CALLBACK],
     ['a client switched off', { ...client, enabled: false }, CALLBACK],
+    ['a client past its expiry', { ...client, expiresAt: NOW }, CALLBACK],
     ['another address', client, 'https://evil.example/cb'],
     ['an address with a trailing slash', client, `${CALLBACK}/`],
   ])('refuses %s', (_name, who, uri) => {
-    expect(clientAccepts(who, uri)).toBe(false)
+    expect(clientAccepts(who, uri, NOW)).toBe(false)
   })
 })

@@ -13,11 +13,13 @@ import type {
 } from '@node-oauth/oauth2-server'
 import type { Payload } from 'payload'
 
-import { OAUTH_GRANTS, OAUTH_LIFETIMES, OAUTH_SCOPE } from '../../domain/oauth/constants'
+import { clientIsOn } from '../../domain/oauth/client'
+import { OAUTH_GRANTS, OAUTH_LIFETIMES } from '../../domain/oauth/constants'
 import { redirectUriMatches } from '../../domain/oauth/redirectUri'
 import { generateToken } from '../../domain/oauth/secrets'
 import { checkToken } from '../../domain/oauth/tokens'
 import type { Credential, Grantee } from '../../domain/oauth/types'
+import { recordAllows } from '../../domain/scopes'
 import { findOAuthClient, isAgentAccount } from './clients'
 import {
   findCredential,
@@ -57,7 +59,7 @@ const issuedTo = (who: Grantee, client: Client, family: string, scope: string[] 
   agentId: who.agentId,
   consentedBy: who.consentedBy,
   resource: who.resource,
-  scope: scope ?? [OAUTH_SCOPE],
+  scope: scope ?? [],
 })
 
 /** The stored form of what the approval gave a credential, as the library's `user` hands it back */
@@ -106,12 +108,13 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
   return {
     async getClient(clientId) {
       const client = await findOAuthClient(payload, clientId)
-      if (!client?.enabled) return false
+      if (!clientIsOn(client, new Date())) return false
       return {
         ...libraryClient(client.clientId),
         redirectUris: client.redirectUris,
         credentialClientId: client.id,
         agentId: client.agentId,
+        scopes: client.scopes,
       }
     },
 
@@ -119,9 +122,10 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
       return redirectUriMatches(client.redirectUris as string[], redirectUri)
     },
 
-    async validateScope(_user, _client, scope) {
+    // A client is never given more than its record allows, whatever it asks for
+    async validateScope(_user, client, scope) {
       const wanted = scope ?? []
-      return wanted.every((s) => s === OAUTH_SCOPE) ? [OAUTH_SCOPE] : false
+      return recordAllows(wanted, client.scopes as string[]) ? wanted : false
     },
 
     generateAuthorizationCode: async () => generateToken('code'),

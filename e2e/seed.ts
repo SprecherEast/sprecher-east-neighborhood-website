@@ -8,6 +8,7 @@ import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
 import { contactForm } from '../src/endpoints/seed/contact-form'
+import { MINIMAL_SCOPES } from '../src/modules/agents'
 import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
@@ -158,6 +159,7 @@ await payload.create({
     name: CONNECT.clientName,
     agent: scout.id,
     redirectUris: [{ uri: CONNECT.redirect }],
+    scopes: [...MINIMAL_SCOPES],
   },
   context,
   overrideAccess: true, // test setup, no user

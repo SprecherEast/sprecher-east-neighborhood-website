@@ -15,7 +15,8 @@ import { exchange, RESOURCE, registerClient, signIn, onlyDoc } from '../../testi
 
 /**
  * An OAuth access token at `/api/mcp` (#1501): it acts as the client's agent account with the
- * access an API key has, nothing else is let in, and the API-key path is unchanged. Every
+ * access an API key has, nothing else is let in, and a key still works as before (its scopes and
+ * expiry are in `cms/scopes.payload.test.ts`). Every
  * refusal is a 401 that points at the protected-resource metadata.
  */
 
