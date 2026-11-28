@@ -143,6 +143,7 @@ through the pointers in `.claude/skills/`, a human as plain Markdown.
 | [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or an image.                   |
 | [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | You make a post or event picture.                                 |
 | [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You review a PR you didn't write.                                 |
+| [`outsider-review`](.agents/skills/outsider-review/SKILL.md)           | Every 5 to 10 merges or weekly: a look from outside.              |
 | [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify, check the deploy, report.                  |
 | [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestone, blockers. |
 | [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: questions, grooming, overlap, briefs. |
