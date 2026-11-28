@@ -1,10 +1,9 @@
 import { isTransient } from './cms.mjs'
 import { gateItem } from './gate.mjs'
+import { clip } from './text.mjs'
 
 // Submit (submit.md): route each item by its curate decision, build the whole MCP call, validate
 // it against submission.schema.json, then send it, retrying a transient failure once. Code only.
-
-const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
 
 /** The `submitSuggestion` arguments, from the draft and the candidate (submit.md step 2). */
 export function suggestionArguments(item, runId) {
@@ -29,13 +28,22 @@ export function suggestionArguments(item, runId) {
   }
 }
 
+/** How the item was placed, in words for an editor (verification.placement, #1009). */
+export function placementNote(placement) {
+  if (!placement) return ''
+  if (placement.method === 'boundary')
+    return `Placed by the boundary: ${placement.inside ? 'inside' : 'outside'} the area${placement.overrode ? ', over the word match' : ''}.`
+  return placement.method === 'word-match' ? 'Placed by word match.' : 'Not placed: no place given.'
+}
+
 /** One line about the candidate and the decision, for an editor (report.schema.json `summary`). */
 function summaryOf(item, note) {
-  const { candidate, curation } = item
+  const { candidate, curation, verification } = item
   const when = candidate.startsAt ? candidate.startsAt.slice(0, 16).replace('T', ' ') : 'no date'
   const parts = [
     note,
     `${candidate.title} (${when}${candidate.locationText ? `, ${candidate.locationText}` : ''}).`,
+    placementNote(verification?.placement),
     curation ? `Decision: ${curation.decision}. ${curation.reasons.join(' ')}` : '',
   ]
   return clip(parts.filter(Boolean).join(' '), 1000)

@@ -28,7 +28,7 @@ Only `valid` sources are ever fetched automatically.
 | City legislation (Legistar API) | JSON API | valid      | 3     |
 | Madison365                      | RSS      | valid      | 4     |
 | Spectrum News 1 Madison         | RSS      | valid      | later |
-| Madison Parks events            | HTML     | pending    | no    |
+| Madison Parks events            | HTML     | valid      | 10    |
 | District 16 alder blog          | HTML     | valid      | 7     |
 | City of Madison news            | HTML     | valid      | 8     |
 | City public information mtgs    | HTML     | valid      | 6     |
@@ -37,17 +37,18 @@ Only `valid` sources are ever fetched automatically.
 | madison.com                     | RSS      | restricted | no    |
 | The Capital Times               | RSS      | invalid    | no    |
 | Channel 3000                    | HTML     | invalid    | no    |
-| Madison Police incident reports | RSS      | pending    | no    |
-| Traffic Engineering news        | HTML     | pending    | no    |
-| Road Closures open-data layer   | JSON API | pending    | no    |
+| Madison Police incident reports | RSS      | valid      | 9     |
+| City street and lane closures   | HTML     | valid      | 15    |
+| Road Closures open-data layer   | JSON API | invalid    | no    |
 | 511 Wisconsin events API        | JSON API | pending    | no    |
-| Door Creek Park page            | HTML     | pending    | no    |
-| Greater Madison MPO events      | HTML     | pending    | no    |
+| Door Creek Park ski trails      | HTML     | valid      | 13    |
+| Door Creek Park ice rink        | HTML     | valid      | 14    |
+| Greater Madison MPO events      | HTML     | valid      | 11    |
 | Dane County Farmers' Market     | HTML     | pending    | no    |
 | Cottage Grove Chamber events    | HTML     | pending    | no    |
 | Henry Vilas Zoo lights          | HTML     | pending    | no    |
 | Visit Madison holiday guide     | HTML     | pending    | no    |
-| Other alders' weekly roundups   | HTML     | pending    | no    |
+| Other alders' weekly roundups   | HTML     | valid      | 12    |
 | MMSD boundary review            | HTML     | pending    | no    |
 | Metro Transit public hearings   | HTML     | pending    | no    |
 | Metro Transit developer feeds   | HTML     | pending    | no    |
@@ -119,14 +120,15 @@ partly in the Town of Blooming Grove. [coverage.md](coverage.md) holds the worki
 
 A hand sweep found the sources above marked `pending`. Each entry in `sources.yaml` records what
 was seen that day and the issue that finishes its hand check (#993 to #998). None is polled, and
-no parser exists yet: those belong to the same issues. Madison Parks events (already listed) got
+no parser exists yet: those belong to the same issues. The police incident reports feed was the first
+to be finished (#993, below). Madison Parks events (already listed) got
 its new observation, and City Legistar (already `valid`) got a note: contract awards and
 resolutions are where a physical project's paper trail turns up.
 
 **Not checked.** The sweep read the pages, not their robots.txt files, so these entries carry no
 `robots` check, and a source that needs one (`direct-then-playwright`) can't get it until a hand
-check records it. Whether 511 Wisconsin needs a free key isn't confirmed, nor is the live address
-of the Road Closures layer (only a catalog entry was found).
+check records it. Both open questions were settled on 2026-11-26 ([#994](#road-closure-and-traffic-change-sources-994)):
+511 Wisconsin needs a developer key, and the Road Closures layer's live address is known but it holds nothing after 2021.
 
 **Discovery only.** The Visit Madison guide is a secondary roundup: use it to find events, then
 confirm each with its organizer ([coverage](coverage.md), "Review passes").
@@ -136,11 +138,94 @@ reading (keep the iCalendar source above). United Way's volunteer listings refus
 read, so their terms need a hand check (#998). Nextdoor and Facebook need a login, so resident
 reports from them reach the Scout only through the owner.
 
+## The police incident reports feed (#993)
+
+Hand check on **2026-11-25**, from the City's own pages. It is `valid`, daily, rank 9, and every
+item is a safety item that waits for a person ([coverage](coverage.md), "Review passes").
+
+- **robots.txt.** `https://www.cityofmadison.com/robots.txt` has three groups, all for every
+  crawler, and none names `/feed`, `/police` or the incident reports; there is no `Crawl-delay`.
+  The feed's path is allowed.
+- **Terms.** The City's [Conditions and Use](https://www.cityofmadison.com/policy/conditions) says
+  that, unless stated otherwise, data on the website is public information and "generally
+  available to copy or distribute", with the City's logos and images excepted, and it says nothing
+  about automated reading. Its [data policy](https://www.cityofmadison.com/policy/data) is
+  informational and sets no reuse condition. We read the feed once a day, logged out, and use no
+  image; we summarize facts and link, never republish.
+- **The feed.** RSS 2.0 with a `link`, `guid` and `pubDate` on every item and no `ttl` or
+  `lastBuildDate`. The incident reports page does not link to it. The `guid` ends in the time of the
+  last update, so it changes when a report does: the report's page link is the item's id, so an
+  update reaches the editor as a change to a known item.
+- **Cadence.** The City posts a few reports a week (the page's first screen spanned 2026-10-29
+  to 2026-11-21, with a long archive behind it), and the feed gives no refresh interval: one read
+  a day is enough.
+- **What an item holds.** The description begins with the place and a comma. Of the 81 items in the
+  feed when it was checked (2026-11-25), 46 began with a block ("2800 block Curry Pkwy"), 21 with an
+  intersection or a bare street ("Mineral Point Rd. at S. Gammon Rd.", "S. Blair St.") and 14 with
+  "UPDATE:" and no place, because the feed replaces an updated report's description. The parser
+  reads the leading place when it is short, of street characters and holds a street type; a block
+  is placed by the boundary, while an intersection or a bare street has no house number, so the
+  locator is sent nothing and the area's words stand (a house number is never followed directly by a connector word or "blocks", which keeps routes and exits
+  from being sent; other prose after a route number can still be read as text with a street type, which is public item
+  text and never resident data; the parser reads plural street types, so all 21 are read). The report's page adds the incident type, a
+  case number, the block address, an approximate map point, when it was published and last
+  updated, and the tip line (the Madison Area Crime Stoppers line and the department's
+  non-emergency line). There is no district field. The parser is `runner/lib/incidents.mjs`; the
+  City's boundary places a block ([coverage](coverage.md), check 2), so `area.yaml` holds no list of
+  street names.
+- **First run.** All 81 items, back about a year, are new on the first run;
+  the model stages take a few per run, newest first ([#1483](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1483)).
+- **Limits.** The feed is a lead: the runner reads the report page and gives its text to verify before an item
+  is considered, and the City makes no guarantee that its pages are accurate or complete.
+
+## Road closure and traffic change sources (#994)
+
+Hand checks on **2026-11-26**, with a plain GET and each site's robots.txt, no browser. Result: one
+source is `valid` and polled, one is `invalid`, one stays `pending` until the owner gets a key.
+
+- **City street and lane closure news: `valid`, daily, rank 15.** The City news list filtered to
+  its Street & Lane Closures category (`https://www.cityofmadison.com/news?category=1031`): 20
+  posts a page, about two months of closures, in the same markup as City news, so it uses the same
+  parser. The City renamed Traffic Engineering to Mobility & Infrastructure; its own news page
+  (`/traffic-engineering/news`, now `/mobility/news`) lists the same posts but answered 403 once the
+  category was added, so this list is the one read. robots.txt
+  (`https://www.cityofmadison.com/robots.txt`, checked 2026-11-26) names only `/search`, `/admin`,
+  `/user`, `/node/add`, `/comment/reply` and file paths: `/news` is allowed, and there is no
+  `Crawl-delay`. Terms are as for the police feed above (Conditions and Use, data policy). No feed
+  exists (the `/news/feed` and `/mobility/news/feed` addresses answer 404).
+- **Why every closure goes to verify.** The list cuts each post off before its detour. The County
+  Highway T closure at Felland Road (posted 2026-10-19, closed 2026-10-26 to 2026-10-30) names
+  Felland Road and County Highway T in the list, and the detour over Sprecher Road, Milwaukee
+  Street and N Thompson Drive only on the post's page. A word match on the list text would have
+  dropped it, so no closure is dropped by code (a handful in 14 days), verify reads the
+  post's page for the closed road, the detour and both dates, and curate rejects a closure
+  elsewhere in the city or one that has ended (`evals/verify-closure.yaml`,
+  `evals/curate-closure.yaml`). `area.yaml` needed no new word: the boundary roads and the detour
+  streets are already in it.
+- **Dates.** The list gives a posted time, not the closure's dates, which are in the post's text
+  and often past the cut. The scout candidate has no start or end of its own, as with every news
+  post; verify reads both from the page and never guesses a date.
+- **Road Closures open-data layer: `invalid`.** The live service is
+  `Public/OPEN_DATA_TE/MapServer/14` on `maps.cityofmadison.com` (no key; the same data is
+  `Traffic/Road_Closures` layer 4). It holds 693 closures and the newest by end date is
+  2021-12-16; its Full Closure and Future Closure layers return none. The City calls it "current and
+  future road closures", but it hasn't been added to since 2021, so it can't show a closure now. The
+  registry says to re-check it at the monthly pass and to prefer it over page parsing once it is
+  current again.
+- **511 Wisconsin events API: `pending`.** The developer page says the REST API "requires a developer
+  key", from a registered 511WI account, at 10 calls every 60 seconds, under a developer access
+  agreement. robots.txt (`https://511wi.gov/robots.txt`, checked 2026-11-26) disallows `/my511/`,
+  `/map/map*/`, `/list/getdata/`, `/eventdetails/` and `/error/` and names no API path. The key and
+  the agreement are the owner's to give (#997), so nothing is collected yet.
+- **Official alerts.** The City's email lists (`https://www.cityofmadison.com/contact/email-lists`)
+  include Transportation lists such as Road Construction, and a Blooming Grove list. A subscription
+  needs an email address, so it is the owner's to make; the daily read does not depend on it.
+
 ## Trust: reach is not trust
 
 Two questions are kept apart. **Reach** is whether an agent may read a page: any public page the
 scout finds may be read, logged out and with robots.txt honored, never past a login, paywall or
-bot gateway, and never on a social network ([README](README.md), "Hard nos"). **Trust** is what a
+bot gateway, and never on a social network ([fetching](fetching.md), "Hard nos"). **Trust** is what a
 page may prove once it is read. The scout decides trust after reading, from the page itself, not
 from a list of approved sites. The daily runner is unchanged: it still polls only `valid` entries
 in `sources.yaml`.
@@ -177,7 +262,7 @@ robots rules disallow automated reading (Dane County's subscription page).
   `direct-then-playwright`: public City pages, read logged out once a day, on paths robots.txt
   allows (checked 2026-10-24). A direct GET that day served both lists in the HTML, with item
   links (Parks: Bat Fest, 2026-10-24; blog: newest post 2026-10-06), so no browser was needed.
-  Parks stays `pending`.
+  Parks became `valid` in #995 (below).
 - **HTML parsers (#390, 2026-10-27):** the District 16 blog, City news, the City's public
   information meetings and WisDOT's I-39/90/94 meetings page have no feed, so each has a parser
   for its own list markup (`runner/lib/html.mjs`, with trimmed copies of each page in
@@ -188,4 +273,19 @@ robots rules disallow automated reading (Dane County's subscription page).
   the first 8 Parks events (October 24 to 29) was at Door Creek Park or Elvehjem Sanctuary;
   Pinney's Book Discussion feed held 8 events, 5 of them from 2026-10-15 to 2026-12-15; Spectrum's
   feed uses custom elements, such as `<section>` and `<ticker>`, outside the RSS 2.0 namespace.
+- **Park and community sources (#995, 2026-11-26):** hand checks with a plain GET and each
+  robots.txt, no browser. Now polled once a day, each with a parser in `runner/lib/html.mjs`:
+  Madison Parks events (two list pages, 11 events; a Door Creek Park event on 2027-01-22 was 8
+  weeks out, past the old two-week window), the Greater Madison MPO events (same layout as the
+  City's public information meetings), District 3's weekly roundup (same layout as the District 16
+  blog; only a post that names the area goes on), and the Door Creek Park winter status, now on
+  the City's ski and ice skating pages because `/parks/doorcreek` redirects to a page with no
+  status (a status other than "Closed for Season" becomes one item for the winter; the tag text of
+  an open place is not seen yet, so re-check on the first open day). Still `pending`, each with
+  its reason in `sources.yaml`: the Farmers' Market holiday page and the Zoo lights page (running
+  text, citywide at most; the Zoo's hours only come from a second named source, and its photos
+  have no reuse terms) and the Cottage Grove Chamber calendar (a few lines of free text, outside
+  the area). The library's event search page stays out: robots.txt disallows it, and its
+  iCalendar feed is the library source. The City Parks event page's description can name a
+  different place than its location field, so the parser reads the location field.
 - Re-check every source at least once a month, and whenever one fails twice in a row.

@@ -27,6 +27,9 @@ export function stripMarkup(html) {
   )
 }
 
+/** `text` cut to `max` characters, ending in an ellipsis when it was cut. */
+export const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text)
+
 /** Whitespace collapsed to single spaces, trimmed. */
 export const collapse = (text) =>
   String(text ?? '')

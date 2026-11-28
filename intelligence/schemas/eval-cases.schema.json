@@ -93,6 +93,7 @@
         },
         "stage": { "enum": ["scout", "verify", "curate", "draft", "submit"] },
         "tags": {
+          "description": "Labels for grouping. `baseline` marks a case that records what a stage does without something (the `-without-background` cases): it documents the gap, and a collector must not score it as the pipeline's pass or fail.",
           "type": "array",
           "uniqueItems": true,
           "items": { "$ref": "common.schema.json#/$defs/sourceId" }
@@ -101,6 +102,21 @@
           "anyOf": [{ "$ref": "#/$defs/scoutInput" }, { "$ref": "#/$defs/candidateInput" }]
         },
         "known": { "$ref": "item.schema.json#/properties/known" },
+        "background": {
+          "description": "The neighborhood background the stage was given for this case (pipeline.yaml `background`): the summary, and the topic notes verify named. A case without it assumes none. A pair of cases with the same input, one `-without-background` and one `-with-background`, shows what the background changes.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["summary"],
+          "properties": {
+            "summary": { "type": "boolean" },
+            "topics": {
+              "type": "array",
+              "maxItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "common.schema.json#/$defs/sourceId" }
+            }
+          }
+        },
         "given": { "$ref": "eval-parts.schema.json#/$defs/given" },
         "expected": { "$ref": "eval-parts.schema.json#/$defs/expected" },
         "graders": {

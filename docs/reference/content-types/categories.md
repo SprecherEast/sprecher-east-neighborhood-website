@@ -3,6 +3,8 @@
 # Categories (`categories`)
 
 - Kind: collection
+- Owner: module `news`, defined in `src/modules/news/cms/categories.ts`
+- AI agent tools: `findCategories`, `submitSuggestion` ([list](../mcp-tools.md))
 - Drafts: no
 - Versions: none kept
 

@@ -1,37 +1,33 @@
+---
+name: 'Agents'
+type: module
+summary: 'MCP access, drafts, runs.'
+aliases: ['MCP', 'neighborhood agents']
+relationships: []
+---
+
 # Agents
 
-How the neighborhood agents reach the site: one MCP address, a key an admin issues, read access to
-published content, suggestions that arrive as drafts for staff, and a history of each run. Agents
+How the neighborhood agents reach the site: one MCP address, a key an admin issues or an AI tool an
+admin allowed in with OAuth, read access to published content, suggestions that arrive as drafts for staff, and a history of each run. Agents
 never publish and never change existing content. Fields, access and hooks:
 [agent runs](../../../docs/reference/content-types/agent-runs.md),
 [review items](../../../docs/reference/content-types/agent-review-items.md),
-[API keys](../../../docs/reference/content-types/payload-mcp-api-keys.md).
+[API keys](../../../docs/reference/content-types/payload-mcp-api-keys.md),
+[OAuth clients](../../../docs/reference/content-types/oauth-clients.md),
+[OAuth tokens](../../../docs/reference/content-types/oauth-tokens.md). The OAuth flow:
+[agent OAuth](../../../docs/architecture/agent-oauth.md).
 
 ## How the pieces link
 
-- A suggestion's categories are found by slug; an unknown slug is refused, never created. Its image is the first category's `defaultImage` (a field of news's `categories`), else the nearest parent's, else the next category's, else none (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`).
-- The Markdown body becomes the collection's own rich text; `<Chart>`, `<FactTabs>` and `<SectionTabs>` tags are read by the editorial converters, and a malformed or unreadable tag refuses the call and stores nothing (`cms/tools/submitSuggestion.ts`, `src/platform/richtext/editorial/*Markdown.ts`, `editorialTag.ts`).
-- Card text: a post's `summary` fills its search-engine description (`meta.description`) only; an event's fills its description. The share image of a post is the category's default image, which is also the hero image of both (`cms/tools/submitSuggestion.ts`).
-- An event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone; an end on another day is dropped (`domain/suggestion.ts`).
-- `externalId` and `contentHash` are unique on events and posts, so one item is never stored twice; the slug ends with the start of the hash (`src/platform/payload/reviewQueue.ts`, `domain/suggestion.ts`).
-- A run's `agent` and a review item's `agent` are set by the server from the key's account, never by the caller (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`).
-- A run's identity (`RUN_IDENTITY`: run id, agent name, pipeline version, commit, start) is written once; an agent's later updates keep the stored values (`cms/agentRuns.ts`, `domain/runs.ts`).
-- What an agent sees is each collection's allowlist, checked against the generated types; related documents become ids, and `meta` keeps only title and description (`cms/agentViews.ts`, `domain/agentView.ts`).
+- **In the CMS:** two collections, `agent-runs` and `agent-review-items`, and the MCP API keys of Payload's MCP plugin (`@payloadcms/plugin-mcp`, the library doing the real work); not in the CMS: the allowlists, the limits and the two tools. The tools, endpoint and jobs are generated: [MCP tools](../../../docs/reference/mcp-tools.md), [endpoints](../../../docs/reference/endpoints.md).
+- **The Markdown body** of a suggestion becomes the collection's own rich text through the editorial converters ([rich text](../../platform/richtext/README.md), `src/platform/richtext/editorial/*Markdown.ts`); categories are [news](../news/README.md)' tree and the review queue is [Shared Payload code](../../platform/payload/README.md).
 
 ## Behaviors and events
 
-- Agents use Payload's official MCP plugin at `/api/mcp`. The key acts as an agent account, so collection access decides what it may do; the per-key boxes in Admin can only narrow that (`cms/mcp.ts`).
-- Over MCP an agent can only find published events, posts and categories, create and update its own runs, and call two tools (`cms/mcp.ts`, `src/payload.config.agentAccess.test.ts`).
-- Keys are admin-only to create, read, change or delete, and each is bound to an account with the agent role (`cms/apiKeys.ts`). The key's account must still be an agent at each request, so a changed role stops the key (`cms/mcp.ts`).
-- Agents get no password sign-in or session, so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
-- Limits: 120 requests a minute per connection, counted before the key is looked up, then 60 a minute per key; past either, 429. Counted in memory, which assumes one server process (`domain/mcpLimits.ts`, `cms/mcp.ts`).
-- Every answer is rebuilt from the allowlisted view, so no personal data reaches the model; an error answer is kept as it is (`cms/mcp.ts`, `domain/agentView.ts`).
-- `submitSuggestion` stores a draft held as `suggested`, never published, as the agent itself; `holdSuggestions` holds it whatever the agent sends and requires a source name and link (`src/platform/payload/reviewQueue.ts`). The title cap is the only length guard on a draft, since Payload checks it only on publish (`domain/suggestion.ts`, #633).
-- The same source ID or fingerprint answers `duplicate` with the stored id, also when two calls race; the lookup bypasses access because agents can't read drafts. The run's counts stay the agent's to keep (`cms/tools/submitSuggestion.ts`).
-- `reportItem` adds one document per report under the agent's own run, so two reports never overwrite each other; it never changes the content it points at. Staff read every item, an agent only its own; only admins change or delete one (`cms/tools/reportItem.ts`, `cms/agentReviewItems.ts`).
-- An agent sees only its own runs, and another agent's run is "not found". That is how it resumes from its source cursors (`cms/agentRuns.ts`, `cms/tools/runs.ts`).
-- Admins may change a run's identity fields and set its agent when creating one; an agent can't (`cms/agentRuns.ts`).
-- Tool arguments follow the agents' contract in `intelligence/schemas/`, with a size cap on each and cross-field rules (an event needs `startsAt`; an update or cancellation needs a target) (`cms/tools/schemas.ts`).
+- **Agents use Payload's official MCP plugin at `/api/mcp`.** The key acts as an agent account, so collection access decides what it may do (`cms/mcp.ts`).
+- **Agents get no password sign-in or session,** so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
+- **`submitSuggestion` stores a draft as the agent itself,** held as `suggested` whatever the agent sends, with a source name and link required (`cms/tools/submitSuggestion.ts`, `src/platform/payload/reviewQueue.ts`).
 
 ## Shared pieces it uses
 
@@ -40,22 +36,33 @@ never publish and never change existing content. Fields, access and hooks:
 
 ## Rules and the tests that protect them
 
-- An agent sees only allowlisted fields, with related documents as ids: `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`.
-- Suggestion slug, schedule and default image rules: `domain/suggestion.test.ts`, `src/payload.config.agentSuggestionCards.test.ts`.
-- The tools' schemas and the agents' contract give the same verdicts: `cms/tools/schemas.contract.test.ts`.
-- Tools store held drafts, answer duplicates and keep concurrent reports: `src/payload.config.agentTools.test.ts`.
-- Keys, limits, run isolation and write-once identity: `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`.
-- Chart, fact-tab and section-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`.
-- The access migration rolls back and applies again: `src/payload.config.agentMigration.test.ts`.
+- **An agent sees only allowlisted fields,** each collection's allowlist checked against the generated types; related documents become ids, `meta` keeps only title and description, and every answer is rebuilt from that view, so no personal data reaches the model (`cms/agentViews.ts`, `domain/agentView.ts`; `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`).
+- **An agent never publishes or changes content:** over MCP it finds published events, posts and categories, writes its own runs and calls two tools; `submitSuggestion` stores a held `suggested` draft, `reportItem` adds a review item for staff (`cms/mcp.ts`; `src/payload.config.agentTools.test.ts`). The tools are listed in the [MCP tools reference](../../../docs/reference/mcp-tools.md).
+- **A suggestion is stored once:** the same source id or fingerprint answers `duplicate` with the stored id, also when two calls race; `externalId` (a lowercase source id, a colon, the source's own id: `EXTERNAL_ID` in `domain/suggestion.ts`) and `contentHash` are unique and the slug ends with the start of the hash (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`; `src/payload.config.agentTools.test.ts`).
+- **A suggestion's shape is checked before anything is stored:** an unknown category slug is refused, never created; a malformed `<Chart>`, `<FactTabs>` or `<SectionTabs>` tag refuses the call; an event needs `startsAt` and an update or cancellation names its target; an event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone, and an end on another day is dropped; the tools' schemas and the agents' contract in `intelligence/schemas/` give the same verdicts (`cms/tools/schemas.ts`, `domain/suggestion.ts`, #633; `domain/suggestion.test.ts`, `cms/tools/schemas.contract.test.ts`, `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`).
+- **A suggestion's text and lists have length caps,** because Payload checks a title's length only on publish, not on a draft. The main ones: title (the shared `TITLE_MAX_LENGTH`), body 12,000, card summary 160, summary 1,000, at most 2 categories and 5 evidence items; `SUGGESTION_CAPS` in `domain/suggestion.ts` holds all of them, including the venue, address, source, category slug, source id, run id, evidence and flag caps (#633; `domain/suggestion.test.ts`).
+- **A suggestion's picture is the first category's `defaultImage`,** else the nearest parent's, else the next category's, else none; a post's `summary` fills only its search-engine description and an event's its description (`cms/tools/submitSuggestion.ts`; `src/payload.config.agentSuggestionCards.test.ts`).
+- **A key is the only credential and it can be narrowed, not widened:** keys are admin-only, each bound to an account that must still have the agent role at each request; collection access decides what it may do and Admin's per-key boxes only narrow that. Limits: 120 requests a minute per connection, then 60 a minute per key, then 429, counted in memory (`cms/apiKeys.ts`, `cms/mcp.ts`, `domain/mcpLimits.ts`; `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`).
+- **Every key and client holds scopes and an optional expiry, and a scope only narrows:** `read` finds published content, `suggest` gives the two tools and the agent's own run log, and `publish` is reserved and grants nothing; the plugin's settings are rebuilt as the overlap of the scopes and the key's boxes or the address's options, so a tool outside them is never offered, and a call to one answers `403` with `insufficient_scope` and the scope needed. A client with none is refused on save, a new one gets `read`, and an expired or switched-off client stops on its next call without touching the others (`domain/scopes.ts`, `cms/scopes.ts`, `cms/clientAccessFields.ts`, `cms/mcp.ts`; `domain/scopes.test.ts`, `cms/scopes.payload.test.ts`, `use-cases/oauth/scopes.payload.test.ts`, `src/payload.config.clientScopesMigration.test.ts`).
+- **An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which, like `/oauth/authorize`, sends `frame-ancestors 'none'` (`NO_FRAMING_PATHS`), so no site can frame it, a sibling subdomain included. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from this site, so Payload reads the session (it does so for a same-origin or same-site request); a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection. The Allow and Don't allow buttons are a form whose server action (`decideConnectionForm` in `actions.ts`) carries the request and ticket (bound once, in the server component `ConsentCard`; binding it in the client component hangs the render of a refusal before hydration), each button submitting its own choice, so a press before the page has hydrated still works (the approval page's referrer policy is `same-origin`, because a form posted before hydration under `no-referrer` carries `Origin: null`, which Next refuses); the first page's way on is a plain link, which does too; the approval card lists what the tool will be able to do (its scopes) (`ui/ConsentCard.tsx`, `ui/ConsentButtons.client.tsx`, `ui/ConnectionCard.tsx`; `src/modules/agents/actions.test.ts`). A request or approval that can't be trusted gets one wording on the site, and an error that goes back to the tool keeps its name only when it is a standard OAuth one (`OAUTH_ERROR_NAMES`); any other is answered as `server_error` (`domain/oauth/constants.ts`).
+- **A code goes only to an address registered in full:** redirect addresses match exactly (a loopback `http` address may choose its port), PKCE S256, a state and the MCP address as `resource` are required, and the approval carries a signed, expiring ticket for that admin and request (`domain/oauth/redirectUri.ts`, `authorizeRequest.ts`, `consent.ts`; their tests).
+- **`@node-oauth/oauth2-server` runs the protocol; our layer stores only HMACs** in two admin-only collections. A code is spent by its first try, even a failed one, a refresh token is replaced on each use, and a reused one, or two at once, ends its whole family: the revocation is one `UPDATE`, saving looks at the family before and after, and every use checks it, so the request that got in first is cut off too (`data/oauth/model.ts`, `credentials.ts`; `use-cases/oauth/race.payload.test.ts`, `renewal.payload.test.ts`).
+- **`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, a body read no further than 8 KB as it arrives, a field sent twice refused with `invalid_request` (any field name counts as a field, `constructor` included), and an access token lasts an hour, with every refusal, including the route's early ones, built by one `tokenError` and never cached (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/tokenAnswer.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).
+- **Every `/api/mcp` call with an access token (prefix `sea_`, in the `Authorization` header whatever the case of `Bearer`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting "Revoked at" on a token (its family goes with it, and it cannot be cleared again), switching the client off or deleting it; moving a client to another agent account revokes its tokens (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).
+- **A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is "not found") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).
+- **Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).
 
 ## Boundaries
 
-- Entry file: `cms.ts` only (collections and plugin options, never server-only). Layers: `domain/` (pure rules), `cms/` (collections, plugin options, tools). It imports no other module (`eslint.boundaries.config.mjs`).
+- Entry files: `cms.ts` (collections and plugin options, never server-only), `index.ts` (discovery documents), `server.ts` and `actions.ts` (the approval page and token address). Layers: `domain/`, `use-cases/`, `data/`, `cms/`, `ui/`. It imports no other module (`eslint.boundaries.config.mjs`); `src/app/(frontend)/oauth/approve/page.tsx` and `src/app/(frontend)/login/page.tsx` compose it with accounts.
 
 ## Decisions
 
-[0008](../../../docs/architecture/decisions/0008-compose-modules-at-the-app-level.md), [0019](../../../docs/architecture/decisions/0019-knowledge-layer.md); issues #336, #363, #633.
+[0008](../../../docs/architecture/decisions/0008-compose-modules-at-the-app-level.md), [0019](../../../docs/architecture/decisions/0019-knowledge-layer.md); [0023](../../../docs/architecture/decisions/0023-mcp-oauth-sign-in.md); issues #336, #363, #633, #1499, #1501.
 
 ## Known gaps
 
-None known.
+- Scopes are `read` and `suggest`; publishing by an agent (`publish`, reserved) is #1502. One agent account per client is recommended, not enforced.
+- Clients are registered by hand; client ID metadata documents and dynamic registration are not offered.
+- The log in page returns to the connection approval after a password or passkey log in, not after Google sign-in, which lands on the account page.
+- Expired token rows stay in the table, and limits are counted in memory, which assumes one server process.

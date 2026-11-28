@@ -5,6 +5,7 @@ import { ArrowRight, Download, Home, Plus } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { Button } from '@/platform/ui/Button'
+import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Link } from '@/platform/ui/Link'
 import { Section } from '@/platform/ui/Section'
 import { SegmentedControl } from '@/platform/ui/SegmentedControl'
@@ -63,6 +64,28 @@ export function ActionsGallery() {
           <Button fullWidth="mobile" variant="accent">
             fullWidth mobile
           </Button>
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="ButtonRow"
+        description="The buttons of one decision: stacked on a phone, side by side from the wider layout up."
+      >
+        <GalleryVariant label="align: start (default)">
+          <ButtonRow>
+            <Button fullWidth="mobile">Allow this connection</Button>
+            <Button variant="secondary" fullWidth="mobile">
+              Don’t allow
+            </Button>
+          </ButtonRow>
+        </GalleryVariant>
+        <GalleryVariant label="align: end">
+          <div className="w-full">
+            <ButtonRow align="end">
+              <Button variant="secondary">Remove passkey</Button>
+              <Button>Keep it</Button>
+            </ButtonRow>
+          </div>
         </GalleryVariant>
       </GalleryEntry>
 

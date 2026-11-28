@@ -32,8 +32,8 @@ How the agent team uses the guides, who reviews whom and how much scrutiny a cha
 
 ## How a role guide is loaded
 
-A role is a guide, not an agent. The only agents are the chief of staff, the worker and the reviewer
-(`qa-reviewer`, which works from its own guide). A guide loads by name from this folder:
+A role is a guide, not an agent. The only agents are the chief of staff, the worker, the reviewer
+(`qa-reviewer`, which works from its own guide) and the outsider reviewer (which works from its skill). A guide loads by name from this folder:
 `docs/roles/<name>.md`, where `<name>` is the one in the table. The dispatch brief names the guides
 a task needs, because an agent skips instructions it has to choose to open
 ([operating model](../process/agent-operating-model.md#3-skills-not-agents)), and the worker reads

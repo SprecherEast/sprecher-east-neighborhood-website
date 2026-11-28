@@ -12,6 +12,7 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { Text } from '@/platform/ui/Text'
 
 import { rampAt } from '../../chartPalette'
+import { CHART_BAR_THICKNESS_CLASS } from '../../chartSizes'
 
 import { Amount } from './Amount'
 
@@ -47,7 +48,13 @@ function Bar({
   look: BarLook
 }) {
   const ramp = rampAt(piece.step)
-  const height = look.compact ? (nested ? 'h-1.5' : 'h-2.5') : nested ? 'h-2' : 'h-3.5'
+  const height = look.compact
+    ? nested
+      ? 'h-1.5'
+      : 'h-2.5'
+    : nested
+      ? 'h-2'
+      : CHART_BAR_THICKNESS_CLASS
   const radius = look.compact ? (nested ? 3 : 5) : nested ? 4 : 7
   return (
     <BarTrack

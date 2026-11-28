@@ -4,6 +4,8 @@
 
 - Kind: collection
 - Purpose: Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after it was confirmed, unless they have an account or a message that is still kept (one from the last 12 months, or on hold). To remove an address on request sooner, delete it here.
+- Owner: module `verification`, defined in `src/modules/verification/cms/emailConfirmations.ts`
+- Jobs: `deleteExpiredEmailConfirmations` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 

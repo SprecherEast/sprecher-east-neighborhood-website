@@ -8,10 +8,13 @@
     "enabled",
     "schedule",
     "budgets",
+    "lookAheadDays",
+    "lowWater",
     "sources",
     "coverage",
     "area",
     "safety",
+    "background",
     "stages",
     "escalation",
     "promotionGuard",
@@ -50,10 +53,64 @@
         "maxDraftsPerRun": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
+    "lookAheadDays": {
+      "description": "Days ahead scout reads, for a source that sets no lookAheadDays of its own.",
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 365
+    },
+    "lowWater": {
+      "type": "object",
+      "required": ["upcomingEvents"],
+      "additionalProperties": false,
+      "properties": {
+        "upcomingEvents": {
+          "description": "The run log and digest warn when fewer published upcoming events than this are on the site.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "sources": { "const": "sources.yaml" },
     "coverage": { "const": "coverage.md" },
     "area": { "const": "area.yaml" },
     "safety": { "const": "safety.yaml" },
+    "background": {
+      "description": "The neighborhood background the model stages are given (stage-context.md): a summary always, a topic note only when verify names it, all within one token budget.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "stages", "maxTokens", "topics"],
+      "properties": {
+        "summary": { "type": "string", "pattern": "^background/[a-z-]+\\.md$" },
+        "stages": {
+          "description": "The model stages that get the summary, and any topic notes verify names.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["verify", "curate", "draft"] }
+        },
+        "maxTokens": {
+          "description": "The most the background adds to one stage's message, the summary included (four characters to a token).",
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 20000
+        },
+        "topics": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "file", "covers"],
+            "properties": {
+              "id": { "$ref": "common.schema.json#/$defs/sourceId" },
+              "file": { "type": "string", "pattern": "^background/[a-z-]+\\.md$" },
+              "covers": { "type": "string", "minLength": 1, "maxLength": 200 }
+            }
+          }
+        }
+      }
+    },
     "stages": {
       "type": "array",
       "items": {

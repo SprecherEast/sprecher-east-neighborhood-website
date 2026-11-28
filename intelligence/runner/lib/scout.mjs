@@ -35,6 +35,11 @@ export function keepItem(source, item, namesArea) {
     return /common council/i.test(item.title) || /public hearing/i.test(text) || namesArea(text)
   }
   if (source.id === 'legistar-matters') return namesArea(text)
+  // Other alders' roundups and the park status pages list every district and park: only what
+  // names the area goes on (#995)
+  if (['alder-weekly-roundups', 'door-creek-park-ski', 'door-creek-park-ice'].includes(source.id)) {
+    return namesArea(text)
+  }
   // City news is citywide: only releases that name the area use the run's model budget (#390)
   if (source.id === 'city-news') return namesArea(text)
   // WisDOT's page also lists meetings on other roads (US 12 in Juneau County): a meeting that
@@ -47,12 +52,15 @@ export function keepItem(source, item, namesArea) {
   return true
 }
 
-/** The source's URL with `{from}`, `{to}` and `{cursor}` filled in (scout.md step 1). */
-export function sourceUrl(source, { today, cursor }) {
+/**
+ * The source's URL with `{from}`, `{to}` and `{cursor}` filled in (scout.md step 1). `{to}` is
+ * today plus the source's own `lookAheadDays`, else the default from pipeline.yaml (#995).
+ */
+export function sourceUrl(source, { today, cursor, lookAheadDays }) {
   const template = source.feedUrl ?? source.canonicalUrl
   return template
     .replaceAll('{from}', today)
-    .replaceAll('{to}', addDays(today, 14))
+    .replaceAll('{to}', addDays(today, source.lookAheadDays ?? lookAheadDays))
     .replaceAll('{cursor}', cursor ?? `${addDays(today, -7)}T00:00:00`)
 }
 
@@ -70,7 +78,7 @@ const newestModified = (items) =>
  */
 export async function scoutSource(
   source,
-  { state, http, robots, budgets, validate, area, now = new Date() },
+  { state, http, robots, budgets, validate, area, lookAheadDays, now = new Date() },
 ) {
   const namesArea = areaMatcher(area)
   const check = {
@@ -83,13 +91,18 @@ export async function scoutSource(
   const saved = state.sources[source.id] ?? {}
   if (source.cadence === 'none') return { check, candidates: [], invalid: [] }
   const today = dateIn(now)
-  const url = sourceUrl(source, { today, cursor: saved.cursor })
+  const days = source.lookAheadDays ?? lookAheadDays
+  if (!Number.isInteger(days)) throw new Error(`no look-ahead for ${source.id}`)
+  const url = sourceUrl(source, { today, cursor: saved.cursor, lookAheadDays: days })
   check.fetchStrategy = 'direct'
+  // A list over several pages is always read whole: a change on a later page doesn't change the
+  // first page's ETag
+  const pages = source.pages ?? 1
   const answer = await fetchDirect(url, {
     http,
     robots,
-    etag: saved.etag,
-    lastModified: saved.lastModified,
+    etag: pages === 1 ? saved.etag : undefined,
+    lastModified: pages === 1 ? saved.lastModified : undefined,
   })
   check.status = answer.status
   check.error = answer.error ? String(answer.error).slice(0, 500) : null
@@ -105,10 +118,25 @@ export async function scoutSource(
   const host = new URL(source.canonicalUrl).hostname.replace(/^www\./, '')
   let items
   try {
-    // `base` resolves an HTML page's relative links (#390)
-    items = parse(answer.body, { from: today, host, base: source.canonicalUrl }).filter((item) =>
-      keepItem(source, item, namesArea),
-    )
+    // `base` resolves an HTML page's relative links (#390); `days` is how far a calendar feed's
+    // repeating events are walked (#995)
+    const options = { from: today, host, base: source.canonicalUrl, days }
+    const read = (body) => parse(body, options)
+    let all = read(answer.body)
+    for (let page = 1; page < pages && all.length > 0; page++) {
+      const more = await fetchDirect(url + (url.includes('?') ? '&' : '?') + `page=${page}`, {
+        http,
+        robots,
+      })
+      if (more.status !== 'ok') {
+        check.error = `page ${page + 1}: ${more.error ?? more.status}`.slice(0, 500)
+        break
+      }
+      const found = read(more.body)
+      if (found.length === 0) break
+      all = [...all, ...found]
+    }
+    items = all.filter((item) => keepItem(source, item, namesArea))
   } catch (error) {
     check.status = 'error'
     check.error = `parse failed: ${error.message}`.slice(0, 500)

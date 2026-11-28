@@ -1,0 +1,21 @@
+# Managed by the website repo (ops/caddy/developer-site.caddy, #1459). ops/developer-site.sh fills in the
+# placeholders and writes the result to $PREVIEW_CADDY_DIR/developer.caddy, which the Caddyfile already
+# imports for the pull request previews. Change it in the repo, not on the server.
+#
+# The developer site: static files only, from one folder that holds nothing but the built showcase and the
+# index page (ops/developer-site-check.sh checks it before it is served). No application, no proxy, no
+# form limits (nothing takes a request body), and no HSTS: it never imports ops/caddy/hsts.caddy, as a
+# pull request preview doesn't. The noindex header and the disallow-all robots.txt are the previews' own
+# snippet, so there is one copy; a wrong path gets a 404 page that still answers 404. Caddy gets the
+# certificate for the name by itself when this block loads.
+__DEVELOPER_HOST__ {
+	import __PREVIEW_HEADERS_FILE__
+	root * __DEVELOPER_ROOT__
+	encode zstd gzip
+	file_server
+	handle_errors {
+		import __PREVIEW_HEADERS_FILE__
+		rewrite * /404.html
+		file_server
+	}
+}

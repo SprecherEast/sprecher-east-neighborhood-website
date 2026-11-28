@@ -26,7 +26,9 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
 - **Tests**: Vitest unit tests next to the code (`*.test.ts`, and `*.test.mjs` for the Claude Code hooks in `.claude/hooks/`, #446, the scripts in `scripts/`, #144, and the server scripts in `ops/`, #948), run with `npm test` and in CI (#139). Component tests (`*.test.tsx`) run in jsdom with Testing Library and axe (`expectAccessible` in `src/platform/ui/testing/`). A few tests send real REST and Local API requests to Payload booted on in-memory SQLite (`src/payload.config.protectedFields.test.ts`, #299). End-to-end tests (`e2e/*.spec.ts`, Playwright, #311) walk each account and contact flow on a phone and a desktop, with axe on each step, and `e2e/alignment.spec.ts` (#678) measures a seeded post of awkward cards at six widths and fails if matching parts of cards in a row aren't on one line, or if the legend under a captioned image starts above its caption or isn't as wide as the image (#658): `npx playwright test` starts `e2e/serve.mjs` (a fresh SQLite database, a production build, a local SMTP catcher the tests read links from, no Turnstile keys) and CI runs it as `End-to-end tests` (not required yet; a step decides whether the rest run: always on a push to `main`; on a PR that changes the UI, or the code the suite walks through (the accounts, contact and verification modules, the Payload config, the seed files it imports), unless its description gives a written `End-to-end exemption`; and always when the tests, their workflow or the gate's own rule files change; `.github/scripts/e2e-gate.mjs`, `scripts/ui-change.mjs`, #868). Where `next build` can't reach Google Fonts, `E2E_DEV=1` runs them against `next dev` instead. The passkey flows (`e2e/passkeys.spec.ts`, #1317) run against a second server (`node e2e/serve.mjs passkeys`, port 3997, its own database and mailbox, started by `playwright.config.ts` beside the first): `next dev` with `PASSKEYS_ENABLED=true`, because the production build on http://localhost can't have the switch on (the relying-party rule of decision 0021 refuses localhost in production, and stays as it is). They drive Chromium's virtual authenticator (`e2e/support/passkeys.ts`) on a phone and a desktop; the same server also runs the `sign in` accounts flows with the switch on. Its site-wide sign-up limit (20 an hour) caps how many tests may sign up there. The email field's autofill list isn't walked: the virtual device answers it at once, so the tests press "Log in with a passkey" instead, and autofill still needs a manual check on a real device. The run's build replaces `.next`, so build again before a local `npm start`
 - **Unused code**: knip (`npm run knip`, config in `knip.jsonc`) finds files, exports and packages nothing uses; CI runs it on every PR (`Unused code (knip)`, not required yet, #445). A module's entry files are its contract, so their exports aren't reported
 - **Duplicate code**: jscpd 4.3.0 (`npm run duplication`, config and ignore list in `.jscpd.json`) fails on a repeated block of 12 lines or more (and at least 30 tokens, so a run of blank or one-word lines isn't counted) in `src`, `intelligence`, `ops` (shell scripts too) and `scripts` (tests, migrations, seed, generated files, the gallery and `src/app/(payload)/`, which Payload generates and rewrites, are ignored; the last clones came down in #622, under #614); CI runs it on every PR (`Duplicate code (jscpd)`, not required yet, #611). The pure-JavaScript 4.x line is used on purpose, not 5.x, which is a prebuilt Rust binary
-- **Generated reference** (#714): `npm run docs:generate` loads the Payload config (no database, no server; `tsx` resolves the `@payload-config` alias) and writes one page per collection and global to `docs/reference/content-types/`: fields, access per operation, hooks by phase, drafts, with the file each function lives in. `npm run docs:check` regenerates in memory and fails on any difference; CI runs it as `Knowledge sync` (required). Never edit those pages by hand. The code is in `scripts/generate-reference.mjs`, `scripts/content-types/` and `scripts/reference/`
+- **Knowledge note structure** (#1460): `npm run knowledge:structure` holds every note listed in `docs/knowledge/map.json` to `docs/knowledge/note-schema.json` (front matter, sections, paths, cap, index lines, code a note covers) and fails on any finding; CI runs it in `Knowledge sync` (required). `-- --write-index` rewrites the index lines, `-- --skeleton <type>` prints a new note. The code is in `scripts/knowledge-structure/`; why: decision 0022
+- **System map data** (#1462): `npm run knowledge:map` scans every note, the generated reference, the skills, rules, workflows and scheduled tasks, and writes `docs/knowledge/graph.json` and `docs/knowledge/catalog.md`, which are build output: git ignores them and nothing commits them (#1581), so a pull request never carries map data. The graph holds typed nodes and relationships on layers, with each node's fields, path and watch-outs; every node but the site has exactly one `contains` parent, and the run fails naming a node that has none; a screen's `module` is the module that holds it, the one most screens under its first address segment import, while its `uses` relationships name every module it imports; a note listed in `map.json` whose file is missing is a gap. The catalog is the same, grouped, read on demand. `-- --check` only runs the scan and fails on scan errors, never comparing against a file: CI runs it in `Knowledge sync`; whatever needs the data (the map page build, #1463) runs the command first. `-- --extras` writes the change history and the dated open-issue snapshot to `.knowledge-map/` (never committed). The code is in `scripts/knowledge-map/`
+- **Generated reference** (#714): `npm run docs:generate` loads the Payload config (no database, no server; `tsx` resolves the `@payload-config` alias) and writes one page per collection and global to `docs/reference/content-types/`: fields, access per operation, hooks by phase, drafts, with the file each function lives in. `npm run docs:check` regenerates in memory and fails on any difference; CI runs it as `Knowledge sync` (required). Never edit those pages by hand. The code is in `scripts/generate-reference.mjs`, `scripts/content-types/` and `scripts/reference/`. The same command writes `docs/reference/endpoints.md` (route files, Payload Admin, server actions, the REST and GraphQL APIs, custom endpoints, the MCP endpoint), `mcp-tools.md` (each AI agent tool, its input, the collections it reaches and whether access is checked) and `jobs.md` (job tasks and runners, timed GitHub workflows, the server cron, the intelligence pipeline's schedule setting, Dependabot) (#1461), and each content-type page names its owning module. Scheduled tasks that live outside the repository are written by hand in `docs/knowledge/scheduled-tasks.md`
 - **Rich Text**: Lexical editor with slash menu, toolbars, inline images, and custom blocks
 - **Icons**: Lucide React
 - **Payload docs for agents**: https://payloadcms.com/llms-full.txt (the whole Payload documentation in one file)
@@ -53,6 +55,9 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
   Caddy exposes it (`ops/install-umami.sh`, #948, steps in [`ops/umami/README.md`](../ops/umami/README.md))
 - **Backups**: daily, weekly and pre-deploy archives of the database, media and `.env.local` in
   `/var/backups/sprecher-east` (#148); restore steps in [`ops/README.md`](../ops/README.md)
+- **Off-site backup**: weekly, the newest daily archive sealed to the owner's public key and uploaded to
+  Google Drive with rclone, once the public key and the secret `OFFSITE_BACKUP_RCLONE_CONF` exist (#1332;
+  how it works, the signal, restore: [`ops/offsite-backup.md`](../ops/offsite-backup.md))
 - **Hostinger API**: Use `$HOSTINGER_API_KEY` env var for snapshots and management
   - API base: `https://developers.hostinger.com`
   - Snapshot endpoint: `POST /api/vps/v1/virtual-machines/1371281/snapshot`
@@ -67,6 +72,16 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
   to false in the repository settings
 - **Caddy config**: `/etc/caddy/Caddyfile`. Rules for editing it (never overwrite, back up,
   validate) are in [`guidelines/security.md`](guidelines/security.md#infrastructure-security)
+- **Developer site** (#1459, #1530): `dev.sprechereast.com` serves the developer pages for the people building the
+  site: the developer home page at `/`, the component showcase at `/showcase/` and, until #1541 removes it, the
+  Storybook showcase at `/storybook/` (the system map, #1446, joins them). The pages are a second small Next.js
+  project in `developer/` that exports plain files (`npm run developer:build`), built from the site's UI kit and
+  theme; the site's own app holds no route for them. The files are in `/var/www/sprecher-east-developer`, served by
+  the same Caddy through one block (`/etc/caddy/previews/developer.caddy`), open to everyone without sign-in and kept
+  out of search engines; no app, database or secret is behind it. The production deploy builds them into each
+  release and publishes them after the release is live, and a failure there never fails or rolls back the deploy
+  ([`ops/developer-site.md`](../ops/developer-site.md)). A pull request preview never serves the developer pages; one
+  that changes the Storybook showcase gets its own copy at `/showcase/index.html` ([`ops/developer-site.md`](../ops/developer-site.md#the-storybook-showcase-in-a-preview-1459))
 - **Live domains**: `sprechereast.com` (HTTPS), `www.sprechereast.com` (redirects to it). The
   domain sends HSTS (`max-age` in `ops/caddy/hsts.caddy`, rolled out in stages; no
   `includeSubDomains` or `preload`), and plain HTTP to the IP on port 80 redirects to
@@ -87,7 +102,7 @@ generated files) are listed in [`architecture/`](architecture/README.md#exceptio
 ```
 src/
   app/                 Next.js App Router: routes and composition only
-    (frontend)/        Public routes (home, posts, events, faq, resources, search, login, account)
+    (frontend)/        Public routes (home, posts, events, faq, resources, roadmap, search, sign-up, login, account), the component gallery (`dev/`)
     (payload)/         Payload admin and API routes (generated; leave alone)
   modules/             One folder per business area
     accounts/          Who is signed in, sign-in and password flows, the users collection
@@ -98,12 +113,15 @@ src/
     news/              Posts, categories, search
     roadmap/           The public plan page, read from GitHub
     site/              CMS pages, page-builder blocks, heroes, header, footer, redirects, link groups
+    verification/      Email confirmation by link, its collection and retention
   platform/            Shared by every module; imports no module
+    analytics/         The Umami visit counter and the likely-human-click event
     email/             SMTP settings for password-reset and form emails
     lib/               Pure helpers: paging, roles, dates and the site timezone, URLs, `cn`
     payload/           Role checks, access functions, media collection, link field, default editor, publishedAt hook, admin components
     richtext/          The `RichText` renderer, the blocks inside rich text, plain-text conversion
     seo/               Page metadata and Open Graph helpers
+    service/           `runUseCase` and `runAction`, the wrapper every use case and action runs in
     theme/             The theme contract (`tokens.ts`), its Tailwind mapping, theme options and decorations, light and dark mode providers
     turnstile/         The robot check (Cloudflare Turnstile): widget and server verifier
     ui/                The UI kit: `Button`, `Link`, `Media`, `LinkButton`, `JsonLd`, `Breadcrumbs`, `LoadMore`…

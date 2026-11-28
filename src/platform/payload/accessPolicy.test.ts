@@ -112,19 +112,30 @@ describe('collections', () => {
 
   // A noindex header only asks search engines (#280): this is what keeps the data private. The
   // REST API runs these same functions for `GET /api/<slug>` and `GET /api/<slug>/<id>`
-  it.each(['users', 'form-submissions', 'email-confirmations', 'payload-jobs', 'redirects'])(
-    'refuse anonymous reads of %s, as a list or one document',
-    async (slug) => {
-      const collection = config.collections.find((c) => c.slug === slug)
-      expect(collection).toBeDefined()
-      expect(await allows(collection?.access.read, 'visitor')).toBe(false)
-      expect(await allows(collection?.access.read, 'visitor', 1)).toBe(false)
-    },
-  )
+  it.each([
+    'users',
+    'form-submissions',
+    'email-confirmations',
+    'payload-jobs',
+    'redirects',
+    'oauth-clients',
+    'oauth-tokens',
+  ])('refuse anonymous reads of %s, as a list or one document', async (slug) => {
+    const collection = config.collections.find((c) => c.slug === slug)
+    expect(collection).toBeDefined()
+    expect(await allows(collection?.access.read, 'visitor')).toBe(false)
+    expect(await allows(collection?.access.read, 'visitor', 1)).toBe(false)
+  })
 
   it('keep agents out of accounts, messages, the admin panel and content changes (#336)', async () => {
     const find = (slug: string) => config.collections.find((c) => c.slug === slug)
-    for (const slug of ['users', 'form-submissions', 'payload-mcp-api-keys']) {
+    for (const slug of [
+      'users',
+      'form-submissions',
+      'payload-mcp-api-keys',
+      'oauth-clients',
+      'oauth-tokens',
+    ]) {
       expect(await allows(find(slug)?.access.read, 'agent')).toBe(false)
     }
     for (const slug of ['events', 'posts']) {
@@ -206,6 +217,9 @@ describe('collections', () => {
       'passkey-challenges',
       // Server-only: what Google said while a neighbor enters a password (#1338)
       'social-link-requests',
+      // Admin-only in every operation: AI tools allowed to sign in, and what they were issued (#1501)
+      'oauth-clients',
+      'oauth-tokens',
       'payload-kv',
     ])
     const unreviewed = config.collections

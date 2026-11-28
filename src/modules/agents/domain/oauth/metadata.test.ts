@@ -1,0 +1,113 @@
+import { describe, expect, it } from 'vitest'
+
+import { SCOPES } from '../scopes'
+import { DISCOVERY_HEADERS } from './constants'
+import {
+  authorizationServerMetadata,
+  bearerChallenge,
+  discoveryResponse,
+  insufficientScopeChallenge,
+  protectedResourceMetadata,
+} from './metadata'
+
+const ORIGIN = 'https://sprechereast.com'
+
+describe('protectedResourceMetadata (RFC 9728)', () => {
+  const doc = protectedResourceMetadata(ORIGIN)
+
+  it('names the MCP address exactly as the audience check does', () => {
+    expect(doc.resource).toBe('https://sprechereast.com/api/mcp')
+  })
+
+  it('lists this site as the one authorization server (Claude reads only the first)', () => {
+    expect(doc.authorization_servers).toEqual([ORIGIN])
+  })
+
+  it('takes bearer tokens in the header only, never in the query', () => {
+    expect(doc.bearer_methods_supported).toEqual(['header'])
+  })
+
+  it('does not double a trailing slash of the origin', () => {
+    expect(protectedResourceMetadata(`${ORIGIN}/`).authorization_servers).toEqual([ORIGIN])
+  })
+})
+
+describe('authorizationServerMetadata (RFC 8414)', () => {
+  const doc = authorizationServerMetadata(ORIGIN)
+
+  it('uses the origin as its issuer and points at our own addresses', () => {
+    expect(doc.issuer).toBe(ORIGIN)
+    expect(doc.authorization_endpoint).toBe(`${ORIGIN}/oauth/authorize`)
+    expect(doc.token_endpoint).toBe(`${ORIGIN}/oauth/token`)
+  })
+
+  it('says the redirect back carries the issuer, as RFC 9207 asks of a server that sends it', () => {
+    expect(doc.authorization_response_iss_parameter_supported).toBe(true)
+  })
+
+  it('offers PKCE S256 and nothing weaker', () => {
+    expect(doc.code_challenge_methods_supported).toEqual(['S256'])
+  })
+
+  it('offers the code and refresh grants only, with no secret-less implicit or client credentials', () => {
+    expect(doc.response_types_supported).toEqual(['code'])
+    expect(doc.grant_types_supported).toEqual(['authorization_code', 'refresh_token'])
+  })
+
+  it('has no open registration', () => {
+    expect(doc).not.toHaveProperty('registration_endpoint')
+  })
+
+  it('has public clients only', () => {
+    expect(doc.token_endpoint_auth_methods_supported).toEqual(['none'])
+  })
+})
+
+describe('scopes advertised', () => {
+  it('lists every scope in both documents, so a standard client can ask for them; the record decides', () => {
+    expect(protectedResourceMetadata(ORIGIN).scopes_supported).toEqual([...SCOPES])
+    expect(authorizationServerMetadata(ORIGIN).scopes_supported).toEqual([...SCOPES])
+    expect(SCOPES).toContain('suggest')
+  })
+})
+
+describe('insufficientScopeChallenge', () => {
+  it('names the error, the scope the call needs and where to sign in (MCP, scope challenge)', () => {
+    expect(insufficientScopeChallenge(ORIGIN, 'suggest')).toBe(
+      'Bearer error="insufficient_scope", scope="suggest", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+    )
+  })
+})
+
+describe('bearerChallenge', () => {
+  it('names every scope and points at the protected-resource metadata for the MCP address', () => {
+    expect(bearerChallenge(ORIGIN)).toBe(
+      'Bearer scope="read suggest", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+    )
+  })
+})
+
+describe('an origin configured with a trailing slash', () => {
+  // The issuer here and the `iss` on every redirect back (`getOAuthContext`) are compared by the
+  // client, so both are spelled from `siteOrigin` and neither may keep the slash
+  const slashed = `${ORIGIN}/`
+
+  it('gives the same issuer and addresses as one without', () => {
+    expect(authorizationServerMetadata(slashed)).toEqual(authorizationServerMetadata(ORIGIN))
+    expect(authorizationServerMetadata(slashed).issuer).toBe(ORIGIN)
+  })
+
+  it('gives the same challenge and authorization server as one without', () => {
+    expect(bearerChallenge(slashed)).toBe(bearerChallenge(ORIGIN))
+    expect(protectedResourceMetadata(slashed)).toEqual(protectedResourceMetadata(ORIGIN))
+  })
+})
+
+describe('discoveryResponse', () => {
+  it('is the document as public JSON that any client may read and cache', async () => {
+    const response = discoveryResponse({ a: 1 })
+    expect(await response.json()).toEqual({ a: 1 })
+    expect(response.headers.get('cache-control')).toBe(DISCOVERY_HEADERS['Cache-Control'])
+    expect(response.headers.get('access-control-allow-origin')).toBe('*')
+  })
+})

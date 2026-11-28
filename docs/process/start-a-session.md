@@ -37,6 +37,11 @@ yet, so the chief of staff agent is not registered until they reload. Then:
 3. Before filing an issue or opening a pull request, read the [filing checklist](filing-checklist.md),
    in a task session too.
 
+Several sessions and tools may steer the work at once, with GitHub as the one record: the session
+that manages workers [looks for changes made elsewhere](../../.agents/skills/chief-of-staff/SKILL.md#8-look-for-changes-made-elsewhere)
+before it plans or acts, and any other session writes each decision and new piece of work on its
+GitHub task before ending its turn.
+
 An instruction helps only if the tool reads it; the checks stay the safety net.
 
 ## Chat apps (ChatGPT, Gemini, Grok on the web)

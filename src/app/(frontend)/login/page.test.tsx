@@ -14,8 +14,16 @@ vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
   arePasskeysOn: mocks.arePasskeysOn,
   getEnabledSocialProviders: () => [],
-  SignInForm: ({ passkeys, social }: { passkeys?: boolean; social?: React.ReactNode }) => (
-    <form aria-label="Log in" data-passkeys={String(passkeys)}>
+  SignInForm: ({
+    passkeys,
+    social,
+    returnTo,
+  }: {
+    passkeys?: boolean
+    social?: React.ReactNode
+    returnTo?: string
+  }) => (
+    <form aria-label="Log in" data-passkeys={String(passkeys)} data-return={returnTo}>
       {social}
     </form>
   ),
@@ -25,6 +33,7 @@ vi.mock('@/modules/accounts/server', () => ({
   ),
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
+// The agents module's own entry holds only types and pure rules, so the real one is used
 
 import LoginPage from './page'
 
@@ -40,6 +49,33 @@ describe('/login', () => {
   it('sends a signed-in user to their account', async () => {
     mocks.getCurrentUser.mockResolvedValue({ id: 7, email: 'a@example.com', name: null })
     await expect(LoginPage(page())).rejects.toThrow('NEXT_REDIRECT /account')
+  })
+
+  const APPROVE = '/oauth/approve?client_id=mcp_a&state=s'
+
+  it('takes a visitor back to the connection approval after logging in, and a signed-in one now', async () => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page({ next: APPROVE })))
+    expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-return')).toBe(APPROVE)
+    cleanup()
+    mocks.getCurrentUser.mockResolvedValue({ id: 7, email: 'a@example.com', name: null })
+    await expect(LoginPage(page({ next: APPROVE }))).rejects.toThrow(`NEXT_REDIRECT ${APPROVE}`)
+  })
+
+  it.each([
+    'https://evil.example/oauth/approve',
+    '//evil.example/oauth/approve',
+    '/account',
+    '/\\evil.example',
+  ])('is never an open redirect: %s goes to the account', async (next) => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page({ next })))
+    expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-return')).toBe(
+      '/account',
+    )
+    cleanup()
+    mocks.getCurrentUser.mockResolvedValue({ id: 7, email: 'a@example.com', name: null })
+    await expect(LoginPage(page({ next }))).rejects.toThrow('NEXT_REDIRECT /account')
   })
 
   it('shows a visitor the sign-in form', async () => {
