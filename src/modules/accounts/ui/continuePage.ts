@@ -1,9 +1,10 @@
 /**
  * The page the sign-in callback answers once the person is signed in (#188): it sends them on to
  * `path` itself, rather than with a redirect. The provider sent the browser back with a cross-site
- * navigation, and a redirect would carry that on, so the next page's request would count as
- * cross-site and Payload's CSRF check would ignore the new sign-in cookie. A page on this site
- * that moves on (a meta refresh, or the link) makes the next request same-origin. No script.
+ * navigation, and a redirect would carry that on. A page on this site that moves on (a meta
+ * refresh, or the link) makes the next request same-origin, so no cross-site rule, Payload's or
+ * ours, can drop the new sign-in. (Up to Payload 3.91, Payload's CSRF check ignored the cookie on
+ * a cross-site visit, the page's first reason; from 3.94 it accepts it.) No script.
  * `path` is one of the module's own paths, never input.
  */
 export function continuePage(path: string): Response {
