@@ -3,9 +3,12 @@
  * The system map scanner (#1462).
  *
  *   npm run knowledge:map                  write docs/knowledge/graph.json and docs/knowledge/catalog.md
- *   npm run knowledge:map -- --check       fail when the committed files are not what the sources give
+ *   npm run knowledge:map -- --check       scan only and fail on scan errors; writes and compares nothing
  *   npm run knowledge:map -- --extras      write the change history and the open-issue snapshot to
  *                                          .knowledge-map/ (read by the map page; never committed)
+ *
+ * The two map files are build output, not committed (#1581): they are ignored by git, and CI runs
+ * `--check`, which only proves the scan succeeds.
  *
  * Run through `tsx`, as `npm run docs:generate` is, because it loads the Payload config. Same inputs,
  * same files, byte for byte: nothing here reads the clock, the network or git history, except
@@ -22,7 +25,6 @@ import { scanGraph } from './scan.mjs'
 
 export const GRAPH_FILE = 'docs/knowledge/graph.json'
 export const CATALOG_FILE = 'docs/knowledge/catalog.md'
-const COMMAND = 'npm run knowledge:map'
 
 /** The two generated files as text, formatted the way the repository's Prettier formats them. */
 export async function renderOutputs(graph, root) {
@@ -32,11 +34,6 @@ export async function renderOutputs(graph, root) {
     [GRAPH_FILE]: await format(JSON.stringify(graph), 'json'),
     [CATALOG_FILE]: await format(renderCatalog(graph), 'markdown'),
   }
-}
-
-const readIfThere = (root, file) => {
-  const full = path.join(root, file)
-  return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : null
 }
 
 function printGaps(graph, log) {
@@ -54,7 +51,7 @@ function printGaps(graph, log) {
  */
 export async function execute({ argv, root, load, log = console.log, run = runCommand, date }) {
   if (argv.includes('--extras')) {
-    const graph = JSON.parse(readIfThere(root, GRAPH_FILE) ?? '{"nodes":[]}')
+    const { graph } = scanGraph(await load(root))
     const result = writeExtras({
       root,
       graph,
@@ -73,17 +70,13 @@ export async function execute({ argv, root, load, log = console.log, run = runCo
     return 1
   }
   printGaps(graph, log)
-  const outputs = await renderOutputs(graph, root)
   if (argv.includes('--check')) {
-    const stale = Object.keys(outputs).filter((file) => readIfThere(root, file) !== outputs[file])
-    for (const file of stale)
-      log(`${file} is out of date: run \`${COMMAND}\` and commit the result.`)
-    if (stale.length === 0)
-      log(
-        `The system map data is current (${graph.nodes.length} nodes, ${graph.edges.length} relationships).`,
-      )
-    return stale.length === 0 ? 0 : 1
+    log(
+      `The system map scan succeeded (${graph.nodes.length} nodes, ${graph.edges.length} relationships).`,
+    )
+    return 0
   }
+  const outputs = await renderOutputs(graph, root)
   for (const [file, text] of Object.entries(outputs)) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
     fs.writeFileSync(path.join(root, file), text)
