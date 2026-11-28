@@ -22,15 +22,8 @@ import { fileURLToPath } from 'node:url'
 import { Tiktoken } from 'js-tiktoken/lite'
 import o200kBase from 'js-tiktoken/ranks/o200k_base'
 
+import { globToRegExp, parseKnowledgeMap, parseLoadMap } from './agent-context-maps.mjs'
 import {
-  KNOWLEDGE_MAP,
-  LOAD_MAP,
-  globToRegExp,
-  parseKnowledgeMap,
-  parseLoadMap,
-} from './agent-context-maps.mjs'
-import {
-  GENERATED_DIR,
   buildRules,
   readFile,
   renderRule,
@@ -42,8 +35,8 @@ import {
 import { frontmatterText } from './frontmatter.mjs'
 
 // The parsers live in a module with no packages, so `PR Policy` can import them (#737)
-export { KNOWLEDGE_MAP, LOAD_MAP, globToRegExp, parseKnowledgeMap, parseLoadMap }
-export { GENERATED_DIR, renderRule, rootLinks, ruleName }
+export { globToRegExp, parseKnowledgeMap, parseLoadMap }
+export { renderRule, rootLinks, ruleName }
 
 /**
  * The most tokens that session start may load (#737, #799). It keeps what every session pays for
