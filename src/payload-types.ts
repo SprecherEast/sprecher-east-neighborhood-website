@@ -83,6 +83,8 @@ export interface Config {
     'email-confirmations': EmailConfirmation
     'agent-runs': AgentRun
     'agent-review-items': AgentReviewItem
+    'oauth-clients': OauthClient
+    'oauth-tokens': OauthToken
     redirects: Redirect
     forms: Form
     'form-submissions': FormSubmission
@@ -119,6 +121,8 @@ export interface Config {
     'email-confirmations': EmailConfirmationsSelect<false> | EmailConfirmationsSelect<true>
     'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>
     'agent-review-items': AgentReviewItemsSelect<false> | AgentReviewItemsSelect<true>
+    'oauth-clients': OauthClientsSelect<false> | OauthClientsSelect<true>
+    'oauth-tokens': OauthTokensSelect<false> | OauthTokensSelect<true>
     redirects: RedirectsSelect<false> | RedirectsSelect<true>
     forms: FormsSelect<false> | FormsSelect<true>
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>
@@ -1444,6 +1448,64 @@ export interface AgentReviewItem {
   createdAt: string
 }
 /**
+ * AI tools that may sign in to the AI agent address. Give the tool the client ID; no secret is used.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oauth-clients".
+ */
+export interface OauthClient {
+  id: number
+  /**
+   * Shown to the admin who approves the connection.
+   */
+  name: string
+  /**
+   * Made when you save. Paste it into the AI tool.
+   */
+  clientId?: string | null
+  /**
+   * The agent account this tool acts as. Its role limits what it can do.
+   */
+  agent: number | User
+  /**
+   * The only addresses a sign-in may return to, written in full.
+   */
+  redirectUris: {
+    uri: string
+    id?: string | null
+  }[]
+  /**
+   * Untick to stop this tool at once: its tokens stop working.
+   */
+  enabled?: boolean | null
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * Sign-ins of AI tools, stored as hashes. Set "Revoked at" on any row to sign that tool out.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oauth-tokens".
+ */
+export interface OauthToken {
+  id: number
+  kind: 'code' | 'access' | 'refresh'
+  tokenHash: string
+  family: string
+  client: number | OauthClient
+  agent: number | User
+  consentedBy?: (number | null) | User
+  resource: string
+  scope?: string | null
+  expiresAt: string
+  usedAt?: string | null
+  revokedAt?: string | null
+  redirectUri?: string | null
+  codeChallenge?: string | null
+  updatedAt: string
+  createdAt: string
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1819,6 +1881,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'agent-review-items'
         value: number | AgentReviewItem
+      } | null)
+    | ({
+        relationTo: 'oauth-clients'
+        value: number | OauthClient
+      } | null)
+    | ({
+        relationTo: 'oauth-tokens'
+        value: number | OauthToken
       } | null)
     | ({
         relationTo: 'redirects'
@@ -2555,6 +2625,45 @@ export interface AgentReviewItemsSelect<T extends boolean = true> {
       }
   flags?: T
   sourceUrl?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oauth-clients_select".
+ */
+export interface OauthClientsSelect<T extends boolean = true> {
+  name?: T
+  clientId?: T
+  agent?: T
+  redirectUris?:
+    | T
+    | {
+        uri?: T
+        id?: T
+      }
+  enabled?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oauth-tokens_select".
+ */
+export interface OauthTokensSelect<T extends boolean = true> {
+  kind?: T
+  tokenHash?: T
+  family?: T
+  client?: T
+  agent?: T
+  consentedBy?: T
+  resource?: T
+  scope?: T
+  expiresAt?: T
+  usedAt?: T
+  revokedAt?: T
+  redirectUri?: T
+  codeChallenge?: T
   updatedAt?: T
   createdAt?: T
 }

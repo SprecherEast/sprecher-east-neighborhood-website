@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { useConfirmedEmail } from '@/platform/ui/ConfirmedEmail.client'
 import { Button, Link } from '@/platform/ui'
+import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Card } from '@/platform/ui/Card'
 
 import { SIGN_UP_PATH } from '../domain/paths'
@@ -51,7 +52,7 @@ export function AccountOffer() {
         It’s optional. You’ll choose a password, and we’ll send one more email to confirm the
         account.
       </p>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <ButtonRow>
         <Button href={toSignUpHref(email)} iconStart={<UserPlus aria-hidden />} fullWidth="mobile">
           Yes, Create an Account
         </Button>
@@ -63,7 +64,7 @@ export function AccountOffer() {
         >
           No, Thanks
         </Button>
-      </div>
+      </ButtonRow>
     </Card>
   )
 }

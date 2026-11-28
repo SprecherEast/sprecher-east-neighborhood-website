@@ -678,8 +678,8 @@
     {
       "id": "business-rule:src/modules/accounts/README.md#17",
       "type": "business-rule",
-      "name": "**No other site frames the sign-in pages:** `/account`, `/login` and…",
-      "summary": "**No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).",
+      "name": "**No other site frames the sign-in pages:** `/account`, `/login`,…",
+      "summary": "**No other site frames the sign-in pages:** `/account`, `/login`, `/auth/:provider/connect` and the two OAuth pages (`/oauth/authorize`, `/oauth/approve`, #1501) send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).",
       "path": "src/app/apiHeaders.test.ts",
       "module": "module:accounts",
       "aliases": [],
@@ -870,6 +870,80 @@
       ]
     },
     {
+      "id": "business-rule:src/modules/agents/README.md#10",
+      "type": "business-rule",
+      "name": "**`@node-oauth/oauth2-server` runs the protocol; our layer stores…",
+      "summary": "**`@node-oauth/oauth2-server` runs the protocol; our layer stores only HMACs** in two admin-only collections. A code is spent by its first try, even a failed one, a refresh token is replaced on each use, and a reused one, or two at once, ends its whole family: the revocation is one `UPDATE`, saving looks at the family before and after, and every use checks it, so the request that got in first is cut off too (`data/oauth/model.ts`, `credentials.ts`; `use-cases/oauth/race.payload.test.ts`, `renewal.payload.test.ts`).",
+      "path": "src/modules/agents/use-cases/oauth/race.payload.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/agents/use-cases/oauth/race.payload.test.ts",
+        "src/modules/agents/use-cases/oauth/renewal.payload.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#11",
+      "type": "business-rule",
+      "name": "**`/oauth/token` takes only the code and refresh grants,** 30…",
+      "summary": "**`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, a body read no further than 8 KB as it arrives, a field sent twice refused with `invalid_request` (any field name counts as a field, `constructor` included), and an access token lasts an hour, with every refusal, including the route's early ones, built by one `tokenError` and never cached (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/tokenAnswer.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).",
+      "path": "src/app/(frontend)/oauth/token/route.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/app/(frontend)/oauth/token/route.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#12",
+      "type": "business-rule",
+      "name": "**Every `/api/mcp` call with an access token (prefix `sea_`, in the…",
+      "summary": "**Every `/api/mcp` call with an access token (prefix `sea_`, in the `Authorization` header whatever the case of `Bearer`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting \"Revoked at\" on a token (its family goes with it, and it cannot be cleared again), switching the client off or deleting it; moving a client to another agent account revokes its tokens (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).",
+      "path": "src/modules/agents/cms/oauth/mcpOAuth.payload.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/agents/cms/oauth/mcpOAuth.payload.test.ts",
+        "src/app/wellKnownRewrites.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#13",
+      "type": "business-rule",
+      "name": "**A run belongs to its agent:** the `agent` of a run and of a review…",
+      "summary": "**A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is \"not found\") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).",
+      "path": "src/payload.config.agentAccess.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.agentAccess.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#14",
+      "type": "business-rule",
+      "name": "**Reports never overwrite each other:** each adds one document under…",
+      "summary": "**Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).",
+      "path": "src/payload.config.agentTools.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/payload.config.agentTools.test.ts",
+        "src/payload.config.agentMigration.test.ts"
+      ]
+    },
+    {
       "id": "business-rule:src/modules/agents/README.md#2",
       "type": "business-rule",
       "name": "**An agent never publishes or changes content:** over MCP it finds…",
@@ -956,31 +1030,32 @@
     {
       "id": "business-rule:src/modules/agents/README.md#8",
       "type": "business-rule",
-      "name": "**A run belongs to its agent:** the `agent` of a run and of a review…",
-      "summary": "**A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is \"not found\") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).",
-      "path": "src/payload.config.agentAccess.test.ts",
-      "module": "module:agents",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/payload.config.agentAccess.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/agents/README.md#9",
-      "type": "business-rule",
-      "name": "**Reports never overwrite each other:** each adds one document under…",
-      "summary": "**Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).",
-      "path": "src/payload.config.agentTools.test.ts",
+      "name": "**An AI tool signs in with OAuth, and only an admin can allow it:**…",
+      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which, like `/oauth/authorize`, sends `frame-ancestors 'none'` (`NO_FRAMING_PATHS`), so no site can frame it, a sibling subdomain included. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from this site, so Payload reads the session (it does so for a same-origin or same-site request); a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection. The Allow and Don't allow buttons are a form whose server action (`decideConnectionForm` in `actions.ts`) carries the request and ticket (bound once, in the server component `ConsentCard`; binding it in the client component hangs the render of a refusal before hydration), each button submitting its own choice, so a press before the page has hydrated still works (the approval page's referrer policy is `same-origin`, because a form posted before hydration under `no-referrer` carries `Origin: null`, which Next refuses); the first page's way on is a plain link, which does too (`ui/ConsentCard.tsx`, `ui/ConsentButtons.client.tsx`, `ui/ConnectionCard.tsx`; `src/modules/agents/actions.test.ts`). A request or approval that can't be trusted gets one wording on the site, and an error that goes back to the tool keeps its name only when it is a standard OAuth one (`OAUTH_ERROR_NAMES`); any other is answered as `server_error` (`domain/oauth/constants.ts`).",
+      "path": "src/app/(frontend)/oauth/connection.payload.test.tsx",
       "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/payload.config.agentTools.test.ts",
-        "src/payload.config.agentMigration.test.ts"
+        "src/app/(frontend)/oauth/connection.payload.test.tsx",
+        "src/app/apiHeaders.test.ts",
+        "src/modules/agents/actions.test.ts"
       ]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#9",
+      "type": "business-rule",
+      "name": "**A code goes only to an address registered in full:** redirect…",
+      "summary": "**A code goes only to an address registered in full:** redirect addresses match exactly (a loopback `http` address may choose its port), PKCE S256, a state and the MCP address as `resource` are required, and the approval carries a signed, expiring ticket for that admin and request (`domain/oauth/redirectUri.ts`, `authorizeRequest.ts`, `consent.ts`; their tests).",
+      "path": "src/modules/agents/README.md",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
     },
     {
       "id": "business-rule:src/modules/contact/README.md#1",
@@ -1947,7 +2022,7 @@
       "id": "business-rule:src/platform/lib/README.md#12",
       "type": "business-rule",
       "name": "Cursors and paging",
-      "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.",
+      "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`; bounded bodies: `readLimitedBody.test.ts`.",
       "path": "src/platform/lib/cursor.test.ts",
       "module": "platform-area:lib",
       "aliases": [],
@@ -1959,7 +2034,8 @@
         "src/platform/lib/paging.test.ts",
         "src/platform/lib/reviewQueue.test.ts",
         "src/platform/lib/retention.test.ts",
-        "src/platform/lib/slidingWindow.test.ts"
+        "src/platform/lib/slidingWindow.test.ts",
+        "src/platform/lib/readLimitedBody.test.ts"
       ]
     },
     {
@@ -2096,6 +2172,19 @@
       ]
     },
     {
+      "id": "business-rule:src/platform/payload/README.md#10",
+      "type": "business-rule",
+      "name": "**The busy timeout needs no transactions:**…",
+      "summary": "**The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.",
+      "path": "src/payload.config.busyTimeout.test.ts",
+      "module": "platform-area:payload",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.busyTimeout.test.ts", "ops/migrate-retry.test.mjs"]
+    },
+    {
       "id": "business-rule:src/platform/payload/README.md#2",
       "type": "business-rule",
       "name": "**Public lists never show drafts:** `PUBLISHED` filters on `_status`…",
@@ -2163,6 +2252,19 @@
     {
       "id": "business-rule:src/platform/payload/README.md#6",
       "type": "business-rule",
+      "name": "**`testing/mcpRequest.ts` sends MCP calls to `/api/mcp`** with an API…",
+      "summary": "**`testing/mcpRequest.ts` sends MCP calls to `/api/mcp`** with an API key, an OAuth access token or none, and returns the status, headers and body (`src/modules/agents/use-cases/oauth/signIn.payload.test.ts`).",
+      "path": "src/modules/agents/use-cases/oauth/signIn.payload.test.ts",
+      "module": "platform-area:payload",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/agents/use-cases/oauth/signIn.payload.test.ts"]
+    },
+    {
+      "id": "business-rule:src/platform/payload/README.md#7",
+      "type": "business-rule",
       "name": "**A fact tab's label stops at one short limit** so it fits its button…",
       "summary": "**A fact tab's label stops at one short limit** so it fits its button (`src/payload.config.factTabs.test.ts`, `testing/factTabsRequests.ts`).",
       "path": "src/payload.config.factTabs.test.ts",
@@ -2174,7 +2276,7 @@
       "links": ["src/payload.config.factTabs.test.ts"]
     },
     {
-      "id": "business-rule:src/platform/payload/README.md#7",
+      "id": "business-rule:src/platform/payload/README.md#8",
       "type": "business-rule",
       "name": "**Links, paging, cursors:** `resolveLink.test.ts`,…",
       "summary": "**Links, paging, cursors:** `resolveLink.test.ts`, `documentHref.test.ts`, `keyset.test.ts`, `src/platform/lib/cursor.test.ts`.",
@@ -2192,7 +2294,7 @@
       ]
     },
     {
-      "id": "business-rule:src/platform/payload/README.md#8",
+      "id": "business-rule:src/platform/payload/README.md#9",
       "type": "business-rule",
       "name": "**A migrated database keeps the schema's delete rules:**…",
       "summary": "**A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it; the migration's `up`, `down` and refusals are in `src/payload.config.deleteRulesMigration.test.ts` and `src/payload.config.deleteRulesGuards.test.ts`, on a database `testing/productionLikeData.ts` fills like production (#1559).",
@@ -2208,19 +2310,6 @@
         "src/payload.config.deleteRulesMigration.test.ts",
         "src/payload.config.deleteRulesGuards.test.ts"
       ]
-    },
-    {
-      "id": "business-rule:src/platform/payload/README.md#9",
-      "type": "business-rule",
-      "name": "**The busy timeout needs no transactions:**…",
-      "summary": "**The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.",
-      "path": "src/payload.config.busyTimeout.test.ts",
-      "module": "platform-area:payload",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/payload.config.busyTimeout.test.ts", "ops/migrate-retry.test.mjs"]
     },
     {
       "id": "business-rule:src/platform/payload/previewCopy/README.md#1",
@@ -5562,6 +5651,198 @@
       "links": ["docs/reference/content-types/media.md"]
     },
     {
+      "id": "collection:oauth-clients",
+      "type": "collection",
+      "name": "oauth-clients",
+      "summary": "AI tools that may sign in to the AI agent address. Give the tool the client ID; no secret is used.",
+      "path": "src/modules/agents/cms/oauth/oauthClients.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "detail": "",
+          "notes": ["max length 80"]
+        },
+        {
+          "name": "clientId",
+          "type": "text",
+          "required": false,
+          "detail": "",
+          "notes": ["read only", "unique", "indexed"]
+        },
+        {
+          "name": "agent",
+          "type": "relationship",
+          "required": true,
+          "detail": "→ users",
+          "notes": []
+        },
+        {
+          "name": "redirectUris",
+          "type": "array",
+          "required": true,
+          "detail": "",
+          "notes": ["min rows 1", "max rows 5"]
+        },
+        {
+          "name": "redirectUris[].uri",
+          "type": "text",
+          "required": true,
+          "detail": "",
+          "notes": ["max length 500"]
+        },
+        {
+          "name": "redirectUris[].id",
+          "type": "text",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden"]
+        },
+        {
+          "name": "enabled",
+          "type": "checkbox",
+          "required": false,
+          "detail": "",
+          "notes": ["default true"]
+        },
+        {
+          "name": "updatedAt",
+          "type": "date",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden", "indexed"]
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden", "indexed"]
+        }
+      ],
+      "facts": [
+        { "label": "Kind", "value": "collection" },
+        { "label": "Owner", "value": "module `agents`" },
+        { "label": "Primary key", "value": "id (set by Payload)" },
+        { "label": "Unique fields", "value": "clientId" },
+        { "label": "Indexed fields", "value": "clientId, updatedAt, createdAt" },
+        { "label": "Versions", "value": "Drafts: no; Versions: none kept" },
+        {
+          "label": "Access",
+          "value": "create: isAdmin; read: isAdmin; update: isAdmin; delete: isAdmin; unlock: defaultUnlockAccess"
+        },
+        {
+          "label": "Hooks",
+          "value": "beforeValidate giveClientId; afterChange revokeWhenAgentChanges; beforeDelete deleteTokensWithClient"
+        },
+        { "label": "GraphQL", "value": "yes" }
+      ],
+      "watchOuts": [],
+      "links": ["docs/reference/content-types/oauth-clients.md"]
+    },
+    {
+      "id": "collection:oauth-tokens",
+      "type": "collection",
+      "name": "oauth-tokens",
+      "summary": "Sign-ins of AI tools, stored as hashes. Set \"Revoked at\" on any row to sign that tool out.",
+      "path": "src/modules/agents/cms/oauth/oauthTokens.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "kind",
+          "type": "select",
+          "required": true,
+          "detail": "code, access, refresh",
+          "notes": []
+        },
+        {
+          "name": "tokenHash",
+          "type": "text",
+          "required": true,
+          "detail": "",
+          "notes": ["hidden", "unique", "indexed"]
+        },
+        { "name": "family", "type": "text", "required": true, "detail": "", "notes": ["indexed"] },
+        {
+          "name": "client",
+          "type": "relationship",
+          "required": true,
+          "detail": "→ oauth-clients",
+          "notes": []
+        },
+        {
+          "name": "agent",
+          "type": "relationship",
+          "required": true,
+          "detail": "→ users",
+          "notes": []
+        },
+        {
+          "name": "consentedBy",
+          "type": "relationship",
+          "required": false,
+          "detail": "→ users",
+          "notes": []
+        },
+        { "name": "resource", "type": "text", "required": true, "detail": "", "notes": [] },
+        { "name": "scope", "type": "text", "required": false, "detail": "", "notes": [] },
+        {
+          "name": "expiresAt",
+          "type": "date",
+          "required": true,
+          "detail": "",
+          "notes": ["indexed"]
+        },
+        { "name": "usedAt", "type": "date", "required": false, "detail": "", "notes": [] },
+        { "name": "revokedAt", "type": "date", "required": false, "detail": "", "notes": [] },
+        { "name": "redirectUri", "type": "text", "required": false, "detail": "", "notes": [] },
+        {
+          "name": "codeChallenge",
+          "type": "text",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden"]
+        },
+        {
+          "name": "updatedAt",
+          "type": "date",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden", "indexed"]
+        },
+        {
+          "name": "createdAt",
+          "type": "date",
+          "required": false,
+          "detail": "",
+          "notes": ["hidden", "indexed"]
+        }
+      ],
+      "facts": [
+        { "label": "Kind", "value": "collection" },
+        { "label": "Owner", "value": "module `agents`" },
+        { "label": "Primary key", "value": "id (set by Payload)" },
+        { "label": "Unique fields", "value": "tokenHash" },
+        {
+          "label": "Indexed fields",
+          "value": "tokenHash, family, expiresAt, updatedAt, createdAt"
+        },
+        { "label": "Versions", "value": "Drafts: no; Versions: none kept" },
+        {
+          "label": "Access",
+          "value": "create: inline; read: isAdmin; update: isAdmin; delete: isAdmin; unlock: defaultUnlockAccess"
+        },
+        { "label": "Hooks", "value": "beforeChange keepRevoked; afterChange revokeFamily" },
+        { "label": "GraphQL", "value": "yes" }
+      ],
+      "watchOuts": [],
+      "links": ["docs/reference/content-types/oauth-tokens.md"]
+    },
+    {
       "id": "collection:pages",
       "type": "collection",
       "name": "pages",
@@ -6979,7 +7260,7 @@
           "name": "document",
           "type": "relationship",
           "required": false,
-          "detail": "→ pages, posts, events, team-members, resources, faq, media, categories, users, passkeys, passkey-challenges, social-link-requests, email-confirmations, agent-runs, agent-review-items, redirects, forms, form-submissions, search, payload-mcp-api-keys, payload-folders",
+          "detail": "→ pages, posts, events, team-members, resources, faq, media, categories, users, passkeys, passkey-challenges, social-link-requests, email-confirmations, agent-runs, agent-review-items, oauth-clients, oauth-tokens, redirects, forms, form-submissions, search, payload-mcp-api-keys, payload-folders",
           "notes": ["indexed"]
         },
         {
@@ -8460,6 +8741,25 @@
       "links": []
     },
     {
+      "id": "decision:0023-mcp-oauth-sign-in",
+      "type": "decision",
+      "name": "0023: OAuth sign-in for MCP clients on `@node-oauth/oauth2-server` and our own thin layer",
+      "summary": "Claude's custom connectors, and other AI tools, sign in to an MCP address with OAuth: authorization code with PKCE, discovery by a 401, the resource indicator. The site's /api/mcp took only an API key, which those connectors do not send.…",
+      "path": "docs/architecture/decisions/0023-mcp-oauth-sign-in.md",
+      "module": "group:how-we-work",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Date", "value": "2026-11-26" },
+        {
+          "label": "Status",
+          "value": "Proposed. It becomes Accepted when a real connection from Claude works end to end (#1500, after the Caddy path-through #1508): unit tests alone missed that the first review's browser case failed, so a fixed head's review is not enough."
+        }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
       "id": "endpoint:action:src/app/(payload)/layout.tsx#serverFunction",
       "type": "endpoint",
       "name": "serverFunction",
@@ -8648,6 +8948,19 @@
       "summary": "A server action: a POST endpoint the browser calls by itself.",
       "path": "src/modules/accounts/actions.ts",
       "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Kind", "value": "server action" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "endpoint:action:src/modules/agents/actions.ts#decideConnectionForm",
+      "type": "endpoint",
+      "name": "decideConnectionForm",
+      "summary": "A server action: a POST endpoint the browser calls by itself.",
+      "path": "src/modules/agents/actions.ts",
+      "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [{ "label": "Kind", "value": "server action" }],
@@ -9093,6 +9406,32 @@
       "links": ["src/platform/payload/media.ts"]
     },
     {
+      "id": "endpoint:rest:/api/oauth-clients",
+      "type": "endpoint",
+      "name": "/api/oauth-clients",
+      "summary": "The REST API of oauth-clients: find, create, update and delete over HTTP.",
+      "path": "src/app/(payload)/api/[...slug]/route.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Address", "value": "/api/oauth-clients" }],
+      "watchOuts": [],
+      "links": ["src/modules/agents/cms/oauth/oauthClients.ts"]
+    },
+    {
+      "id": "endpoint:rest:/api/oauth-tokens",
+      "type": "endpoint",
+      "name": "/api/oauth-tokens",
+      "summary": "The REST API of oauth-tokens: find, create, update and delete over HTTP.",
+      "path": "src/app/(payload)/api/[...slug]/route.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Address", "value": "/api/oauth-tokens" }],
+      "watchOuts": [],
+      "links": ["src/modules/agents/cms/oauth/oauthTokens.ts"]
+    },
+    {
       "id": "endpoint:rest:/api/pages",
       "type": "endpoint",
       "name": "/api/pages",
@@ -9423,6 +9762,54 @@
       "fields": [],
       "facts": [
         { "label": "Address", "value": "/next/seed" },
+        { "label": "Methods", "value": "POST" }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "endpoint:route:/oauth/discovery/authorization-server",
+      "type": "endpoint",
+      "name": "/oauth/discovery/authorization-server",
+      "summary": "A route handler (GET) that answers with data, not a page.",
+      "path": "src/app/(frontend)/oauth/discovery/authorization-server/route.ts",
+      "module": "feature:app",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/discovery/authorization-server" },
+        { "label": "Methods", "value": "GET" }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "endpoint:route:/oauth/discovery/protected-resource",
+      "type": "endpoint",
+      "name": "/oauth/discovery/protected-resource",
+      "summary": "A route handler (GET) that answers with data, not a page.",
+      "path": "src/app/(frontend)/oauth/discovery/protected-resource/route.ts",
+      "module": "feature:app",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/discovery/protected-resource" },
+        { "label": "Methods", "value": "GET" }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "endpoint:route:/oauth/token",
+      "type": "endpoint",
+      "name": "/oauth/token",
+      "summary": "A route handler (POST) that answers with data, not a page.",
+      "path": "src/app/(frontend)/oauth/token/route.ts",
+      "module": "feature:app",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/token" },
         { "label": "Methods", "value": "POST" }
       ],
       "watchOuts": [],
@@ -10307,6 +10694,19 @@
       "aliases": [],
       "fields": [],
       "facts": [{ "label": "Version", "value": "^5.9.2" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "library:@node-oauth/oauth2-server",
+      "type": "library",
+      "name": "@node-oauth/oauth2-server",
+      "summary": "",
+      "path": "package.json",
+      "module": "group:libraries",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Version", "value": "5.3.1" }],
       "watchOuts": [],
       "links": []
     },
@@ -11203,7 +11603,12 @@
       "aliases": ["MCP", "neighborhood agents"],
       "fields": [],
       "facts": [{ "label": "Folder", "value": "src/modules/agents" }],
-      "watchOuts": ["None known."],
+      "watchOuts": [
+        "One scope, `mcp`: a client gets what its agent account's tools allow; narrower scopes are #1499.",
+        "Clients are registered by hand; client ID metadata documents and dynamic registration are not offered.",
+        "The log in page returns to the connection approval after a password or passkey log in, not after Google sign-in, which lands on the account page.",
+        "Expired token rows stay in the table, and limits are counted in memory, which assumes one server process."
+      ],
       "links": []
     },
     {
@@ -11428,7 +11833,7 @@
           "label": "Sections",
           "value": "How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/agents/**" }
+        { "label": "Describes", "value": "src/modules/agents/**, src/app/(frontend)/oauth/**" }
       ],
       "watchOuts": [],
       "links": []
@@ -11787,6 +12192,19 @@
       "summary": "5 screens under /events.",
       "path": "src/app/(frontend)/events",
       "module": "module:events",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "page-cluster:/oauth",
+      "type": "page-cluster",
+      "name": "/oauth",
+      "summary": "2 screens under /oauth.",
+      "path": "src/app/(frontend)/oauth",
+      "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
@@ -12646,7 +13064,12 @@
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/agents/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/agents/**, src/app/(frontend)/oauth/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -12916,7 +13339,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/platform/ui/AdminBar.client.test.tsx, src/platform/ui/AdminBar.client.tsx, src/platform/ui/AdminBar.scss, src/platform/ui/Alert.stories.tsx, src/platform/ui/Alert.test.tsx, src/platform/ui/Alert.tsx, src/platform/ui/AppLink.tsx, src/platform/ui/ArticlePage.test.tsx, src/platform/ui/ArticlePage.tsx, src/platform/ui/Badge.examples.client.tsx, src/platform/ui/Badge.examples.tsx, src/platform/ui/Badge.stories.tsx, src/platform/ui/Badge.test.tsx, src/platform/ui/Badge.tsx, src/platform/ui/BandBackdrop.test.tsx, src/platform/ui/BandBackdrop.tsx, src/platform/ui/BarTrack.test.tsx, src/platform/ui/BarTrack.tsx, src/platform/ui/BrandLogo.test.tsx, src/platform/ui/BrandLogo.tsx, src/platform/ui/Breadcrumbs.stories.tsx, src/platform/ui/Breadcrumbs.test.tsx, src/platform/ui/Breadcrumbs.tsx, src/platform/ui/Button.examples.client.tsx, src/platform/ui/Button.examples.tsx, src/platform/ui/Button.stories.tsx, src/platform/ui/Button.test.tsx, src/platform/ui/Button.tsx, src/platform/ui/CMSLink.test.tsx, src/platform/ui/CMSLink.tsx, src/platform/ui/CancelledBadge.tsx, src/platform/ui/Caption.test.tsx, src/platform/ui/Caption.tsx, src/platform/ui/Card.stories.tsx, src/platform/ui/Card.test.tsx, src/platform/ui/Card.tsx, src/platform/ui/CardGrid.tsx, src/platform/ui/CertaintyBadge.test.tsx, src/platform/ui/CertaintyBadge.tsx, src/platform/ui/ConfirmedEmail.client.tsx, src/platform/ui/DateTime.test.tsx, src/platform/ui/DateTime.tsx, src/platform/ui/DetailLayout.test.tsx, src/platform/ui/DetailLayout.tsx, src/platform/ui/Dialog.client.test.tsx, src/platform/ui/Dialog.client.tsx, src/platform/ui/Disclosure.anchor.test.tsx, src/platform/ui/Disclosure.expand.test.tsx, src/platform/ui/Disclosure.test.tsx, src/platform/ui/Disclosure.tsx, src/platform/ui/DisclosureSummary.client.test.tsx, src/platform/ui/DisclosureSummary.client.tsx, src/platform/ui/Dismissible.client.test.tsx, src/platform/ui/Dismissible.client.tsx, src/platform/ui/EmptyState.test.tsx, src/platform/ui/EmptyState.tsx, src/platform/ui/FeaturedImage.test.tsx, src/platform/ui/FeaturedImage.tsx, src/platform/ui/Field.client.test.tsx, src/platform/ui/Field.client.tsx, src/platform/ui/Field.stories.tsx, src/platform/ui/FieldBar.client.test.tsx, src/platform/ui/FieldCheckbox.client.tsx, src/platform/ui/FieldInput.client.tsx, src/platform/ui/FieldMoney.client.test.tsx, src/platform/ui/FieldMoney.client.tsx, src/platform/ui/FieldSelect.client.tsx, src/platform/ui/FieldSwitch.client.tsx, src/platform/ui/FieldTextArea.client.tsx, src/platform/ui/Figure.test.tsx, src/platform/ui/Figure.tsx, src/platform/ui/Form.client.test.tsx, src/platform/ui/Form.client.tsx, src/platform/ui/GlassPanel.test.tsx, src/platform/ui/GlassPanel.tsx, src/platform/ui/ImageCredit.test.tsx, src/platform/ui/ImageCredit.tsx, src/platform/ui/ImageMedia.client.tsx, src/platform/ui/JsonLd.tsx, src/platform/ui/Link.stories.tsx, src/platform/ui/Link.test.tsx, src/platform/ui/Link.tsx, src/platform/ui/LivePreviewListener.client.tsx, src/platform/ui/LoadMore.client.test.tsx, src/platform/ui/LoadMore.client.tsx, src/platform/ui/MapEmbed.client.test.tsx, src/platform/ui/MapEmbed.client.tsx, src/platform/ui/Media.test.tsx, src/platform/ui/Media.tsx, src/platform/ui/MetaBar.test.tsx, src/platform/ui/MetaBar.tsx, src/platform/ui/MetaList.test.tsx, src/platform/ui/MetaList.tsx, src/platform/ui/NavMenu.client.test.tsx, src/platform/ui/NavMenu.client.tsx, src/platform/ui/OnThisPage.client.test.tsx, src/platform/ui/OnThisPage.client.tsx, src/platform/ui/PageBackdrop.test.tsx, src/platform/ui/PageBackdrop.tsx, src/platform/ui/PageHeader.test.tsx, src/platform/ui/PageHeader.tsx, src/platform/ui/ProgressBar.test.tsx, src/platform/ui/ProgressBar.tsx, src/platform/ui/README.md, src/platform/ui/RelatedLinks.test.tsx, src/platform/ui/RelatedLinks.tsx, src/platform/ui/RouteDialog.client.test.tsx, src/platform/ui/RouteDialog.client.tsx, src/platform/ui/Section.stories.tsx, src/platform/ui/Section.test.tsx, src/platform/ui/Section.tsx, src/platform/ui/SegmentedControl.test.tsx, src/platform/ui/SegmentedControl.tsx, src/platform/ui/SidebarCTA.test.tsx, src/platform/ui/SidebarCTA.tsx, src/platform/ui/Switch.client.test.tsx, src/platform/ui/Switch.client.tsx, src/platform/ui/Tabs.client.test.tsx, src/platform/ui/Tabs.client.tsx, src/platform/ui/Tabs.examples.tsx, src/platform/ui/Tabs.look.test.tsx, src/platform/ui/Tabs.stories.tsx, src/platform/ui/TabsContentLinks.client.test.tsx, src/platform/ui/TabsLinks.client.test.tsx, src/platform/ui/Text.stories.tsx, src/platform/ui/Text.test.tsx, src/platform/ui/Text.tsx, src/platform/ui/TextDivider.test.tsx, src/platform/ui/TextDivider.tsx, src/platform/ui/Toast.client.test.tsx, src/platform/ui/Toast.client.tsx, src/platform/ui/VersionCheck.client.test.tsx, src/platform/ui/VersionCheck.client.tsx, src/platform/ui/VideoMedia.client.tsx, src/platform/ui/Zoom.client.test.tsx, src/platform/ui/Zoom.client.tsx, src/platform/ui/controlVariants.ts, src/platform/ui/example.test.ts, src/platform/ui/example.ts, src/platform/ui/examples.server.test.ts, src/platform/ui/examples.test.tsx, src/platform/ui/fieldContext.ts, src/platform/ui/formMessages.ts, src/platform/ui/index.ts, src/platform/ui/layoutSizes.test.ts, src/platform/ui/layoutSizes.ts, src/platform/ui/mediaProps.ts, src/platform/ui/motion.client.test.ts, src/platform/ui/motion.client.ts, src/platform/ui/onThisPage.ts, src/platform/ui/reveal.client.test.ts, src/platform/ui/reveal.client.ts, src/platform/ui/revealShift.test.ts, src/platform/ui/revealShift.ts, src/platform/ui/scrollMargin.test.ts, src/platform/ui/scrollMargin.ts, src/platform/ui/showcaseRegistry.test.ts, src/platform/ui/showcaseRegistry.ts, src/platform/ui/touchTarget.ts, src/platform/ui/useCountedNumber.client.test.tsx, src/platform/ui/useCountedNumber.client.ts, src/platform/ui/useReplayProgress.client.test.ts, src/platform/ui/useReplayProgress.client.ts, src/platform/ui/__snapshots__/**, src/platform/ui/testing/**"
+          "value": "src/platform/ui/AdminBar.client.test.tsx, src/platform/ui/AdminBar.client.tsx, src/platform/ui/AdminBar.scss, src/platform/ui/Alert.stories.tsx, src/platform/ui/Alert.test.tsx, src/platform/ui/Alert.tsx, src/platform/ui/AppLink.tsx, src/platform/ui/ArticlePage.test.tsx, src/platform/ui/ArticlePage.tsx, src/platform/ui/Badge.examples.client.tsx, src/platform/ui/Badge.examples.tsx, src/platform/ui/Badge.stories.tsx, src/platform/ui/Badge.test.tsx, src/platform/ui/Badge.tsx, src/platform/ui/BandBackdrop.test.tsx, src/platform/ui/BandBackdrop.tsx, src/platform/ui/BarTrack.test.tsx, src/platform/ui/BarTrack.tsx, src/platform/ui/BrandLogo.test.tsx, src/platform/ui/BrandLogo.tsx, src/platform/ui/Breadcrumbs.stories.tsx, src/platform/ui/Breadcrumbs.test.tsx, src/platform/ui/Breadcrumbs.tsx, src/platform/ui/Button.examples.client.tsx, src/platform/ui/Button.examples.tsx, src/platform/ui/Button.stories.tsx, src/platform/ui/Button.test.tsx, src/platform/ui/Button.tsx, src/platform/ui/ButtonRow.test.tsx, src/platform/ui/ButtonRow.tsx, src/platform/ui/CMSLink.test.tsx, src/platform/ui/CMSLink.tsx, src/platform/ui/CancelledBadge.tsx, src/platform/ui/Caption.test.tsx, src/platform/ui/Caption.tsx, src/platform/ui/Card.stories.tsx, src/platform/ui/Card.test.tsx, src/platform/ui/Card.tsx, src/platform/ui/CardGrid.tsx, src/platform/ui/CertaintyBadge.test.tsx, src/platform/ui/CertaintyBadge.tsx, src/platform/ui/ConfirmedEmail.client.tsx, src/platform/ui/DateTime.test.tsx, src/platform/ui/DateTime.tsx, src/platform/ui/DetailLayout.test.tsx, src/platform/ui/DetailLayout.tsx, src/platform/ui/Dialog.client.test.tsx, src/platform/ui/Dialog.client.tsx, src/platform/ui/Disclosure.anchor.test.tsx, src/platform/ui/Disclosure.expand.test.tsx, src/platform/ui/Disclosure.test.tsx, src/platform/ui/Disclosure.tsx, src/platform/ui/DisclosureSummary.client.test.tsx, src/platform/ui/DisclosureSummary.client.tsx, src/platform/ui/Dismissible.client.test.tsx, src/platform/ui/Dismissible.client.tsx, src/platform/ui/EmptyState.test.tsx, src/platform/ui/EmptyState.tsx, src/platform/ui/FeaturedImage.test.tsx, src/platform/ui/FeaturedImage.tsx, src/platform/ui/Field.client.test.tsx, src/platform/ui/Field.client.tsx, src/platform/ui/Field.stories.tsx, src/platform/ui/FieldBar.client.test.tsx, src/platform/ui/FieldCheckbox.client.tsx, src/platform/ui/FieldInput.client.tsx, src/platform/ui/FieldMoney.client.test.tsx, src/platform/ui/FieldMoney.client.tsx, src/platform/ui/FieldSelect.client.tsx, src/platform/ui/FieldSwitch.client.tsx, src/platform/ui/FieldTextArea.client.tsx, src/platform/ui/Figure.test.tsx, src/platform/ui/Figure.tsx, src/platform/ui/Form.client.test.tsx, src/platform/ui/Form.client.tsx, src/platform/ui/GlassPanel.test.tsx, src/platform/ui/GlassPanel.tsx, src/platform/ui/ImageCredit.test.tsx, src/platform/ui/ImageCredit.tsx, src/platform/ui/ImageMedia.client.tsx, src/platform/ui/JsonLd.tsx, src/platform/ui/Link.stories.tsx, src/platform/ui/Link.test.tsx, src/platform/ui/Link.tsx, src/platform/ui/LivePreviewListener.client.tsx, src/platform/ui/LoadMore.client.test.tsx, src/platform/ui/LoadMore.client.tsx, src/platform/ui/MapEmbed.client.test.tsx, src/platform/ui/MapEmbed.client.tsx, src/platform/ui/Media.test.tsx, src/platform/ui/Media.tsx, src/platform/ui/MetaBar.test.tsx, src/platform/ui/MetaBar.tsx, src/platform/ui/MetaList.test.tsx, src/platform/ui/MetaList.tsx, src/platform/ui/NavMenu.client.test.tsx, src/platform/ui/NavMenu.client.tsx, src/platform/ui/OnThisPage.client.test.tsx, src/platform/ui/OnThisPage.client.tsx, src/platform/ui/PageBackdrop.test.tsx, src/platform/ui/PageBackdrop.tsx, src/platform/ui/PageHeader.test.tsx, src/platform/ui/PageHeader.tsx, src/platform/ui/ProgressBar.test.tsx, src/platform/ui/ProgressBar.tsx, src/platform/ui/README.md, src/platform/ui/RelatedLinks.test.tsx, src/platform/ui/RelatedLinks.tsx, src/platform/ui/RouteDialog.client.test.tsx, src/platform/ui/RouteDialog.client.tsx, src/platform/ui/Section.stories.tsx, src/platform/ui/Section.test.tsx, src/platform/ui/Section.tsx, src/platform/ui/SegmentedControl.test.tsx, src/platform/ui/SegmentedControl.tsx, src/platform/ui/SidebarCTA.test.tsx, src/platform/ui/SidebarCTA.tsx, src/platform/ui/Switch.client.test.tsx, src/platform/ui/Switch.client.tsx, src/platform/ui/Tabs.client.test.tsx, src/platform/ui/Tabs.client.tsx, src/platform/ui/Tabs.examples.tsx, src/platform/ui/Tabs.look.test.tsx, src/platform/ui/Tabs.stories.tsx, src/platform/ui/TabsContentLinks.client.test.tsx, src/platform/ui/TabsLinks.client.test.tsx, src/platform/ui/Text.stories.tsx, src/platform/ui/Text.test.tsx, src/platform/ui/Text.tsx, src/platform/ui/TextDivider.test.tsx, src/platform/ui/TextDivider.tsx, src/platform/ui/Toast.client.test.tsx, src/platform/ui/Toast.client.tsx, src/platform/ui/VersionCheck.client.test.tsx, src/platform/ui/VersionCheck.client.tsx, src/platform/ui/VideoMedia.client.tsx, src/platform/ui/Zoom.client.test.tsx, src/platform/ui/Zoom.client.tsx, src/platform/ui/controlVariants.ts, src/platform/ui/example.test.ts, src/platform/ui/example.ts, src/platform/ui/examples.server.test.ts, src/platform/ui/examples.test.tsx, src/platform/ui/fieldContext.ts, src/platform/ui/formMessages.ts, src/platform/ui/index.ts, src/platform/ui/layoutSizes.test.ts, src/platform/ui/layoutSizes.ts, src/platform/ui/mediaProps.ts, src/platform/ui/motion.client.test.ts, src/platform/ui/motion.client.ts, src/platform/ui/onThisPage.ts, src/platform/ui/reveal.client.test.ts, src/platform/ui/reveal.client.ts, src/platform/ui/revealShift.test.ts, src/platform/ui/revealShift.ts, src/platform/ui/scrollMargin.test.ts, src/platform/ui/scrollMargin.ts, src/platform/ui/showcaseRegistry.test.ts, src/platform/ui/showcaseRegistry.ts, src/platform/ui/touchTarget.ts, src/platform/ui/useCountedNumber.client.test.tsx, src/platform/ui/useCountedNumber.client.ts, src/platform/ui/useReplayProgress.client.test.ts, src/platform/ui/useReplayProgress.client.ts, src/platform/ui/__snapshots__/**, src/platform/ui/testing/**"
         }
       ],
       "watchOuts": [],
@@ -13337,7 +13760,57 @@
         { "label": "Rendering", "value": "not stated" },
         { "label": "Pages built ahead", "value": "no" },
         { "label": "Metadata", "value": "`metadata` via `@/platform/seo/notIndexed`" },
-        { "label": "Module entry points", "value": "@/modules/accounts, @/modules/accounts/server" }
+        {
+          "label": "Module entry points",
+          "value": "@/modules/accounts, @/modules/accounts/server, @/modules/agents"
+        }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "screen:/oauth/approve",
+      "type": "screen",
+      "name": "/oauth/approve",
+      "summary": "",
+      "path": "src/app/(frontend)/oauth/approve/page.tsx",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/approve" },
+        { "label": "Rendering", "value": "dynamic = force-dynamic" },
+        { "label": "Pages built ahead", "value": "no" },
+        {
+          "label": "Metadata",
+          "value": "`metadata` via `@/modules/agents`, `@/platform/seo/privateAddress`"
+        },
+        {
+          "label": "Module entry points",
+          "value": "@/modules/accounts, @/modules/agents, @/modules/agents/server"
+        }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "screen:/oauth/authorize",
+      "type": "screen",
+      "name": "/oauth/authorize",
+      "summary": "",
+      "path": "src/app/(frontend)/oauth/authorize/page.tsx",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/authorize" },
+        { "label": "Rendering", "value": "dynamic = force-dynamic" },
+        { "label": "Pages built ahead", "value": "no" },
+        {
+          "label": "Metadata",
+          "value": "`metadata` via `@/modules/agents`, `@/platform/seo/privateAddress`"
+        },
+        { "label": "Module entry points", "value": "@/modules/agents, @/modules/agents/server" }
       ],
       "watchOuts": [],
       "links": []
@@ -14531,6 +15004,28 @@
         }
       ],
       "facts": [{ "label": "Props from its element", "value": "280" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:ButtonRow",
+      "type": "shared-component",
+      "name": "ButtonRow",
+      "summary": "The buttons of one decision side by side, stacked on a phone: the same gap, the same order and the same break everywhere (the account offers, the passkey list and the connection approval). `align=\"end\"` puts them at the right from the wider layout up, as a dialog's do.",
+      "path": "src/platform/ui/ButtonRow.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "align",
+          "type": "\"start\" | \"end\"",
+          "required": false,
+          "detail": "",
+          "notes": []
+        },
+        { "name": "children", "type": "ReactNode", "required": true, "detail": "", "notes": [] }
+      ],
+      "facts": [],
       "watchOuts": [],
       "links": []
     },
@@ -18926,6 +19421,46 @@
       "via": ["database"]
     },
     {
+      "from": "collection:oauth-clients",
+      "to": "collection:users",
+      "type": "references",
+      "layer": "data",
+      "count": 1,
+      "via": ["agent (one)"]
+    },
+    {
+      "from": "collection:oauth-clients",
+      "to": "library:@payloadcms/db-sqlite",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 1,
+      "via": ["database"]
+    },
+    {
+      "from": "collection:oauth-tokens",
+      "to": "collection:oauth-clients",
+      "type": "references",
+      "layer": "data",
+      "count": 1,
+      "via": ["client (one)"]
+    },
+    {
+      "from": "collection:oauth-tokens",
+      "to": "collection:users",
+      "type": "references",
+      "layer": "data",
+      "count": 2,
+      "via": ["agent (one)", "consentedBy (one)"]
+    },
+    {
+      "from": "collection:oauth-tokens",
+      "to": "library:@payloadcms/db-sqlite",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 1,
+      "via": ["database"]
+    },
+    {
       "from": "collection:pages",
       "to": "block:archive",
       "type": "contains",
@@ -19213,6 +19748,22 @@
     {
       "from": "collection:payload-locked-documents",
       "to": "collection:media",
+      "type": "references",
+      "layer": "data",
+      "count": 1,
+      "via": ["document (one)"]
+    },
+    {
+      "from": "collection:payload-locked-documents",
+      "to": "collection:oauth-clients",
+      "type": "references",
+      "layer": "data",
+      "count": 1,
+      "via": ["document (one)"]
+    },
+    {
+      "from": "collection:payload-locked-documents",
+      "to": "collection:oauth-tokens",
       "type": "references",
       "layer": "data",
       "count": 1,
@@ -19778,6 +20329,22 @@
     },
     {
       "from": "endpoint:graphql:/api/graphql",
+      "to": "collection:oauth-clients",
+      "type": "exposes",
+      "layer": "api",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "endpoint:graphql:/api/graphql",
+      "to": "collection:oauth-tokens",
+      "type": "exposes",
+      "layer": "api",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "endpoint:graphql:/api/graphql",
       "to": "collection:pages",
       "type": "exposes",
       "layer": "api",
@@ -20089,6 +20656,22 @@
       "via": []
     },
     {
+      "from": "endpoint:rest:/api/oauth-clients",
+      "to": "collection:oauth-clients",
+      "type": "exposes",
+      "layer": "api",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "endpoint:rest:/api/oauth-tokens",
+      "to": "collection:oauth-tokens",
+      "type": "exposes",
+      "layer": "api",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "endpoint:rest:/api/pages",
       "to": "collection:pages",
       "type": "exposes",
@@ -20330,6 +20913,30 @@
     },
     {
       "from": "feature:app",
+      "to": "endpoint:route:/oauth/discovery/authorization-server",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "endpoint:route:/oauth/discovery/protected-resource",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "endpoint:route:/oauth/token",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:app",
       "to": "feature:app/(frontend)/dev",
       "type": "contains",
       "layer": "structure",
@@ -20365,7 +20972,7 @@
       "to": "library:next",
       "type": "uses",
       "layer": "libraries",
-      "count": 61,
+      "count": 67,
       "via": []
     },
     {
@@ -20405,7 +21012,15 @@
       "to": "module:accounts",
       "type": "uses",
       "layer": "code",
-      "count": 23,
+      "count": 24,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
+      "count": 9,
       "via": []
     },
     {
@@ -20485,7 +21100,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 26,
+      "count": 29,
       "via": []
     },
     {
@@ -20509,7 +21124,7 @@
       "to": "platform-area:seo",
       "type": "uses",
       "layer": "code",
-      "count": 23,
+      "count": 25,
       "via": []
     },
     {
@@ -20525,7 +21140,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 145,
+      "count": 146,
       "via": []
     },
     {
@@ -20606,6 +21221,14 @@
       "type": "uses",
       "layer": "ui",
       "count": 11,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
       "via": []
     },
     {
@@ -22057,6 +22680,14 @@
       "via": []
     },
     {
+      "from": "group:decisions",
+      "to": "decision:0023-mcp-oauth-sign-in",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "group:guidelines",
       "to": "guideline:README",
       "type": "contains",
@@ -22267,6 +22898,14 @@
     {
       "from": "group:libraries",
       "to": "library:@hookform/resolvers",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "group:libraries",
+      "to": "library:@node-oauth/oauth2-server",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -23625,6 +24264,14 @@
       "via": []
     },
     {
+      "from": "guideline:security",
+      "to": "decision:0023-mcp-oauth-sign-in",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "guideline:social-media",
       "to": "guideline:brand-voice",
       "type": "mentions",
@@ -24389,7 +25036,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 47,
+      "count": 50,
       "via": []
     },
     {
@@ -24482,6 +25129,14 @@
     },
     {
       "from": "module:accounts",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 3,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
       "to": "shared-component:Card",
       "type": "uses",
       "layer": "ui",
@@ -24555,6 +25210,46 @@
     {
       "from": "module:agents",
       "to": "business-rule:src/modules/agents/README.md#1",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#10",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#11",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#12",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#13",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#14",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -24642,6 +25337,22 @@
     },
     {
       "from": "module:agents",
+      "to": "collection:oauth-clients",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "collection:oauth-tokens",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "collection:payload-mcp-api-keys",
       "type": "contains",
       "layer": "structure",
@@ -24661,6 +25372,22 @@
       "to": "decision:0019-knowledge-layer",
       "type": "decided-by",
       "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "decision:0023-mcp-oauth-sign-in",
+      "type": "decided-by",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "endpoint:action:src/modules/agents/actions.ts#decideConnectionForm",
+      "type": "contains",
+      "layer": "structure",
       "count": 1,
       "via": []
     },
@@ -24690,6 +25417,22 @@
     },
     {
       "from": "module:agents",
+      "to": "endpoint:rest:/api/oauth-clients",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "endpoint:rest:/api/oauth-tokens",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "endpoint:rest:/api/payload-mcp-api-keys",
       "type": "contains",
       "layer": "structure",
@@ -24698,10 +25441,26 @@
     },
     {
       "from": "module:agents",
+      "to": "library:@node-oauth/oauth2-server",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 2,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "library:@payloadcms/db-sqlite",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 2,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "library:@payloadcms/plugin-mcp",
       "type": "uses",
       "layer": "libraries",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -24714,10 +25473,34 @@
     },
     {
       "from": "module:agents",
+      "to": "library:next",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 2,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "library:payload",
       "type": "uses",
       "layer": "libraries",
-      "count": 7,
+      "count": 16,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "library:react",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 3,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "library:server-only",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 11,
       "via": []
     },
     {
@@ -24725,7 +25508,7 @@
       "to": "library:zod",
       "type": "uses",
       "layer": "libraries",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -24802,10 +25585,18 @@
     },
     {
       "from": "module:agents",
+      "to": "page-cluster:/oauth",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 5,
+      "count": 15,
       "via": []
     },
     {
@@ -24813,7 +25604,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 4,
+      "count": 9,
       "via": []
     },
     {
@@ -24822,6 +25613,78 @@
       "type": "uses",
       "layer": "code",
       "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "platform-area:ui",
+      "type": "uses",
+      "layer": "code",
+      "count": 13,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Alert",
+      "type": "uses",
+      "layer": "ui",
+      "count": 2,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Button",
+      "type": "uses",
+      "layer": "ui",
+      "count": 3,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Card",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:MetaList",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:PageHeader",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Section",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Text",
+      "type": "uses",
+      "layer": "ui",
+      "count": 3,
       "via": []
     },
     {
@@ -27394,6 +28257,22 @@
     },
     {
       "from": "note:src/modules/agents/README.md",
+      "to": "collection:oauth-clients",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/agents/README.md",
+      "to": "collection:oauth-tokens",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/agents/README.md",
       "to": "decision:0008-compose-modules-at-the-app-level",
       "type": "mentions",
       "layer": "docs",
@@ -27403,6 +28282,14 @@
     {
       "from": "note:src/modules/agents/README.md",
       "to": "decision:0019-knowledge-layer",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/agents/README.md",
+      "to": "decision:0023-mcp-oauth-sign-in",
       "type": "mentions",
       "layer": "docs",
       "count": 1,
@@ -28729,6 +29616,22 @@
       "via": []
     },
     {
+      "from": "page-cluster:/oauth",
+      "to": "screen:/oauth/approve",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "page-cluster:/oauth",
+      "to": "screen:/oauth/authorize",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "page-cluster:/posts",
       "to": "screen:/posts",
       "type": "contains",
@@ -29003,6 +29906,14 @@
     {
       "from": "platform-area:payload",
       "to": "business-rule:src/platform/payload/README.md#1",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:payload",
+      "to": "business-rule:src/platform/payload/README.md#10",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -30293,7 +31204,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 89,
+      "count": 90,
       "via": []
     },
     {
@@ -30333,7 +31244,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 102,
+      "count": 103,
       "via": []
     },
     {
@@ -30451,6 +31362,14 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:Button",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:ButtonRow",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -31890,6 +32809,14 @@
     },
     {
       "from": "rule:docs--guidelines--security",
+      "to": "decision:0023-mcp-oauth-sign-in",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:docs--guidelines--security",
       "to": "guideline:security",
       "type": "mirrors",
       "layer": "rules",
@@ -32538,6 +33465,22 @@
     },
     {
       "from": "rule:src--modules--agents--README",
+      "to": "collection:oauth-clients",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--agents--README",
+      "to": "collection:oauth-tokens",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--agents--README",
       "to": "decision:0008-compose-modules-at-the-app-level",
       "type": "mentions",
       "layer": "rules",
@@ -32547,6 +33490,14 @@
     {
       "from": "rule:src--modules--agents--README",
       "to": "decision:0019-knowledge-layer",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--agents--README",
+      "to": "decision:0023-mcp-oauth-sign-in",
       "type": "mentions",
       "layer": "rules",
       "count": 1,
@@ -33978,6 +34929,22 @@
     },
     {
       "from": "screen:/admin/[[...segments]]",
+      "to": "collection:oauth-clients",
+      "type": "edits",
+      "layer": "data",
+      "count": 1,
+      "via": ["/admin/collections/oauth-clients"]
+    },
+    {
+      "from": "screen:/admin/[[...segments]]",
+      "to": "collection:oauth-tokens",
+      "type": "edits",
+      "layer": "data",
+      "count": 1,
+      "via": ["/admin/collections/oauth-tokens"]
+    },
+    {
+      "from": "screen:/admin/[[...segments]]",
       "to": "collection:pages",
       "type": "edits",
       "layer": "data",
@@ -34386,6 +35353,14 @@
     },
     {
       "from": "screen:/login",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/login",
       "to": "shared-component:PageHeader",
       "type": "renders",
       "layer": "ui",
@@ -34405,6 +35380,30 @@
       "to": "shared-component:Text",
       "type": "renders",
       "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/approve",
+      "to": "module:accounts",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/approve",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/authorize",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
       "count": 1,
       "via": []
     },
@@ -34845,7 +35844,7 @@
       "to": "library:@payloadcms/db-sqlite",
       "type": "uses",
       "layer": "libraries",
-      "count": 36,
+      "count": 37,
       "via": []
     },
     {

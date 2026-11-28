@@ -89,6 +89,37 @@ export async function createSchemaDatabase(): Promise<TestDatabase> {
   return open('schema')
 }
 
+/**
+ * Runs `work` on a database that is behind the config: a migration that adds a collection comes
+ * after the one under test, so the edit-lock query Payload makes on every update names a column
+ * the database does not have yet. The missing `<collection>_id` columns of the edit-lock table
+ * are added as plain columns for the work and dropped again, leaving the table as the migrations
+ * made it.
+ */
+export async function withLaterColumns<T>(
+  database: TestDatabase,
+  work: () => Promise<T>,
+): Promise<T> {
+  const have = (
+    await database.query<{ name: string }>(
+      `SELECT name FROM pragma_table_info('payload_locked_documents_rels')`,
+    )
+  ).map((column) => column.name)
+  const missing = database.payload.config.collections
+    .map((collection) => `${collection.slug.replaceAll('-', '_')}_id`)
+    .filter((column) => !have.includes(column))
+  for (const column of missing) {
+    await database.query(`ALTER TABLE payload_locked_documents_rels ADD "${column}" integer`)
+  }
+  try {
+    return await work()
+  } finally {
+    for (const column of missing) {
+      await database.query(`ALTER TABLE payload_locked_documents_rels DROP COLUMN "${column}"`)
+    }
+  }
+}
+
 export type ForeignKey = {
   table: string
   column: string

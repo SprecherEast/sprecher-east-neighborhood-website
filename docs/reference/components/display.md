@@ -50,7 +50,7 @@ Source: `src/platform/ui/MetaList.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `accounts`, `events`, `site`
+- Modules: `accounts`, `agents`, `events`, `site`
 - Routes: `/account`, `/dev/gallery`
 
 ## `MetaBar`
@@ -86,7 +86,7 @@ Source: `src/platform/ui/Text.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `accounts`, `directory`, `events`, `news`, `roadmap`, `site`
+- Modules: `accounts`, `agents`, `directory`, `events`, `news`, `roadmap`, `site`
 - Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/login`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 

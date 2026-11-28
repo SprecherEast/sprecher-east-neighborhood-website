@@ -33,6 +33,7 @@ import * as migration_20261119_203801_social_sign_in from './20261119_203801_soc
 import * as migration_20261119_224613_passkeys from './20261119_224613_passkeys'
 import * as migration_20261120_170903_social_link_requests from './20261120_170903_social_link_requests'
 import * as migration_20261126_203500_foreign_key_delete_rules from './20261126_203500_foreign_key_delete_rules'
+import * as migration_20261127_130000_mcp_oauth_sign_in from './20261127_130000_mcp_oauth_sign_in'
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20261126_203500_foreign_key_delete_rules.up,
     down: migration_20261126_203500_foreign_key_delete_rules.down,
     name: '20261126_203500_foreign_key_delete_rules',
+  },
+  {
+    up: migration_20261127_130000_mcp_oauth_sign_in.up,
+    down: migration_20261127_130000_mcp_oauth_sign_in.down,
+    name: '20261127_130000_mcp_oauth_sign_in',
   },
 ]

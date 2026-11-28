@@ -28,6 +28,8 @@ paths:
   - 'src/platform/ui/Button.stories.tsx'
   - 'src/platform/ui/Button.test.tsx'
   - 'src/platform/ui/Button.tsx'
+  - 'src/platform/ui/ButtonRow.test.tsx'
+  - 'src/platform/ui/ButtonRow.tsx'
   - 'src/platform/ui/CMSLink.test.tsx'
   - 'src/platform/ui/CMSLink.tsx'
   - 'src/platform/ui/CancelledBadge.tsx'
@@ -184,6 +186,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 ## How the pieces link
 
 - **Sizes live once:** `layoutSizes.ts` and `scrollMargin.ts` hold Tailwind classes that read CSS variables from `src/app/(frontend)/globals.css` (`--reading-width`, `--header-clearance`, `--anchor-offset`, the chart widths and the home hero's `--hero-*` values), so a number two files must agree on has one definition (#616; `layoutSizes.test.ts`, `scrollMargin.test.ts`).
+- **Buttons of one decision:** `ButtonRow` stacks them on a phone and sets them in a row from the wider layout up, with one gap; `align="end"` right-aligns them (`ButtonRow.tsx`; `ButtonRow.test.tsx`, #1501).
 - **Links:** `Button` and `Link` render through `AppLink` (`next/link` for routes, a plain `<a>` for in-page `#` links so keyboard focus moves); `LinkButton` (`CMSLink.tsx`) turns a resolved CMS link into a `Button` (outline becomes `secondary`, `accent` stays orange, anything else `primary`).
 - **Media:** `Media` picks `VideoMedia` for a video mime type, else `ImageMedia`; upload paths stay relative so Next optimizes them as local images, with the image's `updatedAt` as cache key (`Media.tsx`, `ImageMedia.client.tsx`, `src/platform/lib/getMediaUrl.ts`). A picture that must stay cropped keeps its subject in view through the upload's focal point (`atFocalPoint`, `src/platform/lib/focalPoint.ts`, #1013); cards never pass it.
 - **Article pages:** a post's or event's page heads with a plain `PageHeader` band (optionally over a title photo, `BandBackdrop`, #1024), a `MetaBar` and a whole, uncropped `FeaturedImage` placed by `ArticlePage` (`PageHeader.tsx`, `MetaBar.tsx`, `FeaturedImage.tsx`, `ArticlePage.tsx`, #1013, #1055).

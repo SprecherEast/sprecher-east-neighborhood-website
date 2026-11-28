@@ -1,5 +1,5 @@
 import { NO_REVALIDATE, createAccount, paragraph } from './inMemoryPayload'
-import { createMedia, lockDocument, type TestDatabase } from './migratedDatabase'
+import { createMedia, lockDocument, withLaterColumns, type TestDatabase } from './migratedDatabase'
 
 /**
  * A database filled the way production had it before the delete-rules migration (#1559): posts with
@@ -31,7 +31,10 @@ export async function snapshot(database: TestDatabase): Promise<Snapshot> {
   return { rows: rest, shape }
 }
 
-export async function seedLikeProduction(database: TestDatabase): Promise<void> {
+export const seedLikeProduction = (database: TestDatabase): Promise<void> =>
+  withLaterColumns(database, () => seed(database))
+
+async function seed(database: TestDatabase): Promise<void> {
   const { payload } = database
   const media = (alt: string) => createMedia(database, alt)
 

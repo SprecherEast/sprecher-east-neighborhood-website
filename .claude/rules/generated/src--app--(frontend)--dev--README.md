@@ -20,6 +20,7 @@ One page, `/dev/gallery`, that draws each shared component, variant and state be
 ## How the pieces link
 
 - **One list drives it:** `galleryComponents.ts` lists the components shown; `page.tsx` composes the sections (`ActionsGallery`, `BadgeGallery`, `ChartGallery`, `FieldsGallery`, `ProgressGallery`, `SwitchGallery`, `TabsGallery` and the rest), each in its own file, with sample data in `sampleData.ts`, `blocksPostSample.ts` and `sectionTabsSample.ts`.
+- **Actions section:** shows `Button`, `ButtonRow` (both alignments) and `Link` (`ActionsGallery.client.tsx`; `galleryComponents.ts`).
 - **What it shows:** the [UI kit](/src/platform/ui/README.md), the [charts](/src/platform/ui/chart/README.md) and the [rich-text](/src/platform/richtext/README.md) renderers, with the chart fixtures from `src/platform/lib/chart/fixtures.ts`; `docs/ui/component-set.md` and the generated components reference point readers to it.
 
 ## Behaviors and events

@@ -6,6 +6,7 @@ export type ShowcaseLoader = () => Promise<unknown>
 /** Every shared component, by its exported name. */
 export const COMPONENT_LOADERS: Record<string, ShowcaseLoader> = {
   Button: () => import('@/platform/ui/Button').then((m) => m.Button),
+  ButtonRow: () => import('@/platform/ui/ButtonRow').then((m) => m.ButtonRow),
   Link: () => import('@/platform/ui/Link').then((m) => m.Link),
   AppLink: () => import('@/platform/ui/AppLink').then((m) => m.AppLink),
   LinkButton: () => import('@/platform/ui/CMSLink').then((m) => m.LinkButton),

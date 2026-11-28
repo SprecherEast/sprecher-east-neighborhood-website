@@ -21,7 +21,7 @@ Source: `src/platform/ui/Alert.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `accounts`, `verification`
+- Modules: `accounts`, `agents`, `verification`
 - Routes: `/dev/gallery`, `/events/[slug]`
 - Platform: `platform/richtext`, `platform/ui`
 

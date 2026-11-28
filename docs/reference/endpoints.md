@@ -8,18 +8,21 @@ Every way into the application that is not a site page, except what is listed un
 
 The access check of a route handler is inside it and is not shown.
 
-| URL                         | Methods                                | File                                                   |
-| --------------------------- | -------------------------------------- | ------------------------------------------------------ |
-| `/api/[...slug]`            | GET, POST, PUT, PATCH, DELETE, OPTIONS | `src/app/(payload)/api/[...slug]/route.ts`             |
-| `/api/graphql`              | POST, OPTIONS                          | `src/app/(payload)/api/graphql/route.ts`               |
-| `/api/graphql-playground`   | GET                                    | `src/app/(payload)/api/graphql-playground/route.ts`    |
-| `/api/version`              | GET                                    | `src/app/(frontend)/api/version/route.ts`              |
-| `/auth/[provider]`          | GET                                    | `src/app/(frontend)/auth/[provider]/route.ts`          |
-| `/auth/[provider]/callback` | GET                                    | `src/app/(frontend)/auth/[provider]/callback/route.ts` |
-| `/auth/[provider]/link`     | GET                                    | `src/app/(frontend)/auth/[provider]/link/route.ts`     |
-| `/next/exit-preview`        | GET                                    | `src/app/(frontend)/next/exit-preview/route.ts`        |
-| `/next/preview`             | GET                                    | `src/app/(frontend)/next/preview/route.ts`             |
-| `/next/seed`                | POST                                   | `src/app/(frontend)/next/seed/route.ts`                |
+| URL                                     | Methods                                | File                                                               |
+| --------------------------------------- | -------------------------------------- | ------------------------------------------------------------------ |
+| `/api/[...slug]`                        | GET, POST, PUT, PATCH, DELETE, OPTIONS | `src/app/(payload)/api/[...slug]/route.ts`                         |
+| `/api/graphql`                          | POST, OPTIONS                          | `src/app/(payload)/api/graphql/route.ts`                           |
+| `/api/graphql-playground`               | GET                                    | `src/app/(payload)/api/graphql-playground/route.ts`                |
+| `/api/version`                          | GET                                    | `src/app/(frontend)/api/version/route.ts`                          |
+| `/auth/[provider]`                      | GET                                    | `src/app/(frontend)/auth/[provider]/route.ts`                      |
+| `/auth/[provider]/callback`             | GET                                    | `src/app/(frontend)/auth/[provider]/callback/route.ts`             |
+| `/auth/[provider]/link`                 | GET                                    | `src/app/(frontend)/auth/[provider]/link/route.ts`                 |
+| `/next/exit-preview`                    | GET                                    | `src/app/(frontend)/next/exit-preview/route.ts`                    |
+| `/next/preview`                         | GET                                    | `src/app/(frontend)/next/preview/route.ts`                         |
+| `/next/seed`                            | POST                                   | `src/app/(frontend)/next/seed/route.ts`                            |
+| `/oauth/discovery/authorization-server` | GET                                    | `src/app/(frontend)/oauth/discovery/authorization-server/route.ts` |
+| `/oauth/discovery/protected-resource`   | GET                                    | `src/app/(frontend)/oauth/discovery/protected-resource/route.ts`   |
+| `/oauth/token`                          | POST                                   | `src/app/(frontend)/oauth/token/route.ts`                          |
 
 ## Files Next.js serves by name
 
@@ -64,6 +67,7 @@ Each is a POST endpoint the browser calls by itself, from a function marked `'us
 | module `accounts`        | `signOut`                | `src/modules/accounts/actions.ts` |
 | module `accounts`        | `signUp`                 | `src/modules/accounts/actions.ts` |
 | module `accounts`        | `verifyAccount`          | `src/modules/accounts/actions.ts` |
+| module `agents`          | `decideConnectionForm`   | `src/modules/agents/actions.ts`   |
 | module `events`          | `loadMoreEvents`         | `src/modules/events/actions.ts`   |
 | module `news`            | `loadMorePosts`          | `src/modules/news/actions.ts`     |
 
@@ -84,6 +88,8 @@ Payload builds a REST API for each content type under `/api`, guarded by the con
 | [`forms`](content-types/forms.md)                                       | collection | `/api/forms`                      | on      |
 | [`header`](content-types/header.md)                                     | global     | `/api/globals/header`             | on      |
 | [`media`](content-types/media.md)                                       | collection | `/api/media`                      | on      |
+| [`oauth-clients`](content-types/oauth-clients.md)                       | collection | `/api/oauth-clients`              | on      |
+| [`oauth-tokens`](content-types/oauth-tokens.md)                         | collection | `/api/oauth-tokens`               | on      |
 | [`pages`](content-types/pages.md)                                       | collection | `/api/pages`                      | on      |
 | [`passkey-challenges`](content-types/passkey-challenges.md)             | collection | `/api/passkey-challenges`         | on      |
 | [`passkeys`](content-types/passkeys.md)                                 | collection | `/api/passkeys`                   | on      |

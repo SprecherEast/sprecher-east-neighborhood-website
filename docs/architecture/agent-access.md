@@ -9,7 +9,9 @@ they suggest waits in the [review queue](review-queue.md) until staff publish it
 
 An admin creates an account with the `agent` role, then an API key for it in Admin (Agents → API
 Keys). Each MCP request sends the key (`Authorization: Bearer <key>`) and acts as that account,
-so collection access decides, and the key's checkboxes can only narrow it. An agent has these
+so collection access decides, and the key's checkboxes can only narrow it. An AI tool such as
+Claude can instead sign in with OAuth (#1501): it acts as the agent account its client is bound to,
+with the same tools ([agent OAuth](agent-oauth.md)). An agent has these
 tools and nothing else:
 
 | Tool                                                  | What it does                                                               |

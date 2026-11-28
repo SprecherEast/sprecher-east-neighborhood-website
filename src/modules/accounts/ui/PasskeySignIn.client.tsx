@@ -51,9 +51,16 @@ async function logInWithAPasskey(
  * then, and when it can't, shows nothing. Where the browser can offer a passkey in the email
  * field's autofill list, one request waits there from the start; pressing the button replaces it.
  * A closed prompt gets no message; any failure is one fixed message and the form stays as it was.
- * A good log in opens the account page.
+ * A good log in opens `returnTo`, the account page by default.
  */
-export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
+export function PasskeySignIn({
+  rememberMe,
+  returnTo = ACCOUNT_PATH,
+}: {
+  rememberMe: boolean
+  /** Where a good log in goes: a page the log in page checked, else the account */
+  returnTo?: string
+}) {
   const router = useRouter()
   // `null` while the browser is being asked
   const [supported, setSupported] = useState<boolean | null>(null)
@@ -73,7 +80,7 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
     // A newer attempt (the button, after the autofill one) has replaced this one
     if (mine !== attempt.current) return
     if (outcome === 'signed-in') {
-      router.push(ACCOUNT_PATH)
+      router.push(returnTo)
       router.refresh()
       return
     }
