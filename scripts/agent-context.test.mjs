@@ -250,6 +250,7 @@ describe('the parsers PR Policy imports', () => {
     const copies = [
       'scripts/agent-context-maps.mjs',
       'scripts/behavior-change.mjs',
+      'scripts/reference/showcaseRegistry.mjs',
       '.github/scripts/knowledge-sync.mjs',
       '.github/scripts/pr-body.mjs',
     ]
