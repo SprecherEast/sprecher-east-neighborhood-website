@@ -26,7 +26,13 @@ let agent: Account
 const cookies: Record<string, string> = {}
 const KEY = 'viewer-suite-key-0123456789abcdef'
 
-const SAME_ORIGIN = { 'sec-fetch-site': 'same-origin', 'sec-fetch-mode': 'navigate' }
+const SAME_ORIGIN = {
+  'sec-fetch-site': 'same-origin',
+  'sec-fetch-mode': 'navigate',
+  'sec-fetch-dest': 'document',
+}
+/** A browser opening the page from a link on another site, as every browser sends it */
+const FROM_ANOTHER_SITE = { ...SAME_ORIGIN, 'sec-fetch-site': 'cross-site' }
 
 const cookieFor = async (account: Account) => {
   const { token } = await payload.login({
@@ -70,9 +76,31 @@ describe('getViewer', () => {
     expect(await viewer(SAME_ORIGIN)).toBeNull()
   })
 
-  it('ignores the cookie on a visit from another site, where Payload withholds it', async () => {
-    const cross = { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'navigate' }
-    expect(await viewer({ ...cross, cookie: cookies.admin ?? '' })).toBeNull()
+  it.each(['same-site', 'none'])(
+    'signs an admin in on a `%s` visit (a sibling subdomain, a typed address)',
+    async (site) => {
+      const visit = { ...SAME_ORIGIN, 'sec-fetch-site': site }
+      expect(await viewer({ ...visit, cookie: cookies.admin ?? '' })).toEqual({
+        id: admin.id,
+        isAdmin: true,
+      })
+    },
+  )
+
+  it('ignores the cookie on a top-level visit from another site', async () => {
+    expect(await viewer({ ...FROM_ANOTHER_SITE, cookie: cookies.admin ?? '' })).toBeNull()
+  })
+
+  it('ignores a visit from another site even where Payload would sign the cookie in', async () => {
+    // Our own check, not Payload's: its rule for cross-site visits changes between versions
+    const { getOAuthContext } = await import('./context')
+    const { payload: live } = await getOAuthContext()
+    vi.spyOn(live, 'auth').mockResolvedValue({
+      user: { id: admin.id, role: 'admin', collection: 'users' },
+      permissions: {},
+      responseHeaders: new Headers(),
+    } as never)
+    expect(await viewer({ ...FROM_ANOTHER_SITE, cookie: cookies.admin ?? '' })).toBeNull()
   })
 
   it('is no one for a credential that is no account, even one Payload says is an admin', async () => {

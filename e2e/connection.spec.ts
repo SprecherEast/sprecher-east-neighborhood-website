@@ -7,9 +7,9 @@ import { expect, expectAccessible, test } from './support/test'
 
 // An AI tool such as the Claude connector asking to be let in to the AI agent address (#1501), as
 // the admin goes through it on a phone and on a desktop. The tool's site is a page on another
-// origin, so the first visit is a real cross-site navigation, where the browser holds back the
-// sign-in cookie: the first page shows who is asking and a way on, and the approval, opened from
-// this site, is where the signed-in admin is recognised. This is the flow a unit test of the
+// origin, so the first visit is a real cross-site navigation. The first page reads no session and
+// shows who is asking and a way on; the approval ignores a session from another site
+// (`isFromAnotherSite`), so it is opened from this site, where the signed-in admin is recognised. This is the flow a unit test of the
 // page could not see.
 
 const allow = (page: Page) => page.getByRole('button', { name: 'Allow this connection' })

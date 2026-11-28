@@ -65,12 +65,16 @@ export async function getGoogleConnection(
 /**
  * Starting a link from the account page: the session must be a recent sign-in, and an account
  * that already has Google has nothing to connect. Answers the account the flow is bound to, or
- * where to send the person instead.
+ * where to send the person instead. A start from a link on another site reads no session (from
+ * Payload 3.94 the cookie would count there, so any site's link could start a connect for a
+ * neighbor who signed in recently): it goes to the account page, where the button is.
  */
 export async function beginGoogleLink(
   provider: SocialProvider,
   now: Date,
+  { fromAnotherSite = false }: { fromAnotherSite?: boolean } = {},
 ): Promise<{ ok: true; accountId: number } | { ok: false; to: string }> {
+  if (fromAnotherSite) return { ok: false, to: ACCOUNT_PATH }
   const session = await getSignInSession()
   const decision = decideStartLink({
     accountId: session?.accountId ?? null,

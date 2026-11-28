@@ -57,12 +57,13 @@ const failureTo = (link: boolean, failure: 'failed' | 'too-many') =>
  * Starts a sign-in: keeps its checks in this browser and answers where to send the person.
  * Answers `/login` with a fixed message when the provider is off or can't be reached. With `link`
  * (a signed-in neighbor connecting Google from `/account`, #1338) the session must be a recent
- * sign-in, the flow is bound to its account, and failures go back to the account page.
+ * sign-in, the flow is bound to its account, and failures go back to the account page;
+ * `fromAnotherSite` says the request began on another site, where the session isn't read.
  */
 export async function startSocialSignIn(
   provider: SocialProvider,
   ip: string | null,
-  { link = false }: { link?: boolean } = {},
+  { link = false, fromAnotherSite = false }: { link?: boolean; fromAnotherSite?: boolean } = {},
 ): Promise<string> {
   if (!providerKeys(provider, process.env)) return failureTo(link, 'failed')
   if (await signInGuard({ token: null, ip }, NO_ROBOT_CHECK)) return failureTo(link, 'too-many')
@@ -70,7 +71,7 @@ export async function startSocialSignIn(
     const now = new Date()
     let linkAccountId: number | null = null
     if (link) {
-      const begun = await beginGoogleLink(provider, now)
+      const begun = await beginGoogleLink(provider, now, { fromAnotherSite })
       if (!begun.ok) return begun.to
       linkAccountId = begun.accountId
     }

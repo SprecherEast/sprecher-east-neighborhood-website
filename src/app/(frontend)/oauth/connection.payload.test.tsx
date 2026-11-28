@@ -16,10 +16,10 @@ import {
 /**
  * The connection pages as a browser reaches them (#1501), with a real sign-in cookie and the
  * fetch-metadata headers a browser sends: the first page from the AI tool's own site
- * (`cross-site`, no `Origin`), the approval page from our own (`same-origin`). Payload's CSRF
- * check ignores the sign-in cookie on a cross-site visit, which is why the first page reads no
- * session and shows nothing about any account, and why the approval, where the session is read,
- * is a page of its own. Nothing here is mocked but the request's headers.
+ * (`cross-site`, no `Origin`), the approval page from our own (`same-origin`). The session is
+ * ignored on a visit from another site (`getViewer`, by `isFromAnotherSite`), which is why the
+ * first page reads no session and shows nothing about any account, and why the approval, where
+ * the session is read, is a page of its own. Nothing here is mocked but the request's headers.
  */
 
 const request = vi.hoisted(() => ({ headers: new Headers() }))
