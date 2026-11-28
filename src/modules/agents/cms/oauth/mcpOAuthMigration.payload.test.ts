@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import * as foreignKeyRules from '@/migrations/20261126_203500_foreign_key_delete_rules'
 import * as oauthSignIn from '@/migrations/20261127_130000_mcp_oauth_sign_in'
+import * as clientScopes from '@/migrations/20261128_023421_client_scopes'
 import { createAccount } from '@/platform/payload/testing/inMemoryPayload'
 import {
   createMigratedDatabase,
@@ -75,6 +76,8 @@ describe('the OAuth sign-in migration', () => {
       'oauth_clients_redirect_uris',
       'oauth_tokens',
     ])
+    // The client scopes migration (#1499) comes next, and the clients below are saved with scopes
+    await database.run(clientScopes.up)
     expect(schemaRules).toEqual([
       'oauth_clients_id:oauth_clients:CASCADE:NO ACTION',
       'oauth_tokens_id:oauth_tokens:CASCADE:NO ACTION',
@@ -103,6 +106,8 @@ describe('the OAuth sign-in migration', () => {
     const tokenLock = await lockDocument(database, 'oauth-tokens', token.id)
     const unrelatedLock = await lockDocument(database, 'users', admin.id)
 
+    // The scopes migration sits on this one, so it rolls back first
+    await database.run(clientScopes.down)
     await database.run(oauthSignIn.down)
 
     expect(await oauthTables()).toEqual([])

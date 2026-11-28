@@ -9,7 +9,7 @@ import { OAUTH_CLIENTS, OAUTH_TOKENS } from './constants'
  * (#1501). Plain data, no Payload import.
  */
 
-/** The stored credential for an HMAC hash, with its client's id, public name and switch. */
+/** The stored credential for an HMAC hash, with the client fields its rules read (#1499 adds scopes and expiry). */
 export const credentialByHash = (tokenHash: string) =>
   ({
     collection: OAUTH_TOKENS,
@@ -17,7 +17,15 @@ export const credentialByHash = (tokenHash: string) =>
     limit: 1,
     depth: 1,
     pagination: false,
-    populate: { [OAUTH_CLIENTS]: { clientId: true, enabled: true, agent: true } },
+    populate: {
+      [OAUTH_CLIENTS]: {
+        clientId: true,
+        enabled: true,
+        agent: true,
+        scopes: true,
+        expiresAt: true,
+      },
+    },
     overrideAccess: true,
   }) as const
 

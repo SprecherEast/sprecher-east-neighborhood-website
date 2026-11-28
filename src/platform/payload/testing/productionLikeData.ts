@@ -1,5 +1,11 @@
 import { NO_REVALIDATE, createAccount, paragraph } from './inMemoryPayload'
-import { createMedia, lockDocument, withLaterColumns, type TestDatabase } from './migratedDatabase'
+import {
+  createMedia,
+  insertRawRow,
+  lockDocument,
+  withLaterColumns,
+  type TestDatabase,
+} from './migratedDatabase'
 
 /**
  * A database filled the way production had it before the delete-rules migration (#1559): posts with
@@ -93,15 +99,18 @@ async function seed(database: TestDatabase): Promise<void> {
     data: { email: 'seed@example.com' },
   })
   const agent = await createAccount(payload, 'agent', 'seed-agent')
-  const key = await payload.db.create({
-    collection: 'payload-mcp-api-keys',
-    data: { user: agent.id, label: 'Agent', enableAPIKey: false },
+  // Written straight to the table: the key's later fields (its scopes, #1499) come after the
+  // migrations this database stops at
+  const keyId = await insertRawRow(database, 'payload_mcp_api_keys', {
+    user_id: agent.id,
+    label: 'Agent',
+    enable_a_p_i_key: 0,
   })
   const lock = (relationTo: string, value: number) => lockDocument(database, relationTo, value)
   await lock('posts', post.id as number)
   await lock('events', event.id as number)
   await lock('email-confirmations', confirmation.id as number)
-  await lock('payload-mcp-api-keys', key.id as number)
+  await lock('payload-mcp-api-keys', keyId)
   await payload.db.create({
     collection: 'payload-preferences',
     data: { key: 'nav', user: { relationTo: 'users', value: editor.id }, value: { open: true } },
@@ -110,7 +119,7 @@ async function seed(database: TestDatabase): Promise<void> {
     collection: 'payload-preferences',
     data: {
       key: 'nav',
-      user: { relationTo: 'payload-mcp-api-keys', value: key.id },
+      user: { relationTo: 'payload-mcp-api-keys', value: keyId },
       value: { a: 1 },
     },
   })

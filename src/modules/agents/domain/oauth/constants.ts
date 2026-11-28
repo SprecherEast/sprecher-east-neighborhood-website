@@ -1,6 +1,6 @@
 /**
  * What the OAuth sign-in for MCP clients fixes in one place (#1501): the addresses, how long each
- * credential lives, the one scope, and the prefix that tells our access tokens from an API key.
+ * credential lives, and the prefix that tells our access tokens from an API key.
  * Paths are on the site's own origin; `metadata.ts` joins them to it.
  */
 export const OAUTH_PATHS = {
@@ -22,9 +22,6 @@ export const OAUTH_LIFETIMES = {
   /** How long an admin has to press the button on the consent page */
   consentSeconds: 10 * 60,
 } as const
-
-/** The one scope: what the MCP address already offers an agent account. Narrower scopes: #1499 */
-export const OAUTH_SCOPE = 'mcp'
 
 /** Our credentials start with a fixed prefix, so an access token never reaches the API-key lookup */
 export const TOKEN_PREFIX = { code: 'sec_', access: 'sea_', refresh: 'ser_' } as const

@@ -123,7 +123,7 @@ describe('saving tokens into a family that ends', () => {
           accessTokenExpiresAt: new Date(Date.now() + 60_000),
           refreshToken: `ser_${family}`,
           refreshTokenExpiresAt: new Date(Date.now() + 120_000),
-          scope: ['mcp'],
+          scope: ['read'],
         },
         { id: clientId, grants: [], credentialClientId: client.id },
         { agentId: 1, consentedBy: 1, resource: RESOURCE, family },

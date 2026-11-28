@@ -45,7 +45,7 @@ describe('readClientAndRedirect', () => {
 })
 
 describe('readAuthorizeRequest', () => {
-  it('accepts a complete request and defaults the scope', () => {
+  it('accepts a complete request and defaults to the minimal scope', () => {
     expect(read()).toEqual({
       ok: true,
       request: {
@@ -54,14 +54,16 @@ describe('readAuthorizeRequest', () => {
         state: 'state-123',
         codeChallenge: valid.code_challenge,
         resource: RESOURCE,
-        scope: 'mcp',
+        scope: 'read',
       },
     })
   })
 
-  it('accepts the one scope, alone or among repeats of itself', () => {
-    expect(read({ scope: 'mcp' })).toMatchObject({ ok: true })
-    expect(read({ scope: 'mcp mcp' })).toMatchObject({ ok: true })
+  it('carries the scopes asked for, once each and in a fixed order', () => {
+    expect(read({ scope: 'suggest read read' })).toMatchObject({
+      ok: true,
+      request: { scope: 'read suggest' },
+    })
   })
 
   const refused: [string, Record<string, string | string[] | undefined>, string][] = [
@@ -81,7 +83,9 @@ describe('readAuthorizeRequest', () => {
     ['no resource', { resource: undefined }, 'invalid_target'],
     ['another resource', { resource: 'https://sprechereast.com/api/graphql' }, 'invalid_target'],
     ['two resources', { resource: [RESOURCE, RESOURCE] }, 'invalid_target'],
-    ['another scope', { scope: 'mcp admin' }, 'invalid_scope'],
+    ['an unknown scope', { scope: 'read admin' }, 'invalid_scope'],
+    ['the old single scope', { scope: 'mcp' }, 'invalid_scope'],
+    ['two scope parameters', { scope: ['read', 'suggest'] }, 'invalid_scope'],
     [
       'two challenges',
       { code_challenge: [valid.code_challenge, valid.code_challenge] },
@@ -119,7 +123,7 @@ describe('toAuthorizeParams', () => {
       code_challenge_method: 'S256',
       state: valid.state,
       resource: RESOURCE,
-      scope: 'mcp',
+      scope: 'read',
     })
     expect(readAuthorizeRequest(params, RESOURCE)).toEqual(read1)
   })

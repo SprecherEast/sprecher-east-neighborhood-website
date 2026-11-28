@@ -36,6 +36,8 @@
 | `redirectUris`       | array        | yes      |                   | min rows 1; max rows 5                                                                                     |
 | `redirectUris[].uri` | text         | yes      |                   | max length 500                                                                                             |
 | `redirectUris[].id`  | text         | no       |                   | hidden                                                                                                     |
+| `scopes`             | select       | yes      | read, suggest     |                                                                                                            |
+| `expiresAt`          | date         | no       |                   |                                                                                                            |
 | `enabled`            | checkbox     | no       |                   | default true                                                                                               |
 | `updatedAt`          | date         | no       |                   | hidden; indexed                                                                                            |
 | `createdAt`          | date         | no       |                   | hidden; indexed                                                                                            |

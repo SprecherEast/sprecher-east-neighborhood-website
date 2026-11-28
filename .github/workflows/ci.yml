@@ -193,10 +193,10 @@ jobs:
         run: npm run knowledge:structure
 
       # The system map's data (#1462) is made from the notes, the generated reference and the
-      # repository's own files by one command; the job fails when the committed graph or catalog
-      # differs from what the sources give. The change history and the open-issue snapshot are
-      # separate files that are not committed, so they cannot make it fail.
-      - name: Check the system map data
+      # repository's own files by one command. The graph and the catalog are not committed (#1581);
+      # the job fails when the scan fails (a missing path, a duplicate node, a type outside the
+      # vocabulary), and compares nothing against a file.
+      - name: Check the system map scan
         run: npm run knowledge:map -- --check
 
   # The account and contact flows as a resident uses them, on a phone and a desktop (#311):

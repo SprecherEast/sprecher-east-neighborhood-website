@@ -10,7 +10,7 @@ const row: CredentialRow = {
   agent: { id: 9 },
   consentedBy: 1,
   resource: 'https://sprechereast.com/api/mcp',
-  scope: 'mcp',
+  scope: 'read suggest',
   expiresAt: '2026-12-01T00:00:00.000Z',
   usedAt: null,
   revokedAt: '2026-11-30T00:00:00.000Z',
@@ -25,7 +25,7 @@ describe('toCredential', () => {
       client: { id: 2, clientId: 'mcp_abc', enabled: true, agentId: 9 },
       agentId: 9,
       consentedBy: 1,
-      scope: ['mcp'],
+      scope: ['read', 'suggest'],
       usedAt: null,
       revokedAt: new Date('2026-11-30T00:00:00.000Z'),
       expiresAt: new Date('2026-12-01T00:00:00.000Z'),
@@ -40,6 +40,23 @@ describe('toCredential', () => {
   it('reads the client’s agent account, as an id or a loaded account, and 0 when absent', () => {
     expect(toCredential({ ...row, client: { id: 2, agent: { id: 4 } } })?.client.agentId).toBe(4)
     expect(toCredential({ ...row, client: { id: 2 } })?.client.agentId).toBe(0)
+  })
+
+  it('reads the client scopes and expiry, and keeps only scope names', () => {
+    const client = {
+      id: 2,
+      clientId: 'mcp_abc',
+      scopes: ['read', 'mcp'],
+      expiresAt: '2027-01-01T00:00:00.000Z',
+    }
+    expect(toCredential({ ...row, client })?.client).toMatchObject({
+      scopes: ['read'],
+      expiresAt: new Date('2027-01-01T00:00:00.000Z'),
+    })
+    expect(toCredential({ ...row, client: { id: 2 } })?.client).toMatchObject({
+      scopes: [],
+      expiresAt: null,
+    })
   })
 
   it('cannot judge a row whose client was not loaded', () => {

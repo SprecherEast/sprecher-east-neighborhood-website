@@ -11,10 +11,12 @@ import { TOO_MANY_REQUESTS } from '../domain/oauth/constants'
 import { bearerChallenge } from '../domain/oauth/metadata'
 import { mcpResource } from '../domain/oauth/resource'
 import { tokenKindOf } from '../domain/oauth/secrets'
+import { isExpired, scopesOf, type Scope } from '../domain/scopes'
 import { AGENT_RUNS } from './agentRuns'
 import { AGENT_VIEWS } from './agentViews'
 import { adminOnlyApiKeys } from './apiKeys'
 import { authenticateOAuth } from './oauth/authenticateBearer'
+import { applyScopes } from './scopes'
 import { reportItemTool } from './tools/reportItem'
 import { submitSuggestionTool } from './tools/submitSuggestion'
 
@@ -52,12 +54,28 @@ const challenge = (req: PayloadRequest) => {
 }
 
 /**
+ * A key's own record decides, as a client's does: past its expiry it is refused like an unknown
+ * key, and its scopes (a list on the same record, read at every request, never cached) narrow the
+ * boxes ticked for it. A record with no scopes gets nothing.
+ */
+const authenticateKey = async (
+  defaultSettings: (apiKey?: null | string) => Promise<MCPAccessSettings>,
+  now: Date,
+): Promise<{ settings: MCPAccessSettings; scopes: Scope[] }> => {
+  const settings = await defaultSettings()
+  const record = settings as unknown as { scopes?: unknown; expiresAt?: string | null }
+  if (isExpired(record.expiresAt, now)) throw new UnauthorizedError()
+  return { settings, scopes: scopesOf(record.scopes) }
+}
+
+/**
  * A per-connection limit counted before the credential is looked up, so guessing keys is slow;
  * then the credential, either one of our OAuth access tokens (#1501, recognised by its prefix,
  * which no API key has) or the plugin's own key check, which is unchanged; and two of ours: the
  * account must still be an agent (a credential never acts as staff, even if the account's role
  * changed), and each key or client gets a few requests a minute. Past a limit, 429; with no
- * valid credential, 401 pointing at the OAuth metadata.
+ * valid credential, 401 pointing at the OAuth metadata. Last, the credential's scopes narrow what
+ * the plugin serves, and a call outside them is a 403 naming the scope it needs (`cms/scopes.ts`).
  */
 const checkAgentKey = async (
   req: PayloadRequest,
@@ -68,13 +86,13 @@ const checkAgentKey = async (
   if (ip && !connections.tryTake(ip, MCP_LIMITS.perConnection, now)) throw tooMany()
   try {
     const token = bearerToken(req)
-    const settings =
+    const { settings, scopes } =
       token !== null && tokenKindOf(token) === 'access'
         ? await authenticateOAuth(req, token, mcpResource(getServerSideURL()), mcpOptions)
-        : await defaultSettings()
+        : await authenticateKey(defaultSettings, new Date(now))
     if (!hasAgent(settings.user)) throw new UnauthorizedError()
     if (!requests.tryTake(String(settings.id), MCP_LIMITS.perKey, now)) throw tooMany()
-    return settings
+    return await applyScopes(req, settings, scopes)
   } catch (error) {
     if (error instanceof UnauthorizedError) challenge(req)
     throw error

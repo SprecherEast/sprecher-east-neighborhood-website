@@ -7,6 +7,10 @@ from the board and reads GitHub only, so any session can run it and nothing depe
 
 A finding is evidence from GitHub, never a recollection or an estimate.
 
+The [outsider review](../../.agents/skills/outsider-review/SKILL.md) is a separate, read-only look
+at recent merges, with the power to pause work through the chief of staff; this review does not
+have it.
+
 ## How to run it
 
 Use `gh api` (REST), which works in cloud sessions

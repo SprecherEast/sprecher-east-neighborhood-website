@@ -10,6 +10,7 @@ import type { ConsentRequest } from '../../domain/oauth/consent'
 import { redirectError } from '../../domain/oauth/redirects'
 import type { ClientFacts } from '../../domain/oauth/types'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
+import { grantFor, scopeList } from '../../domain/scopes'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
 import { createConnectionLimit } from './connectionLimit'
@@ -32,8 +33,10 @@ export type Checked =
 /**
  * What both pages of the connection do first (#1501), in this order, so nothing is sent anywhere
  * or asked of anyone before it is safe: a limit per connection (each visit reads the database);
- * the client must be registered and on, the redirect address one of its own, and the request
- * complete (PKCE S256, state, the MCP address as resource). Reads no session.
+ * the client must be registered, on and unexpired, the redirect address one of its own, and the
+ * request complete (PKCE S256, state, the MCP address as resource, scopes we know). The request
+ * leaves with only the scopes the client's record allows (#1499), so both pages show and carry the
+ * same grant; none at all is `invalid_scope`. Reads no session.
  */
 export async function checkAuthorization(params: RawParams, headers: Headers): Promise<Checked> {
   if (!allows(headers)) return { kind: 'too-many' }
@@ -41,7 +44,7 @@ export async function checkAuthorization(params: RawParams, headers: Headers): P
   if (!ids.ok) return { kind: 'refused', message: ids.message }
   const { payload, origin, resource } = await getOAuthContext()
   const client = await findOAuthClient(payload, ids.clientId)
-  if (!clientAccepts(client, ids.redirectUri)) {
+  if (!clientAccepts(client, ids.redirectUri, new Date())) {
     return { kind: 'refused', message: CONNECTION_REFUSED }
   }
   const read = readAuthorizeRequest(params, resource)
@@ -49,9 +52,21 @@ export async function checkAuthorization(params: RawParams, headers: Headers): P
     const state = typeof params.state === 'string' ? params.state : undefined
     return { kind: 'redirect', url: redirectError(ids.redirectUri, origin, read.error, state) }
   }
+  // Never more than the client's record allows, whatever it asked for
+  const granted = grantFor(scopeList(read.request.scope), client.scopes)
+  if (granted.length === 0) {
+    const error = {
+      code: 'invalid_scope',
+      description: 'This AI agent is not allowed what it asked for.',
+    } as const
+    return {
+      kind: 'redirect',
+      url: redirectError(ids.redirectUri, origin, error, read.request.state),
+    }
+  }
   return {
     kind: 'ok',
-    request: read.request,
+    request: { ...read.request, scope: granted.join(' ') },
     clientName: client.name,
     agentId: client.agentId,
     redirectHost: new URL(ids.redirectUri).host,

@@ -37,6 +37,8 @@ describe('checkToken', () => {
   it('refuses an expired token, also at the exact moment it expires', () => {
     expect(check(token({ expiresAt: minutes(-1) }))).toBe('expired')
     expect(check(token({ expiresAt: NOW }))).toBe('expired')
+    // a date that cannot be read counts as past, never as no expiry
+    expect(check(token({ expiresAt: new Date('nonsense') }))).toBe('expired')
   })
 
   it('refuses a revoked token', () => {
@@ -56,6 +58,19 @@ describe('checkToken', () => {
     expect(check(token({ client: { enabled: true, agentId: 10 } }))).toBe('agent-changed')
     // A client row that did not say its agent (read as 0) can never match
     expect(check(token({ client: { enabled: true, agentId: 0 } }))).toBe('agent-changed')
+  })
+
+  it('refuses a token whose client has expired, at the moment it expires too', () => {
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: minutes(-1) } }))).toBe(
+      'client-expired',
+    )
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: NOW } }))).toBe(
+      'client-expired',
+    )
+    expect(
+      check(token({ client: { enabled: true, agentId: 9, expiresAt: minutes(1) } })),
+    ).toBeNull()
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: null } }))).toBeNull()
   })
 
   it('reports reuse before expiry, so a replay always revokes the family', () => {

@@ -10,6 +10,7 @@ import {
 import { redirectBack, redirectError } from '../../domain/oauth/redirects'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
 import type { Grantee, Viewer } from '../../domain/oauth/types'
+import { recordAllows, scopeList } from '../../domain/scopes'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
 import { createOAuthServer, OAuthError, OAuthRequest, OAuthResponse } from './oauthServer'
@@ -39,12 +40,14 @@ export async function decideConsent(
     return REFUSED
   }
   const client = await findOAuthClient(payload, request.clientId)
-  if (!clientAccepts(client, request.redirectUri)) {
+  if (!clientAccepts(client, request.redirectUri, now)) {
     return REFUSED
   }
   const params = toAuthorizeParams(request)
   // The same rules as the page, so a ticket for a request that no longer passes them is refused
   if (!readAuthorizeRequest(params, resource).ok) return REFUSED
+  // The record may have been narrowed since the page was shown: no cached grants
+  if (!recordAllows(scopeList(request.scope), client.scopes)) return REFUSED
   if (decision === 'deny') {
     const error = {
       code: 'access_denied',

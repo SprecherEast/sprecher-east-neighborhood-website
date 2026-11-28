@@ -1475,7 +1475,15 @@ export interface OauthClient {
     id?: string | null
   }[]
   /**
-   * Untick to stop this tool at once: its tokens stop working.
+   * What this AI agent may do. We can only narrow what its agent account allows, never widen it. A change applies on its next request.
+   */
+  scopes: ('read' | 'suggest')[]
+  /**
+   * Optional. After this time the AI agent is refused until an admin sets a later time or leaves this empty.
+   */
+  expiresAt?: string | null
+  /**
+   * Untick to stop this AI agent at once: its tokens stop working. Other AI agents are not touched.
    */
   enabled?: boolean | null
   updatedAt: string
@@ -1674,6 +1682,14 @@ export interface PayloadMcpApiKey {
      */
     reportItem?: boolean | null
   }
+  /**
+   * What this AI agent may do. We can only narrow what its agent account allows, never widen it. A change applies on its next request.
+   */
+  scopes: ('read' | 'suggest')[]
+  /**
+   * Optional. After this time the AI agent is refused until an admin sets a later time or leaves this empty.
+   */
+  expiresAt?: string | null
   updatedAt: string
   createdAt: string
   enableAPIKey?: boolean | null
@@ -2642,6 +2658,8 @@ export interface OauthClientsSelect<T extends boolean = true> {
         uri?: T
         id?: T
       }
+  scopes?: T
+  expiresAt?: T
   enabled?: T
   updatedAt?: T
   createdAt?: T
@@ -2903,6 +2921,8 @@ export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
         submitSuggestion?: T
         reportItem?: T
       }
+  scopes?: T
+  expiresAt?: T
   updatedAt?: T
   createdAt?: T
   enableAPIKey?: T

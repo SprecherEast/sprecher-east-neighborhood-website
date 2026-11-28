@@ -1,4 +1,4 @@
-import { OAUTH_SCOPE } from './constants'
+import { parseRequestedScopes } from '../scopes'
 import type { ConsentRequest } from './consent'
 import { resourceMatches } from './resource'
 
@@ -105,9 +105,12 @@ export function readAuthorizeRequest(
   if (!resourceMatches(single(params, 'resource'), expectedResource)) {
     return refuse('invalid_target', `The resource must be ${expectedResource}.`)
   }
-  const scopes = (single(params, 'scope') ?? OAUTH_SCOPE).split(' ').filter(Boolean)
-  if (scopes.length === 0 || scopes.some((scope) => scope !== OAUTH_SCOPE)) {
-    return refuse('invalid_scope', `The only scope is ${OAUTH_SCOPE}.`)
+  // A scope repeated as two parameters is not the one parameter RFC 6749 describes
+  const scopes = Array.isArray(params.scope)
+    ? ({ ok: false } as const)
+    : parseRequestedScopes(single(params, 'scope'))
+  if (!scopes.ok) {
+    return refuse('invalid_scope', 'The request names a scope this address does not offer.')
   }
   return {
     ok: true,
@@ -117,7 +120,7 @@ export function readAuthorizeRequest(
       state,
       codeChallenge: challenge,
       resource: expectedResource,
-      scope: OAUTH_SCOPE,
+      scope: scopes.scopes.join(' '),
     },
   }
 }
