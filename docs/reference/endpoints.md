@@ -67,7 +67,6 @@ Each is a POST endpoint the browser calls by itself, from a function marked `'us
 | module `accounts`        | `signOut`                | `src/modules/accounts/actions.ts` |
 | module `accounts`        | `signUp`                 | `src/modules/accounts/actions.ts` |
 | module `accounts`        | `verifyAccount`          | `src/modules/accounts/actions.ts` |
-| module `agents`          | `decideConnection`       | `src/modules/agents/actions.ts`   |
 | module `agents`          | `decideConnectionForm`   | `src/modules/agents/actions.ts`   |
 | module `events`          | `loadMoreEvents`         | `src/modules/events/actions.ts`   |
 | module `news`            | `loadMorePosts`          | `src/modules/news/actions.ts`     |

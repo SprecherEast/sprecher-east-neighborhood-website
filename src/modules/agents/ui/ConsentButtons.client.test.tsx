@@ -7,8 +7,9 @@ const mocks = vi.hoisted(() => ({ decideConnectionForm: vi.fn() }))
 vi.mock('../actions', () => ({ decideConnectionForm: mocks.decideConnectionForm }))
 
 import { ConsentButtons } from './ConsentButtons.client'
+import { ConsentCard } from './ConsentCard'
 
-const view = {
+const input = {
   request: {
     clientId: 'mcp_a',
     redirectUri: 'https://claude.ai/cb',
@@ -19,27 +20,30 @@ const view = {
   },
   ticket: '123.abc',
 }
+const view = { ...input, clientName: 'Claude', redirectHost: 'claude.ai', agentName: 'Scout' }
 
 beforeEach(() => mocks.decideConnectionForm.mockReset().mockResolvedValue({ message: 'Refused.' }))
 afterEach(cleanup)
 
-/** What the action received: the bound input, the earlier answer and the form's fields */
+/** What the action received: its bound input, the earlier answer and the form's fields */
 const lastCall = () => {
-  const [input, , form] = mocks.decideConnectionForm.mock.lastCall ?? []
-  return { input, choice: (form as FormData).get('decision') }
+  const [bound, , form] = mocks.decideConnectionForm.mock.lastCall ?? []
+  return { bound, choice: (form as FormData).get('decision') }
 }
+/** The card binds the request and ticket once, on the server, and hands the buttons the action */
+const card = () => render(<ConsentCard view={view} />)
 
-describe('ConsentButtons', () => {
+describe('ConsentButtons in the approval card', () => {
   it('sends the request and its ticket with the choice of the pressed button', async () => {
-    render(<ConsentButtons view={view} />)
+    card()
     await userEvent.click(screen.getByRole('button', { name: 'Allow this connection' }))
-    expect(lastCall()).toEqual({ input: view, choice: 'approve' })
+    expect(lastCall()).toEqual({ bound: input, choice: 'approve' })
     await userEvent.click(screen.getByRole('button', { name: 'Don’t allow' }))
-    expect(lastCall()).toEqual({ input: view, choice: 'deny' })
+    expect(lastCall()).toEqual({ bound: input, choice: 'deny' })
   })
 
   it('is a form that submits each button, so it needs no script to work', () => {
-    render(<ConsentButtons view={view} />)
+    card()
     for (const name of ['Allow this connection', 'Don’t allow']) {
       const button = screen.getByRole('button', { name })
       expect(button.getAttribute('type')).toBe('submit')
@@ -48,8 +52,18 @@ describe('ConsentButtons', () => {
   })
 
   it('shows a refusal where the buttons are', async () => {
-    render(<ConsentButtons view={view} />)
+    card()
     await userEvent.click(screen.getByRole('button', { name: 'Allow this connection' }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Refused.'))
+  })
+})
+
+describe('ConsentButtons', () => {
+  it('takes its action bound, and never binds one itself', async () => {
+    const action = vi.fn().mockResolvedValue({ message: 'Refused.' })
+    render(<ConsentButtons action={action} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Allow this connection' }))
+    expect(action).toHaveBeenCalledOnce()
+    expect(mocks.decideConnectionForm).not.toHaveBeenCalled()
   })
 })

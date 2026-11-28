@@ -105,6 +105,45 @@ test.describe('connecting an AI tool', () => {
     })
   }
 
+  // A refused press before hydration (an altered or expired ticket, or no choice) is answered by a
+  // render of the page with the refusal. It must answer at once and leave the site answering: a
+  // render that never finishes once held the server at full CPU.
+  const alteredTicket = async (page: Page) => {
+    const bound = page.locator('input[name^="$ACTION_"][value*="ticket"]')
+    await bound.evaluate((input: HTMLInputElement) => {
+      input.value = input.value.replace(/"ticket":"[^"]*"/, '"ticket":"1.forged"')
+    })
+  }
+  const noChoice = (page: Page) =>
+    page.getByRole('button', { name: 'Allow this connection' }).evaluate((button) => {
+      button.removeAttribute('name')
+    })
+  for (const [variant, spoil] of [
+    ['an altered ticket', alteredTicket],
+    ['no choice', noChoice],
+  ] as const) {
+    test(`pressing "Allow this connection" with ${variant} before the page has loaded its scripts shows the refusal and leaves the site answering`, async ({
+      page,
+    }) => {
+      await logIn(page, CONNECT.adminEmail, CONNECT.password)
+      await expect(page).toHaveURL(/\/account/)
+      await routeTheTool(page, connectionRequest(await connectionClientId(), 'state-refused'))
+      await page.goto('https://claude.example/')
+      await page.route('**/_next/static/**/*.js', (route) => route.abort())
+      await page.getByRole('link', { name: 'Connect' }).click()
+      await page.getByRole('link', { name: 'Continue to approval' }).click()
+      await spoil(page)
+      const posted = page.waitForResponse((response) => response.request().method() === 'POST', {
+        timeout: 10_000,
+      })
+      await page.getByRole('button', { name: 'Allow this connection' }).click()
+      expect((await posted).status()).toBe(200)
+      await expect(page.getByRole('alert').filter({ hasText: 'not valid' })).toBeVisible()
+      // The site still answers
+      expect((await page.request.get('/events', { timeout: 10_000 })).status()).toBe(200)
+    })
+  }
+
   test('a visitor who is signed out logs in and comes back to the same request', async ({
     page,
   }) => {

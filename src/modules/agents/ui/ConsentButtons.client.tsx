@@ -6,19 +6,17 @@ import { Alert } from '@/platform/ui/Alert'
 import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Button } from '@/platform/ui'
 
-import type { ConsentView } from '../use-cases/oauth/beginAuthorization'
-import { decideConnectionForm } from '../actions'
+import type { DecideAction } from '../actions'
 
 /**
  * Approve or not. A form whose server action carries the request and its ticket, and each button
  * its choice, so a press before the page has hydrated still works. The browser then leaves for the
- * AI tool, so a refusal is the only answer shown here.
+ * AI tool, so a refusal is the only answer shown here. The action arrives already bound, from the
+ * server component: binding it here, on every render, makes a new pending promise each time on the
+ * server, and the render of a refusal before hydration then never finishes.
  */
-export function ConsentButtons({ view }: { view: Pick<ConsentView, 'request' | 'ticket'> }) {
-  const [refusal, decide, pending] = useActionState(
-    decideConnectionForm.bind(null, { request: view.request, ticket: view.ticket }),
-    null,
-  )
+export function ConsentButtons({ action }: { action: DecideAction }) {
+  const [refusal, decide, pending] = useActionState(action, null)
 
   return (
     <form action={decide} className="space-y-4">

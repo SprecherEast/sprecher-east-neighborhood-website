@@ -197,14 +197,25 @@ describe('the approval page, opened from this site', () => {
 })
 
 describe('pressing a button on the approval page', () => {
+  /** The form's fields as the browser sends them: the pressed button's name and value */
+  const pressed = (decision: string) => {
+    const form = new FormData()
+    form.set('decision', decision)
+    return form
+  }
+
   /** The page's server action, as the browser calls it from this site with the session cookie */
   const press = async (decision: 'approve' | 'deny') => {
     const { beginAuthorization } = await import('@/modules/agents/server')
     const begun = await beginAuthorization(query(), new Headers(), { id: admin.id, isAdmin: true })
     if (begun.kind !== 'consent') throw new Error('expected the approval')
-    const { decideConnection } = await import('@/modules/agents/actions')
+    const { decideConnectionForm } = await import('@/modules/agents/actions')
     open('fromThisSite', cookie)
-    return decideConnection({ request: begun.view.request, ticket: begun.view.ticket, decision })
+    return decideConnectionForm(
+      { request: begun.view.request, ticket: begun.view.ticket },
+      null,
+      pressed(decision),
+    )
   }
 
   it('sends the browser back to the AI tool with a code when a signed-in admin allows it', async () => {
@@ -228,13 +239,13 @@ describe('pressing a button on the approval page', () => {
     const { beginAuthorization } = await import('@/modules/agents/server')
     const begun = await beginAuthorization(query(), new Headers(), { id: admin.id, isAdmin: true })
     if (begun.kind !== 'consent') throw new Error('expected the approval')
-    const { decideConnection } = await import('@/modules/agents/actions')
+    const { decideConnectionForm } = await import('@/modules/agents/actions')
     open('fromTheTool', cookie)
-    const answer = await decideConnection({
-      request: begun.view.request,
-      ticket: begun.view.ticket,
-      decision: 'approve',
-    })
+    const answer = await decideConnectionForm(
+      { request: begun.view.request, ticket: begun.view.ticket },
+      null,
+      pressed('approve'),
+    )
     expect(answer.message).toBe(CONNECTION_REFUSED)
   })
 })

@@ -12,11 +12,18 @@ import { consentInputSchema } from './domain/oauth/consentInput'
 import { getViewer } from './data/oauth/viewer'
 import { decideConsent } from './use-cases/oauth/decideConsent'
 
+/** What the page's form hands the approval: its earlier refusal, if any, and the pressed button. */
+export type DecideAction = (
+  previous: { message: string } | null,
+  form: FormData,
+) => Promise<{ message: string }>
+
 /**
  * Answers only when the approval is refused, with a message for the page; on success it sends the
- * browser back to the AI tool and does not return.
+ * browser back to the AI tool and does not return. Not exported: it is no server action of its
+ * own, only `decideConnectionForm` below is.
  */
-export async function decideConnection(input: unknown): Promise<{ message: string }> {
+async function decideConnection(input: unknown): Promise<{ message: string }> {
   const parsed = consentInputSchema.safeParse(input)
   if (!parsed.success) return { message: CONNECTION_REFUSED }
   const { request, ticket, decision } = parsed.data
