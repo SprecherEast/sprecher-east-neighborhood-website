@@ -9,7 +9,8 @@ resource indicator.
 ## The flow
 
 1. An admin creates the agent account (role `agent`) and registers the tool in Admin, under Agents,
-   **OAuth clients**: a name, the agent account, and its redirect addresses. Saving makes the client
+   **OAuth clients**: a name, the agent account, its scopes (read only unless more is picked), an
+   optional expiry and its redirect addresses. Saving makes the client
    ID. The tool is given the ID and no secret (every client is public; PKCE protects the code).
 2. The tool calls `/api/mcp` with no token. It gets `401` and `WWW-Authenticate: Bearer
 resource_metadata="https://<site>/.well-known/oauth-protected-resource/api/mcp"`.
@@ -18,14 +19,14 @@ resource_metadata="https://<site>/.well-known/oauth-protected-resource/api/mcp"`
    method, no registration address. Both are served by routes under `/oauth/discovery/`, reached
    through the rewrites in `next.config.js`. A document answers only for the resource whose path it is fetched with (RFC 9728), so only `/.well-known/oauth-protected-resource/api/mcp` is served; it and the authorization-server document say the redirect carries `iss` (RFC 9207).
 4. It sends the admin's browser to `/oauth/authorize` with the client ID, redirect address, PKCE
-   challenge, state and `resource`. This visit comes from the tool's own site, so the browser holds
+   challenge, state, `resource` and, if it wants more than `read`, `scope`. This visit comes from the tool's own site, so the browser holds
    back the session cookie (Payload's CSRF check ignores it on a cross-site visit, and we keep
    that). The page therefore reads no session and shows no account: it checks the request (below),
    says who is asking and where it returns to, and offers **Continue to approval**.
    That link goes to `/oauth/approve` on this site, carrying the checked request and nothing
    secret, so the browser sends the session and the page checks everything again. There a signed-in
-   admin is asked to **Allow this connection**, with the tool's name, the host it returns to and the
-   agent account. A visitor is told to log in with an admin account and is sent back to the same
+   admin is asked to **Allow this connection**, with the tool's name, the host it returns to, the
+   agent account and what it will be able to do (its scopes). A visitor is told to log in with an admin account and is sent back to the same
    request after logging in (`/login?next=`, which only returns to `/oauth/approve`). An editor is
    told an admin is needed. Google sign-in lands on the account page, so after it the admin starts
    again from the tool. Each visit to either page counts against 30 a minute per connection.
@@ -54,6 +55,37 @@ it checks the verifier, and builds the error and token answers. We supply storag
 leaves to a model, and everything it does not do: discovery, the resource, consent, audience
 checks on every call.
 
+## Scopes
+
+Each client, and each MCP API key, holds named scopes and an optional expiry (#1499), set in Admin
+under Agents with no code change. The pure rules are `domain/scopes.ts`; `cms/scopes.ts` applies
+them in `overrideAuth`, after the credential is known.
+
+| Scope     | Lets the AI agent                                                                                                                        |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `read`    | `findEvents`, `findPosts`, `findCategories`                                                                                              |
+| `suggest` | `submitSuggestion`, `reportItem` and its own run log (`findAgentRuns`, `createAgentRuns`, `updateAgentRuns`), which both tools attach to |
+| `publish` | Nothing. A reserved name for #1502; it cannot be given to a client                                                                       |
+
+- **Narrow only.** The settings the plugin serves are rebuilt as the overlap of the scopes and the
+  key's own boxes (or, for OAuth, the address's options). The agent account's collection access is still
+  the final word, and no scope allows a write to events, posts or categories.
+- **A request gets the minimal scope.** With no `scope` it gets `read`; the metadata and the `401`
+  advertise only `read`. A request names scopes from our list or is refused (`invalid_scope`); what the
+  client's record does not allow is dropped before either page (the approval lists only what is
+  granted), and the request is refused only if nothing is left.
+- **A token has at most what the record allows now and what was approved.** The record is read at every
+  request, so narrowing a client takes effect on its next call, while widening it does not widen a token
+  already issued.
+- **An out-of-scope call** to a tool a scope covers is `403` with `WWW-Authenticate: Bearer
+error="insufficient_scope", scope="<needed>"`, so a client can ask again for more; the tool is not
+  offered or run either way.
+- **Expiry.** A client or key past its expiry is refused like an unknown one (a client's refresh tokens
+  too); an admin sets a later time or clears it to bring it back. Switching a client off (or unticking
+  "Enable API key") stops one tool at once and leaves the others.
+- **Existing keys** (Local Scout's among them) got `read` and `suggest` when the scopes arrived, so
+  their rights did not change.
+
 ## Threat model
 
 | Threat                                    | What stops it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -65,7 +97,7 @@ checks on every call.
 | **Replay of a refresh token**             | Each use spends it atomically (one conditional `UPDATE`) and issues a new one. A spent one used again, or two at the same moment, ends the whole family: every code, access token and refresh token from that approval. The revocation is one `UPDATE`; saving a request's new tokens checks the family before and after, and if it has ended refuses the request and revokes what it saved, so the request that got in first is cut off too; and every use (`getRefreshToken`, the MCP check) looks for a revoked row in the family again. The same holds for two exchanges of one code.                                                                                                                                                                                                                              |
 | **CSRF on consent**                       | Only an admin's session reaches the approval, which is read only on a same-origin or same-site request (Payload's rule, so a page on a sibling subdomain would pass it), and the buttons are server actions, which Next.js only runs for the site's own origin. Each carries a ticket: an HMAC over the admin's account, the whole request and an expiry (ten minutes), so a forged or changed request, another admin's ticket or an old one is refused. The client and address are checked again. Both pages send `frame-ancestors 'none'` (`NO_FRAMING_PATHS`, `/oauth/approve` included, pinned in `src/app/apiHeaders.test.ts` and read from the response in `e2e/connection.spec.ts`), so no other site, a sibling subdomain such as a pull request preview included, can frame the approval and have it clicked. |
 | **A token for the wrong service**         | The request must carry `resource` equal to the MCP address, the token stores it, and every `/api/mcp` call checks it again (RFC 8707, MCP spec). A token for another address, or issued before the site's address changed, is refused.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **An agent gaining more than an API key** | A token acts as the client's agent account, with the same tools an API key with every box ticked has. The account must still be an agent at every call. No client can act as staff: the client's account is filtered to the agent role on save. Nothing here publishes (#1502).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **An agent gaining more than an API key** | A token acts as the client's agent account, with the scopes its client holds (never more than an API key with every box ticked). The account must still be an agent at every call. No client can act as staff: the client's account is filtered to the agent role on save. Nothing here publishes (#1502).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | **Guessing at the token address**         | 30 requests a minute per connection, only two grants, fixed error names, a body read no further than 8 KB as it arrives (and Caddy's 256 KB cap, #1508).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Someone registering themselves**        | No registration endpoint, and the collections are admin-only in every operation; token rows cannot be created or edited through the API except to revoke, and a revoked row cannot be un-revoked or its date moved.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
@@ -77,6 +109,6 @@ or change the account's role (the next call is refused). Moving a client to anot
 
 ## Not covered yet
 
-Per-client scopes (#1499), publishing by an agent (#1502), client ID metadata documents and dynamic
+Publishing by an agent (#1502), client ID metadata documents and dynamic
 registration, a return address after Google sign-in, a limit shared across more than one server process, deleting old token rows, and the Caddy path-through
 for `/.well-known/` (#1508).

@@ -32,7 +32,12 @@ beforeAll(async () => {
   await signIn(payload, admin, clientId)
 }, 60_000)
 
-const clientData = { name: 'Tool', agent: 0, redirectUris: [{ uri: 'https://claude.ai/cb' }] }
+const clientData = {
+  name: 'Tool',
+  agent: 0,
+  scopes: ['read' as const],
+  redirectUris: [{ uri: 'https://claude.ai/cb' }],
+}
 const asUser = (user: Account | undefined) => ({ user, overrideAccess: false as const })
 
 describe.each([['oauth-clients'], ['oauth-tokens']] as const)('%s access', (collection) => {

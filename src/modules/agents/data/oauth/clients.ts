@@ -8,6 +8,7 @@ import { hasAgent } from '@/platform/payload/roles'
 import { OAUTH_CLIENTS } from '../../domain/oauth/constants'
 import { accountById } from '../../domain/oauth/queries'
 import type { OAuthClient } from '../../domain/oauth/types'
+import { scopesOf } from '../../domain/scopes'
 
 /** The client an admin registered under this ID, or null. Reads past access: only the server asks. */
 export async function findOAuthClient(
@@ -33,6 +34,8 @@ export async function findOAuthClient(
     redirectUris: (doc.redirectUris ?? []).map((row) => row.uri),
     enabled: doc.enabled !== false,
     agentId,
+    scopes: scopesOf(doc.scopes),
+    expiresAt: doc.expiresAt ? new Date(doc.expiresAt) : null,
   }
 }
 

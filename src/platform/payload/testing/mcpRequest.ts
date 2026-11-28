@@ -45,7 +45,14 @@ export function mcpClient(config: SanitizedConfig) {
     return { text, isError: Boolean(result?.isError ?? body?.error) }
   }
 
-  return { call, tool }
+  /** The tools a credential is offered: the answer's status, and the sorted names. */
+  async function tools(key: string) {
+    const { status, body } = await call('tools/list', {}, key)
+    const names = (body?.result?.tools ?? []).map((t: { name: string }) => t.name) as string[]
+    return { status, tools: names.sort() }
+  }
+
+  return { call, tool, tools }
 }
 
 /** Every tool the plugin offers, checked on a key, so only collection access can refuse. */
@@ -57,10 +64,24 @@ const ALL_TOOLS = {
 }
 
 /** An MCP API key for `owner`, created by `admin` in Admin. */
-export const createMcpKey = (payload: Payload, admin: TypedUser, owner: number, apiKey: string) =>
+export const createMcpKey = (
+  payload: Payload,
+  admin: TypedUser,
+  owner: number,
+  apiKey: string,
+  extra: { scopes?: ('read' | 'suggest')[]; expiresAt?: string } = {},
+) =>
   payload.create({
     collection: 'payload-mcp-api-keys',
-    data: { user: owner, label: 'Test', enableAPIKey: true, apiKey, ...ALL_TOOLS },
+    data: {
+      user: owner,
+      label: 'Test',
+      enableAPIKey: true,
+      apiKey,
+      ...ALL_TOOLS,
+      scopes: ['read', 'suggest'],
+      ...extra,
+    },
     user: admin,
     overrideAccess: false,
   })

@@ -45,9 +45,10 @@ describe.each([
 describe('what a code and a token save', () => {
   const client = { id: 'mcp_x', grants: [], credentialClientId: 3 }
   const who = { agentId: 1, consentedBy: 2, resource: 'https://sprechereast.com/api/mcp' }
-  const held = { clientId: 3, agentId: 1, consentedBy: 2, resource: who.resource, scope: ['mcp'] }
+  // No scope from the library is no scope stored: a credential never gets one it was not granted
+  const held = { clientId: 3, agentId: 1, consentedBy: 2, resource: who.resource, scope: [] }
 
-  it('gives a code the client, the account, the audience and the one scope when none was asked', async () => {
+  it('gives a code the client, the account and the audience, and no scope when none was granted', async () => {
     const code = { authorizationCode: 'sec_a', expiresAt: new Date(), redirectUri: 'https://x/cb' }
     await model().saveAuthorizationCode(code as never, client as never, who as never)
     expect(credentials.saveCredential).toHaveBeenCalledWith(

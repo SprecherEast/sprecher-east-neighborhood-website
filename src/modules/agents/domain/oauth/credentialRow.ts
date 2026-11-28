@@ -1,5 +1,6 @@
 import { relationId, type Relation } from '@/platform/lib'
 
+import { scopeList, scopesOf } from '../scopes'
 import type { TokenKind } from './constants'
 import type { Credential } from './types'
 
@@ -10,7 +11,14 @@ export type CredentialRow = {
   family: string
   client:
     | number
-    | { id: number; clientId?: string | null; enabled?: boolean | null; agent?: Relation | null }
+    | {
+        id: number
+        clientId?: string | null
+        enabled?: boolean | null
+        agent?: Relation | null
+        scopes?: string[] | null
+        expiresAt?: string | null
+      }
   agent: Relation
   consentedBy?: Relation | null
   resource: string
@@ -37,11 +45,13 @@ export function toCredential(row: CredentialRow): Credential | null {
       enabled: row.client.enabled !== false,
       // Unknown when the row did not carry it, which can never equal an agent: it reads as changed
       agentId: relationId(row.client.agent) ?? 0,
+      scopes: scopesOf(row.client.scopes),
+      expiresAt: date(row.client.expiresAt),
     },
     agentId: relationId(row.agent) ?? 0,
     consentedBy: relationId(row.consentedBy),
     resource: row.resource,
-    scope: (row.scope ?? '').split(' ').filter(Boolean),
+    scope: scopeList(row.scope),
     expiresAt: new Date(row.expiresAt),
     usedAt: date(row.usedAt),
     revokedAt: date(row.revokedAt),

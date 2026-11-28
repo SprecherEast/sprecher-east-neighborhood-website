@@ -11,6 +11,7 @@ import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
 import { checkRegisteredRedirectUri } from '../../domain/oauth/redirectUri'
 import { generateClientId } from '../../domain/oauth/secrets'
+import { clientAccessFields } from '../clientAccessFields'
 import { revokeUnrevoked } from './revokeTokens'
 
 /** The client's public ID is made by the server when it is registered, and never changes. */
@@ -57,7 +58,7 @@ export const OAuthClients: CollectionConfig = {
   admin: {
     group: 'Agents',
     useAsTitle: 'name',
-    defaultColumns: ['name', 'agent', 'enabled', 'clientId'],
+    defaultColumns: ['name', 'agent', 'scopes', 'enabled', 'clientId'],
     description:
       'AI tools that may sign in to the AI agent address. Give the tool the client ID; no secret is used.',
   },
@@ -115,11 +116,15 @@ export const OAuthClients: CollectionConfig = {
         },
       ],
     },
+    ...clientAccessFields,
     {
       name: 'enabled',
       type: 'checkbox',
       defaultValue: true,
-      admin: { description: 'Untick to stop this tool at once: its tokens stop working.' },
+      admin: {
+        description:
+          'Untick to stop this AI agent at once: its tokens stop working. Other AI agents are not touched.',
+      },
     },
   ],
 }

@@ -5,6 +5,7 @@ import {
   authorizationServerMetadata,
   bearerChallenge,
   discoveryResponse,
+  insufficientScopeChallenge,
   protectedResourceMetadata,
 } from './metadata'
 
@@ -61,10 +62,25 @@ describe('authorizationServerMetadata (RFC 8414)', () => {
   })
 })
 
+describe('scopes advertised', () => {
+  it('lists only the minimal scope in both documents; a client asks for more only when told', () => {
+    expect(protectedResourceMetadata(ORIGIN).scopes_supported).toEqual(['read'])
+    expect(authorizationServerMetadata(ORIGIN).scopes_supported).toEqual(['read'])
+  })
+})
+
+describe('insufficientScopeChallenge', () => {
+  it('names the error, the scope the call needs and where to sign in (MCP, scope challenge)', () => {
+    expect(insufficientScopeChallenge(ORIGIN, 'suggest')).toBe(
+      'Bearer error="insufficient_scope", scope="suggest", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+    )
+  })
+})
+
 describe('bearerChallenge', () => {
   it('points at the protected-resource metadata for the MCP address', () => {
     expect(bearerChallenge(ORIGIN)).toBe(
-      'Bearer resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+      'Bearer scope="read", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
     )
   })
 })

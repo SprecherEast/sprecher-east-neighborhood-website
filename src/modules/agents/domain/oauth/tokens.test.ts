@@ -58,6 +58,19 @@ describe('checkToken', () => {
     expect(check(token({ client: { enabled: true, agentId: 0 } }))).toBe('agent-changed')
   })
 
+  it('refuses a token whose client has expired, at the moment it expires too', () => {
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: minutes(-1) } }))).toBe(
+      'client-expired',
+    )
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: NOW } }))).toBe(
+      'client-expired',
+    )
+    expect(
+      check(token({ client: { enabled: true, agentId: 9, expiresAt: minutes(1) } })),
+    ).toBeNull()
+    expect(check(token({ client: { enabled: true, agentId: 9, expiresAt: null } }))).toBeNull()
+  })
+
   it('reports reuse before expiry, so a replay always revokes the family', () => {
     expect(
       check(token({ kind: 'refresh', usedAt: minutes(-5), expiresAt: minutes(-1) }), 'refresh'),

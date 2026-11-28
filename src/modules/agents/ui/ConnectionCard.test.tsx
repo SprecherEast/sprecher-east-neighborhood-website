@@ -30,4 +30,22 @@ describe('ConnectionCard', () => {
     expect(screen.getByText('Acts as')).toBeTruthy()
     expect(screen.getByText('Scout')).toBeTruthy()
   })
+
+  it('lists what the tool may do only when the page gives it, one line each', () => {
+    render(
+      <ConnectionCard client={client} agentName="Scout" abilities={['Read posts', 'Suggest']}>
+        <p>Inside</p>
+      </ConnectionCard>,
+    )
+    expect(screen.getByText('It can')).toBeTruthy()
+    expect(screen.getByText('Read posts')).toBeTruthy()
+    expect(screen.getByText('Suggest')).toBeTruthy()
+    cleanup()
+    render(
+      <ConnectionCard client={client} agentName="Scout">
+        <p>Inside</p>
+      </ConnectionCard>,
+    )
+    expect(screen.queryByText('It can')).toBeNull()
+  })
 })
