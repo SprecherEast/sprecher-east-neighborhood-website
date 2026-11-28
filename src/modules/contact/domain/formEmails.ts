@@ -29,8 +29,7 @@ type EmailHeaders = { from: string; replyTo?: string }
 
 /** Whether an email may go out; if so, the email to send and which headers were replaced. */
 export type FormEmailDecision<E> =
-  | { send: false }
-  | { send: true; email: E; fromReplaced: boolean; replyToReplaced: boolean }
+  { send: false } | { send: true; email: E; fromReplaced: boolean; replyToReplaced: boolean }
 
 /** True when a setting pulls in something the visitor submitted ("{{email}}"). */
 export const hasSubmittedValue = (setting: string | null | undefined): boolean =>

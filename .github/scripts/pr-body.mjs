@@ -14,7 +14,7 @@
  */
 export function withoutComments(body) {
   let text = (body ?? '').replace(/\r\n?/g, '\n')
-  for (let previous = null; previous !== text; ) {
+  for (let previous = null; previous !== text;) {
     previous = text
     text = text.replace(/<!--[\s\S]*?(?:-->|$)/g, '')
   }

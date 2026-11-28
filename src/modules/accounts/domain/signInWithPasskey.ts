@@ -32,8 +32,7 @@ export type PasskeyRequestOptions = {
 
 /** What asking for the options answers. */
 export type StartPasskeySignInResult =
-  | { ok: true; options: PasskeyRequestOptions }
-  | { ok: false; failure: PasskeySignInFailure }
+  { ok: true; options: PasskeyRequestOptions } | { ok: false; failure: PasskeySignInFailure }
 
 /**
  * The browser's answer to the options (`AuthenticationResponseJSON`). Parsed again on the server

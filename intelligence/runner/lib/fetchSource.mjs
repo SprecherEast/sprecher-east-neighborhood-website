@@ -95,7 +95,7 @@ export async function fetchDirect(
 ) {
   let current = url
   let retries = 0
-  for (let hop = 0; hop <= maxHops; ) {
+  for (let hop = 0; hop <= maxHops;) {
     // robots.txt is checked for every URL fetched, redirect targets included
     if (robots && !(await robots(current))) {
       return { status: 'blocked', retries, error: `robots.txt disallows ${current}` }

@@ -132,8 +132,7 @@ export interface Config {
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>
     'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>
     'payload-locked-documents':
-      | PayloadLockedDocumentsSelect<false>
-      | PayloadLockedDocumentsSelect<true>
+      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>
   }
@@ -377,8 +376,7 @@ export interface Post {
    */
   contentHash?: string | null
   audience?:
-    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
-    | null
+    ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[] | null
   updatedAt: string
   createdAt: string
   _status?: ('draft' | 'published') | null
@@ -1155,8 +1153,7 @@ export interface Event {
    */
   contentHash?: string | null
   audience?:
-    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
-    | null
+    ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[] | null
   updatedAt: string
   createdAt: string
   _status?: ('draft' | 'published') | null
