@@ -85,9 +85,11 @@ flowchart TB
 | Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Built; run not recorded (#1092) |
 | Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Built; levels planned (#1450)   |
 
-Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
+Three kinds of session and no standing layer between them. The [outsider review](../../.agents/skills/outsider-review/SKILL.md)
+is a read-only look from outside at recent merges, started by the chief of staff every five to ten merged pull
+requests or weekly; it reports to the owner and fixes nothing (the owner's decision, 2026-11-27, #1580). Another, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
-Built: the three agents and `pr-review` ([limits: manual test, not run](chief-of-staff-manual-test.md)). The levels taking effect and the reviewer's subagent perspectives are planned (#1450).
+Built: the four agents, `pr-review` and `outsider-review` ([limits: manual test, not run](chief-of-staff-manual-test.md)). The levels taking effect and the reviewer's subagent perspectives are planned (#1450).
 
 **Why so few.** Several agents use about 15 times a chat's tokens, and coding has less parallel work
 than research ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). In a
@@ -237,7 +239,7 @@ Repeated failures are counted weekly and fixed at the root: [the feedback loop](
 | Code owners for the rule files                                  | Built   | #694                           |
 | Knowledge layer: lean context, notes, generated reference, sync | Built   | #712                           |
 | Chief of staff session, skill, overlap check (piece one)        | Built   | #695, 2026-11-08               |
-| The three agents only; role guides loaded by name               | Built   | #695, 2026-11-24               |
+| The four agents only; role guides loaded by name                | Built   | #695, 2026-11-24, #1580        |
 | Reviewer perspectives as subagents; §6 takes effect             | Planned | #1450                          |
 | Design brief and standards upkeep as procedures                 | Planned | #696                           |
 | The `ready` label and native fields drive the board             | Built   | #1089                          |

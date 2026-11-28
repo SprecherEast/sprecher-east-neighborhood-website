@@ -43,8 +43,8 @@ function walk(dir) {
   })
 }
 
-/** The only agents in use; the chief of staff may start the other two. */
-const AGENTS = ['chief-of-staff', 'qa-reviewer', 'worker']
+/** The only agents in use; the chief of staff may start the other three. */
+const AGENTS = ['chief-of-staff', 'outsider-reviewer', 'qa-reviewer', 'worker']
 
 /** Role guides in docs/roles that were once agents too, named so a revival fails here. */
 const REMOVED = [
@@ -74,17 +74,17 @@ const mentions = (re) =>
   DOCS.flatMap((file) => [...read(file).matchAll(re)].map((m) => [file, m[1]]))
 
 describe('agents', () => {
-  it('are exactly the chief of staff, the worker and the reviewer', () => {
+  it('are exactly the chief of staff, the worker, the reviewer and the outsider reviewer', () => {
     expect(names('.claude/agents', '.md').map((n) => n.replace(/\.md$/, ''))).toEqual(AGENTS)
   })
 
   it.each(AGENTS)('%s is named by its file and points at something that exists', (agent) => {
     const file = `.claude/agents/${agent}.md`
     expect(frontmatter(file).name).toBe(agent)
-    const pointer =
-      agent === 'chief-of-staff'
-        ? '.agents/skills/chief-of-staff/SKILL.md'
-        : `docs/roles/${agent}.md`
+    const skills = { 'chief-of-staff': 'chief-of-staff', 'outsider-reviewer': 'outsider-review' }
+    const pointer = skills[agent]
+      ? `.agents/skills/${skills[agent]}/SKILL.md`
+      : `docs/roles/${agent}.md`
     expect(read(file)).toContain(pointer)
     expect(exists(pointer), pointer).toBe(true)
   })
@@ -98,7 +98,7 @@ describe('agents', () => {
         .split(',')
         .map((n) => n.trim())
         .sort(),
-    ).toEqual(['qa-reviewer', 'worker'])
+    ).toEqual(['outsider-reviewer', 'qa-reviewer', 'worker'])
     for (const [file, agent] of mentions(/\.claude\/agents\/([\w-]+)(?:\.md)?/g)) {
       expect(AGENTS, `${file} names the agent ${agent}`).toContain(agent)
     }

@@ -18,7 +18,7 @@ decide, claim or ask is a comment on the issue
 
 ## 1. Start of session
 
-Four things, in this order, in one reply. Nothing here waits for the owner before the next step.
+Five things, in this order, in one reply. Nothing here waits for the owner before the next step.
 
 1. **What keeps failing.** Count the checks that failed on pull requests over the last week,
    by name:
@@ -57,6 +57,15 @@ Four things, in this order, in one reply. Nothing here waits for the owner befor
 
 4. **Weekly review due?** Check as [When one is due](../../../docs/process/weekly-review.md#when-one-is-due)
    says; when none was posted in the last seven days, offer one in one line.
+
+5. **Outsider review due?** Count the pull requests merged since the newest merged one carrying a
+   `### [STEP] Outsider review` comment. Five to ten, or a week, means start the
+   [`outsider-review`](../outsider-review/SKILL.md) as the `outsider-reviewer` subagent. Post its
+   report on the newest merged pull request. If it finds something off, stop dispatching, give the
+   owner the report and wait.
+
+**Red flag:** two or more pull requests that keep conflicting, stacked or not, mean stop dispatching
+and ask the owner what is going on, rather than resolving them one by one.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
 Before the first look at step 3, and again before every later one, [look for changes made

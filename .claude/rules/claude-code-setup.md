@@ -19,7 +19,7 @@ Claude Code.
   of staff is built (#695 piece one): `.claude/agents/chief-of-staff.md`, run with
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
   Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
-  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
+  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer, outsider-reviewer)` as
   the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the reviewer stays
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
