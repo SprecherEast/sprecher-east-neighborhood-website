@@ -20,9 +20,9 @@ export const metadata: Metadata = privateAddressMetadata(TITLE, CONNECTION_DESCR
 export const dynamic = 'force-dynamic'
 
 /**
- * Where an AI tool sends the browser first (#1501), from its own site. A visit from another site
- * carries no session (Payload's CSRF check ignores the cookie there), so this page reads none and
- * shows nothing about any account: the request is checked, a request that can't be trusted is
+ * Where an AI tool sends the browser first (#1501), from its own site. This page reads no session
+ * and shows nothing about any account (the approval ignores a session from another site,
+ * `isFromAnotherSite`): the request is checked, a request that can't be trusted is
  * explained here, one with an error goes back to the tool, and otherwise a link continues on the
  * site itself, at the approval page, which can see who is signed in.
  */
