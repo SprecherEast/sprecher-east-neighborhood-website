@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
-    "@libsql/client": "0.18.0",
+    "@libsql/client": "0.14.0",
     "@node-oauth/oauth2-server": "5.3.1",
     "@payloadcms/admin-bar": "^3.94.2",
     "@payloadcms/db-sqlite": "^3.94.2",

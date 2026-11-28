@@ -18,11 +18,19 @@ const VARIANTS = ['card', 'row', 'listRow', 'bar', 'link', 'nav'] as const
  */
 async function isTurned(chevron: Element): Promise<boolean> {
   const css = (await compile('@tailwind utilities;')).build([...chevron.classList])
-  const selectors = [...css.matchAll(/\{\s*([^{}]+?)\s*\{\s*rotate: 180deg/g)].map(
-    (match) => match[1],
+  const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  const selectors = [...rules.matchAll(/([^{}]+?)\s*\{\s*rotate: 180deg/g)].map((match) =>
+    match[1].trim(),
   )
   expect(selectors.length).toBeGreaterThan(0)
-  return selectors.some((selector) => chevron.matches(selector.replace(/&/g, 'svg')))
+  // jsdom's selector engine cannot read the escaped class names Tailwind writes, so each one is
+  // swapped for the element's own tag name (the old nested CSS did the same with `&`)
+  const readable = (selector: string) =>
+    [...chevron.classList].reduce(
+      (text, name) => text.split(`.${name.replace(/[^\w-]/g, '\\$&')}`).join(chevron.localName),
+      selector,
+    )
+  return selectors.some((selector) => chevron.matches(readable(selector)))
 }
 
 describe('Disclosure', () => {
