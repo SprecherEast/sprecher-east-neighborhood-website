@@ -71,6 +71,18 @@
           ]
         },
         "notes": { "type": "string" },
+        "lookAheadDays": {
+          "description": "For a source that publishes early: days ahead scout reads, instead of pipeline.yaml's default.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "pages": {
+          "description": "For an HTML list over several pages: how many pages scout reads (`?page=N`).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
         "fetchStrategy": { "$ref": "common.schema.json#/$defs/fetchStrategy" },
         "robots": {
           "description": "The robots.txt check for the paths this source reads.",

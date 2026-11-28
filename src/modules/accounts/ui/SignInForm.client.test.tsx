@@ -16,8 +16,8 @@ vi.mock('next/navigation', () => ({
 // The passkey button is tested on its own (`PasskeySignIn.client.test.tsx`); here it only shows
 // what the form hands it
 vi.mock('./PasskeySignIn.client', () => ({
-  PasskeySignIn: ({ rememberMe }: { rememberMe: boolean }) => (
-    <button type="button" data-remember={String(rememberMe)}>
+  PasskeySignIn: ({ rememberMe, returnTo }: { rememberMe: boolean; returnTo?: string }) => (
+    <button type="button" data-remember={String(rememberMe)} data-return={returnTo}>
       Log in with a passkey
     </button>
   ),
@@ -65,6 +65,19 @@ describe('SignInForm', () => {
     })
     expect(mocks.push).toHaveBeenCalledWith('/account')
     expect(mocks.refresh).toHaveBeenCalled()
+  })
+
+  it('opens the page it was asked to return to after logging in, and gives it to the passkey button', async () => {
+    mocks.signIn.mockResolvedValue({ ok: true })
+    render(<SignInForm passkeys returnTo="/oauth/approve?client_id=mcp_a" />)
+    expect(
+      (await screen.findByRole('button', { name: 'Log in with a passkey' })).getAttribute(
+        'data-return',
+      ),
+    ).toBe('/oauth/approve?client_id=mcp_a')
+    await fillAndSend()
+    expect(mocks.push).toHaveBeenCalledWith('/oauth/approve?client_id=mcp_a')
+    expect(mocks.push).not.toHaveBeenCalledWith('/account')
   })
 
   it('offers "Keep me signed in", unticked, and says how long it lasts (#587)', () => {

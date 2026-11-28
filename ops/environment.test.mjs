@@ -322,8 +322,8 @@ describe('the preview port range', () => {
 })
 
 describe('the most previews at once (#1345, #1076)', () => {
-  it('is one by default until the server is measured, and only a number from 1 to 999 is taken', () => {
-    expect(printed({}, 'echo $PREVIEW_MAX_COUNT').trim()).toBe('1')
+  it('is two by default, as measured (#1557), and only a number from 1 to 999 is taken', () => {
+    expect(printed({}, 'echo $PREVIEW_MAX_COUNT').trim()).toBe('2')
     expect(
       printed({ PREVIEW_NUMBER: '7', PREVIEW_MAX_COUNT: '999' }, 'echo $PREVIEW_MAX_COUNT').trim(),
     ).toBe('999')

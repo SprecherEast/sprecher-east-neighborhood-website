@@ -139,7 +139,7 @@ jobs:
             if (problems.length) {
               core.setFailed(
                 `This PR does not meet AGENTS.md yet:\n- ${problems.join('\n- ')}\n\n` +
-                  'Each line starts with its rule ID (docs/process/project-management.md#the-pull-request-gate). Fix the issue or the PR description, then edit the PR (or re-run this check).',
+                  'Each line starts with its rule ID (docs/process/issue-and-pr-checks.md#the-pull-request-gate). Fix the issue or the PR description, then edit the PR (or re-run this check).',
               );
             } else {
               core.info(`PR Policy passed. Closes: ${links.closes.map((n) => '#' + n).join(', ')}`);

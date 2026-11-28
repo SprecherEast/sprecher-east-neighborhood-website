@@ -217,6 +217,7 @@ describe('preview-deploy.sh', () => {
       STUB_UPLOAD_TEXT:
         '::error title=Preview access::refused: there are already as many previews as are allowed\n',
       STUB_LIST_AFTER_UPLOAD: 'not a list',
+      PREVIEW_MAX_COUNT: '1',
     })
     expect(r.code).toBe(0)
     expect(r.written).toBe('cap=1\nholders=\nresult=limit\n')
@@ -228,6 +229,7 @@ describe('preview-deploy.sh', () => {
       STUB_UPLOAD_TEXT:
         '::error title=Preview access::refused: there are already as many previews as are allowed\n',
       STUB_LIST_AFTER_UPLOAD: `preview=9 commit=none idle=1 folder=yes block=no process=none\n`,
+      PREVIEW_MAX_COUNT: '1',
     })
     expect(r.code).toBe(0)
     expect(r.written).toBe('cap=1\nholders=9\nresult=limit\n')

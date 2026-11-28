@@ -21,7 +21,8 @@
             "statusConfirmed": { "$ref": "verification.schema.json#/properties/statusConfirmed" },
             "evidence": { "$ref": "verification.schema.json#/properties/evidence" },
             "unknowns": { "$ref": "verification.schema.json#/properties/unknowns" },
-            "flags": { "$ref": "verification.schema.json#/properties/flags" }
+            "flags": { "$ref": "verification.schema.json#/properties/flags" },
+            "safety": { "$ref": "verification.schema.json#/properties/safety" }
           }
         },
         "curation": {
@@ -29,6 +30,7 @@
           "additionalProperties": false,
           "properties": {
             "decision": { "$ref": "curation.schema.json#/properties/decision" },
+            "safety": { "$ref": "curation.schema.json#/properties/safety" },
             "reasons": { "$ref": "curation.schema.json#/properties/reasons" },
             "scores": { "$ref": "curation.schema.json#/properties/scores" },
             "audiences": { "$ref": "curation.schema.json#/properties/audiences" },
@@ -105,13 +107,21 @@
           "description": "Flags the output must include.",
           "$ref": "common.schema.json#/$defs/flags"
         },
+        "safety": {
+          "description": "The item is a safety item: the answer sets safety to true and the decision is never accept.",
+          "type": "boolean"
+        },
         "flagsAbsent": {
           "description": "Flags the output must not include.",
           "$ref": "common.schema.json#/$defs/flags"
         },
         "route": {
-          "description": "The MCP tool the submit stage calls: accept \u2192 submitSuggestion; needs-review, update, cancel \u2192 reportItem; reject, duplicate \u2192 none.",
+          "description": "The MCP tool the submit stage calls: accept \u2192 submitSuggestion, unless the item's source is always held or a stage answered safety (safety.yaml), then reportItem; needs-review, update, cancel \u2192 reportItem; reject, duplicate \u2192 none.",
           "enum": ["submitSuggestion", "reportItem", "none"]
+        },
+        "placement": {
+          "description": "How the item is placed (verification.placement.method): by the City's boundary when its street address resolves, by word match otherwise, or unplaced when it names no place.",
+          "$ref": "verification.schema.json#/properties/placement/properties/method"
         },
         "reportKind": { "$ref": "report.schema.json#/properties/kind" },
         "targetCollection": { "$ref": "curation.schema.json#/properties/targetCollection" },

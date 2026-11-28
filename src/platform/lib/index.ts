@@ -15,6 +15,7 @@ export { MAX_PAGE, parsePageNumber, toPageNumbers, type FeedMore, type FeedPage 
 export { RETENTION, toConfirmedCutoff, toUnconfirmedCutoff } from './retention'
 export { AUDIENCES, type Audience } from './reviewQueue'
 export { ACCOUNTS_COLLECTION, ROLES, type Role } from './roles'
+export { relationId, type Relation } from './relationId'
 export { SlidingWindowCounter } from './slidingWindow'
 export type { HumanVerifier } from './humanCheck'
 export type { ActionResult } from './actionResult'

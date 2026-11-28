@@ -12,7 +12,11 @@
 # The agents' MCP endpoint (#336) shares the cap: one MCP request carries one tool call (a find,
 # or one suggested event or post), a few KB of JSON, so 256KB never blocks a real one. Payload
 # reads the whole body before the plugin sees it.
-@sprecherEastFormSubmissions path /api/form-submissions /api/form-submissions/* /api/graphql /api/graphql/* /api/mcp
+#
+# The OAuth token address (#1501) shares it too: a token request is a few short form fields, and
+# the app cuts a body off at 8 KB itself as it arrives, so Caddy's cap only keeps the rest of an
+# oversized one from reaching Node at all.
+@sprecherEastFormSubmissions path /api/form-submissions /api/form-submissions/* /api/graphql /api/graphql/* /api/mcp /oauth/token
 request_body @sprecherEastFormSubmissions {
 	max_size 256KB
 }

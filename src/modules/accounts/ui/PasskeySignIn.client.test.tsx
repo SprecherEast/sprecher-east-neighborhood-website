@@ -87,6 +87,15 @@ describe('PasskeySignIn: when it shows', () => {
   })
 })
 
+describe('PasskeySignIn: returning to a page', () => {
+  it('opens the page it was asked to return to, not the account', async () => {
+    render(<PasskeySignIn rememberMe={false} returnTo="/oauth/approve?client_id=mcp_a" />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Log in with a passkey' }))
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/oauth/approve?client_id=mcp_a'))
+    expect(mocks.push).not.toHaveBeenCalledWith('/account')
+  })
+})
+
 describe('PasskeySignIn: logging in', () => {
   it('asks for options, shows the browser’s prompt, sends its answer, and opens the account', async () => {
     await press()

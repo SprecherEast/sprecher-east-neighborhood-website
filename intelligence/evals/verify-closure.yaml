@@ -1,0 +1,56 @@
+# Verify eval cases for road closure and traffic change posts (#994): the closed road and the
+# detour are two different places, and verify reads both from the post's own page, because the
+# City's list cuts each post off before its detour. Synthetic unless `why` names a real post.
+# Offsets are America/Chicago (CDT -05:00 until 2026-11-01 02:00).
+version: 1
+asOf: '2026-10-24'
+stage: verify
+cases:
+  - id: closure-detour-runs-through-area
+    stage: verify
+    tags: [closure, detour]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Highway T Closure at Felland Road Begins October 26
+      sourceText: >-
+        On Monday, October 26, starting at 9:00am, Capitol Underground will close County Hwy T in both
+        directions east of the intersection with Felland Road to complete utility work for a private
+        development contract. The closure will be in place until Friday October 30th at 3pm. The detour
+        route will use Sprecher Road, Milwaukee Street, and N Thompson Drive.
+      startsAt: null
+      locationText: null
+      sourceStatus: unknown
+    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    graders:
+      - check: model
+        rubric: >-
+          The result says the closed road (County Highway T east of Felland Road) is outside the area,
+          that the detour runs over Sprecher Road and Milwaukee Street, which bound the area, and gives
+          both dates from the post: Monday October 26 at 9:00 am to Friday October 30 at 3:00 pm.
+    why: >-
+      The real County Highway T closure of 2026-10-19, which the site missed. The coverage comes from
+      the detour, not the closed road, and the dates are on the post's page.
+  - id: closure-elsewhere-no-detour-here
+    stage: verify
+    tags: [closure]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Temporary Closure at Railroad Crossing on W Main Street
+      sourceText: >-
+        On Tuesday, November 17, W Main Street will be closed at the railroad track crossing between
+        Proudfit Street and South Bedford Street to replace the track crossing. The street will be
+        closed between 7:00 am and 5:00 pm. Use W Washington Avenue or W Dayton Street instead.
+      startsAt: null
+      locationText: null
+      sourceStatus: unknown
+    expected: { decision: reject, coverage: outside, route: none }
+    graders:
+      - check: model
+        rubric: >-
+          The result places both the closed street and its detour downtown, away from the area, and does
+          not call the item local because the City runs it.
+    why: >-
+      A downtown closure with a downtown detour (a real post, 2026-11-16, with its detour sentence
+      added for the case) is the City's news, not the neighborhood's.

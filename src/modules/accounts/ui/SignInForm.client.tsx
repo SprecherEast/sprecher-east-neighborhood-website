@@ -29,7 +29,7 @@ const PasskeySignIn = dynamic(() => import('./PasskeySignIn.client').then((m) =>
 
 /**
  * The sign-in form on /login, with the way to reset a forgotten password. On success it opens
- * /account. The quick ways in come first, above the form, under one divider line (#1365): with
+ * `returnTo` (the account by default). The quick ways in come first, above the form, under one divider line (#1365): with
  * `passkeys` (the page passes it while the switch is on, decision 0021) "Log in with a passkey",
  * then `social` (the page's "Continue with Google", drawn on the server), and the passkey in the
  * email field's autofill. The passkey button honors the "Keep me signed in" box below it, so the
@@ -38,9 +38,12 @@ const PasskeySignIn = dynamic(() => import('./PasskeySignIn.client').then((m) =>
 export function SignInForm({
   passkeys = false,
   social,
+  returnTo = ACCOUNT_PATH,
 }: {
   passkeys?: boolean
   social?: React.ReactNode
+  /** Where success goes: a page of this site the page checked (`safeReturnPath`), else the account */
+  returnTo?: string
 }) {
   const router = useRouter()
   const [status, setStatus] = useState<FormStatus>('idle')
@@ -64,7 +67,7 @@ export function SignInForm({
     }
     if (!result.ok) return fail(result.failure)
 
-    router.push(ACCOUNT_PATH)
+    router.push(returnTo)
     router.refresh()
     setStatus('idle')
   }
@@ -72,7 +75,7 @@ export function SignInForm({
   return (
     <div className="flex flex-col gap-6">
       <SignInMethods>
-        {passkeys && <PasskeySignIn rememberMe={rememberMe} />}
+        {passkeys && <PasskeySignIn rememberMe={rememberMe} returnTo={returnTo} />}
         {social}
       </SignInMethods>
       <Form

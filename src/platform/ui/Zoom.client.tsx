@@ -7,7 +7,7 @@ import { cn } from '@/platform/lib/cn'
 
 import { Button } from './Button'
 import { Dialog } from './Dialog.client'
-import { ZOOM_SPLIT } from './layoutSizes'
+import { EXPAND_ICON_BUTTON, ZOOM_SPLIT } from './layoutSizes'
 
 export type ZoomProps = {
   /** Names the button and the dialog */
@@ -111,10 +111,9 @@ export function Zoom({
             size={overlay ? 'icon' : 'sm'}
             aria-label={`Enlarge${kind ? ` ${kind}` : ''}: ${title}`}
             className={cn(
-              'hidden scripted:inline-flex',
               overlay
-                ? 'absolute top-2 right-2 z-10 bg-scrim/60 text-on-image hover:bg-scrim/80'
-                : 'self-end lg:min-h-11 lg:px-4',
+                ? EXPAND_ICON_BUTTON
+                : 'hidden self-end lg:min-h-11 lg:px-4 scripted:inline-flex',
               buttonClassName,
             )}
             iconStart={<Maximize2 aria-hidden="true" />}

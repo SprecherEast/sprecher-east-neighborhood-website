@@ -56,16 +56,22 @@ const sentFor = async (pathname: string) => {
     .flatMap(({ headers }) => headers)
 }
 
-describe('no framing of the account, log in and connect Google pages (decisions 0020, 0021)', () => {
+describe('no framing of the account, log in, connect Google and connect AI tool pages (decisions 0020, 0021, #1501)', () => {
   it('lists the pages, and sends frame-ancestors none for each listed path', () => {
-    expect(NO_FRAMING_PATHS).toEqual(['/account', '/login', '/auth/:provider/connect'])
+    expect(NO_FRAMING_PATHS).toEqual([
+      '/account',
+      '/login',
+      '/auth/:provider/connect',
+      '/oauth/authorize',
+      '/oauth/approve',
+    ])
     for (const { source, headers } of NO_FRAMING_HEADERS) {
       expect(NO_FRAMING_PATHS).toContain(source)
       expect(headers).toEqual([{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }])
     }
   })
 
-  it.each(['/account', '/login', '/auth/google/connect'])(
+  it.each(['/account', '/login', '/auth/google/connect', '/oauth/authorize', '/oauth/approve'])(
     'reaches %s in the config Next reads, once, the same way',
     async (pathname) => {
       const csp = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')
@@ -82,6 +88,8 @@ describe('no framing of the account, log in and connect Google pages (decisions 
       '/account-help',
       '/api/users',
       '/admin',
+      '/oauth/token',
+      '/oauth/authorize/extra',
     ]) {
       const sent = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')
       expect(sent, pathname).toEqual([])

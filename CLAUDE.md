@@ -12,10 +12,9 @@ Loaded into every session, so keep it short (`npm run agent-context` fails over 
 
 Every other guideline, `docs/project.md` and `docs/process/project-management.md` load by
 themselves when the work reads or edits a matching file: `.claude/rules/generated/` holds a copy of
-each, made from the load map in [`docs/guidelines/README.md`](docs/guidelines/README.md). Edit the
-reference or the map, never the copy, then run `npm run agent-context -- --write`. The setup notes
-(agent team, unattended runs, subagents, hooks, plugins) are `.claude/rules/claude-code-setup.md`;
-they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/`.
+each, built from the load map in [`docs/guidelines/README.md`](docs/guidelines/README.md) and not in git
+(session start builds it, or `npm run agent-context -- --write`). Edit the reference or the map. The setup notes (agent team, unattended runs, subagents, hooks, plugins) are
+`.claude/rules/claude-code-setup.md`; they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/`.
 
 ## Claude Code specifics
 

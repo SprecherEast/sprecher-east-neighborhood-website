@@ -3,6 +3,8 @@
 # Passkey Challenges (`passkey-challenges`)
 
 - Kind: collection
+- Owner: module `accounts`, defined in `src/modules/accounts/cms/passkeyChallenges.ts`
+- Jobs: `deleteExpiredPasskeyChallenges` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 

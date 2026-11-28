@@ -45,13 +45,20 @@ def falling(pts):
 def street(top,sidew=46):
     return (f'<rect x="-10" y="{top}" width="1700" height="{sidew}" fill="#d8dde6" stroke="{NAVY}" stroke-width="{SW}"/>')
 
+def road(top,sidew,height,line_y):
+    """A sidewalk starting at `top`, then a dark road `height` tall with a dashed yellow centre line at `line_y`."""
+    y=top+sidew
+    place("road",-10,top,1700,y+height,bleed=True)
+    return (street(top,sidew)+f'<rect x="-10" y="{y}" width="1700" height="{height}" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/>'
+            f'<path d="M0,{line_y} L1700,{line_y}" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>')
+
 def scene_trash():
     b=grass()
-    b+=street(640,50)+f'<rect x="-10" y="690" width="1700" height="220" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,800 L1700,800" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
+    b+=road(640,50,220,800)
     b+=tree(135,640,540)
     b+=cart(300,690,"#2b3556","#1f2a44",1.5)+cart(470,690,BLUE,"#3b7aa5",1.5,True)
-    b+=f'<g transform="translate(615,330)"><rect x="0" y="0" width="230" height="250" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/><rect x="0" y="0" width="230" height="60" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/><text x="115" y="42" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="34" fill="#fff">NOV</text><text x="115" y="190" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="120" fill="{NAVY}">26</text><circle cx="52" cy="2" r="9" fill="{NAVY}"/><circle cx="178" cy="2" r="9" fill="{NAVY}"/></g>'
-    b+=f'<g transform="translate(730,676) scale(.8)"><ellipse cx="0" cy="6" rx="110" ry="16" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/><ellipse cx="0" cy="-14" rx="76" ry="38" fill="#c9843c" stroke="{NAVY}" stroke-width="{SW}"/><ellipse cx="-20" cy="-26" rx="40" ry="16" fill="#e0a257" opacity=".8"/><rect x="-100" y="-28" width="30" height="14" rx="7" fill="#e0a257" stroke="{NAVY}" stroke-width="3" transform="rotate(-20 -85 -21)"/><rect x="70" y="-28" width="30" height="14" rx="7" fill="#e0a257" stroke="{NAVY}" stroke-width="3" transform="rotate(20 85 -21)"/></g>'
+    b+=calendar_page(615,330,"NOV","26")
+    b+=roast_turkey(730,676,.8)
     b+=panel(["Trash days","move"],["Thu. moves to Wed.","Fri. moves to Mon.","Drop-offs closed","Thursday and Friday"])
     return b
 

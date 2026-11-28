@@ -5,12 +5,11 @@ everyone who changes it: AI agents and humans. The supported agents are Claude C
 Codex, Gemini CLI and Grok Build ([Tool adapters](#tool-adapters)). Start here; it links to everything.
 
 It does not depend on any tool's private memory. If a tool's memory, a chat instruction or
-another doc conflicts with this file, **this file wins**. To change the rules, change this file
-through the workflow below.
+another doc conflicts with it, **this file wins**; change the rules through the workflow below.
 
-**Starting a session:** in Claude Code, unless given a specific task, you are the chief of staff:
-follow its [skill](.agents/skills/chief-of-staff/SKILL.md). In another tool, work on the one
-issue you are given ([how each tool starts](docs/process/start-a-session.md)).
+**Starting a session:** in Claude Code, unless given a task, you are the chief of staff: follow its
+[skill](.agents/skills/chief-of-staff/SKILL.md). In another tool, work on the one issue you are
+given ([how each tool starts](docs/process/start-a-session.md)).
 **Before filing an issue or opening a PR** (even on one task), read the
 [filing checklist](docs/process/filing-checklist.md).
 
@@ -71,7 +70,7 @@ change follows these five steps:
    posted on the PR and ending with **Ready to merge**, and every review comment is answered and
    resolved. Without Copilot's review agent, a new session reviews each PR (`pr-review` step 0). Changes to the process are policy changes the review calls out explicitly:
    `AGENTS.md`, `.agents/`, `docs/guidelines/`, `docs/roles/`, `.github/`, the Claude Code adapter
-   (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (sprint length, Ready or
+   (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (the flow rules, Ready or
    Done, the levels of work, the board's columns and fields), not wording, links or facts. A policy
    change the owner (Amine) asked for follows the normal path. Agents file issues through his
    account, so the issue or PR records a short summary of what he decided, with the date and where;
@@ -112,7 +111,7 @@ change follows these five steps:
   the account you're using has admin rights.
 - Never remove `needs owner` from a question that is the owner's without his answer: first record
   its summary, with the date and where he gave it
-  ([waits for owner](docs/process/project-management.md#waits-for-owner)).
+  ([waits for owner](docs/process/waits-for-owner.md)).
 - Never copy what the owner types or dictates word for word into issues, PRs, comments, reviews,
   commit messages, docs or code comments. Summarize it in clean wording.
 - **Never change code on the server.** No editing files in `/var/www/sprecher-east`, no
@@ -132,8 +131,8 @@ GitHub identity (#106) the no-bypass rule rests on every agent merging with `byp
 ## Skills: how to do things
 
 Procedures are [Agent Skills](https://agentskills.io): a folder in `.agents/skills/` with a
-`SKILL.md` that starts with a `name` and a `description`. Codex loads them from there, Claude Code
-through the pointers in `.claude/skills/`, and a human reads them as plain Markdown.
+`SKILL.md` (a `name`, a `description`, then the steps). Codex loads them from there, Claude Code
+through the pointers in `.claude/skills/`, a human as plain Markdown.
 
 | Skill                                                                  | Use it when                                                       |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -144,8 +143,9 @@ through the pointers in `.claude/skills/`, and a human reads them as plain Markd
 | [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or an image.                   |
 | [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | You make a post or event picture.                                 |
 | [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You review a PR you didn't write.                                 |
+| [`outsider-review`](.agents/skills/outsider-review/SKILL.md)           | Every 5 to 10 merges or weekly: a look from outside.              |
 | [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify, check the deploy, report.                  |
-| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, sprint, blockers.    |
+| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestone, blockers. |
 | [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: questions, grooming, overlap, briefs. |
 
 Two skills come unchanged from Vercel (MIT, `SOURCE.md` in each, #424):
@@ -156,8 +156,8 @@ for component APIs. `write-code` and the reviews apply them; this repo's rules c
 ## Where knowledge lives
 
 Durable knowledge lives in this repository and changes through the workflow above, never in a
-tool's private memory, a chat, or loose notes. Write it for any agent and any human (no
-tool-specific commands or model names), and keep each file under 250 lines.
+tool's private memory, a chat, or loose notes. Write it for any agent and human (no tool-specific
+commands or model names), each file under 250 lines.
 
 - A rule everyone follows on every change: this file.
 - How a module or the content types work: [`docs/knowledge/index.md`](docs/knowledge/index.md), one

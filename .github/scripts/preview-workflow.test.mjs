@@ -337,3 +337,35 @@ describe('what the preview workflow never touches', () => {
     expect(codeOf('preview.yml')).not.toMatch(/VPS_(HOST|USER|PORT|SSH_KEY|KNOWN_HOSTS)/)
   })
 })
+
+describe('the component showcase in a pull request preview (#1459)', () => {
+  const buildEnv = () => steps('build').find((s) => s.name === 'Build').env
+  const reportEnv = () =>
+    steps('report').find((s) => String(s.uses).startsWith('actions/github-script')).env
+
+  it('the gate passes on whether the change touches the showcase', () => {
+    expect(jobs.gate.outputs.showcase).toContain('steps.plan.outputs.showcase')
+  })
+
+  it('the build names a folder in the release’s public/ only when the gate said so, and never marks it optional', () => {
+    expect(buildEnv().SHOWCASE_DEST).toBe(
+      "${{ needs.gate.outputs.showcase == 'true' && 'public/showcase' || '' }}",
+    )
+    expect(buildEnv()).not.toHaveProperty('SHOWCASE_OPTIONAL')
+  })
+
+  it('the build is still the one job with no key and no secret, with the showcase in it', () => {
+    expect(jobs.build.environment).toBeUndefined()
+    expect(JSON.stringify(jobs.build)).not.toMatch(/secrets\./)
+  })
+
+  it('no job that holds the key builds or runs the showcase', () => {
+    for (const id of KEY_JOBS)
+      expect(JSON.stringify(jobs[id])).not.toMatch(/storybook|showcase|build-release/i)
+  })
+
+  it('the comment learns whether to link it from the gate', () => {
+    expect(reportEnv().SHOWCASE).toBe('${{ needs.gate.outputs.showcase }}')
+    expect(JSON.stringify(steps('report'))).toContain('showcase: process.env.SHOWCASE')
+  })
+})

@@ -1,18 +1,26 @@
 import { REST_POST } from '@payloadcms/next/routes'
 import type { Payload, SanitizedConfig, TypedUser } from 'payload'
 
+import type { PayloadMcpApiKey } from '@/payload-types'
+
 /**
- * Sends MCP JSON-RPC requests to Payload's `/api/mcp` with an API key, as an agent runtime does,
+ * Sends MCP JSON-RPC requests to Payload's `/api/mcp` with an API key or an OAuth access token (or
+ * none, with `null`), as an agent runtime does,
  * through the same REST handler the site's `/api` route uses (#336).
  */
 export function mcpClient(config: SanitizedConfig) {
   let requestId = 0
 
-  async function call(method: string, params: Record<string, unknown>, key: string) {
+  async function call(
+    method: string,
+    params: Record<string, unknown>,
+    key: string | null,
+    scheme = 'Bearer',
+  ) {
     const request = new Request('http://localhost:3000/api/mcp', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${key}`,
+        ...(key === null ? {} : { Authorization: `${scheme} ${key}` }),
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
       },
@@ -24,7 +32,11 @@ export function mcpClient(config: SanitizedConfig) {
     const raw = await response.text()
     // Streamable HTTP may answer as one server-sent event
     const json = raw.startsWith('event:') ? raw.slice(raw.indexOf('data:') + 5) : raw
-    return { status: response.status, body: raw ? JSON.parse(json) : null }
+    return {
+      status: response.status,
+      headers: response.headers,
+      body: raw ? JSON.parse(json) : null,
+    }
   }
 
   /** Calls a tool and answers the text it returned, and whether the server marked it an error. */
@@ -35,7 +47,14 @@ export function mcpClient(config: SanitizedConfig) {
     return { text, isError: Boolean(result?.isError ?? body?.error) }
   }
 
-  return { call, tool }
+  /** The tools a credential is offered: the answer's status, and the sorted names. */
+  async function tools(key: string) {
+    const { status, body } = await call('tools/list', {}, key)
+    const names = (body?.result?.tools ?? []).map((t: { name: string }) => t.name) as string[]
+    return { status, tools: names.sort() }
+  }
+
+  return { call, tool, tools }
 }
 
 /** Every tool the plugin offers, checked on a key, so only collection access can refuse. */
@@ -47,10 +66,26 @@ const ALL_TOOLS = {
 }
 
 /** An MCP API key for `owner`, created by `admin` in Admin. */
-export const createMcpKey = (payload: Payload, admin: TypedUser, owner: number, apiKey: string) =>
+export const createMcpKey = (
+  payload: Payload,
+  admin: TypedUser,
+  owner: number,
+  apiKey: string,
+  extra: { scopes?: PayloadMcpApiKey['scopes']; expiresAt?: string } = {},
+) =>
   payload.create({
     collection: 'payload-mcp-api-keys',
-    data: { user: owner, label: 'Test', enableAPIKey: true, apiKey, ...ALL_TOOLS },
+    data: {
+      user: owner,
+      label: 'Test',
+      enableAPIKey: true,
+      apiKey,
+      ...ALL_TOOLS,
+      // Every scope, as a key had before scopes existed. `platform/` cannot import the agents
+      // module's `SCOPES`, so the list is named here; callers that need another set pass `scopes`
+      scopes: ['read', 'suggest'],
+      ...extra,
+    },
     user: admin,
     overrideAccess: false,
   })

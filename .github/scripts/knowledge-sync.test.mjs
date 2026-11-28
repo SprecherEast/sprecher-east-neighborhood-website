@@ -411,18 +411,19 @@ describe('changedFiles', () => {
 
 describe('the real knowledge map: shared helpers', () => {
   const real = readFileSync('docs/knowledge/map.json', 'utf8')
-  const payload = parseKnowledgeMap(real).find((e) => e.source === 'src/platform/payload/README.md')
+  const lib = parseKnowledgeMap(real).find((e) => e.source === 'src/platform/lib/README.md')
 
-  it('keeps a helper the Payload note describes mapped to it', () => {
-    expect(describes(payload, 'src/platform/lib/cn.ts')).toBe(true)
-    expect(describes(payload, 'src/platform/lib/messages/accounts.ts')).toBe(true)
+  it('maps every shared helper to the shared helpers note', () => {
+    expect(describes(lib, 'src/platform/lib/cn.ts')).toBe(true)
+    expect(describes(lib, 'src/platform/lib/messages/accounts.ts')).toBe(true)
+    expect(describes(lib, 'src/platform/lib/canUseDOM.ts')).toBe(true)
   })
 
-  it('does not map a helper the note does not describe', () => {
-    expect(describes(payload, 'src/platform/lib/canUseDOM.ts')).toBe(false)
+  it('does not map a Payload helper to it', () => {
+    expect(describes(lib, 'src/platform/payload/roles.ts')).toBe(false)
   })
 
-  it('still gates an unmapped helper under the whole-repository rule', () => {
+  it('asks for the shared helpers note when a helper changes', () => {
     const files = [
       {
         filename: 'src/platform/lib/canUseDOM.ts',
@@ -432,6 +433,6 @@ describe('the real knowledge map: shared helpers', () => {
     ]
     const problems = knowledgeProblems({ mapJson: real, files, noteExists: () => true, body: '' })
     expect(problems).toHaveLength(1)
-    expect(problems[0]).not.toContain('src/platform/payload/README.md')
+    expect(problems[0]).toContain('src/platform/lib/README.md')
   })
 })
