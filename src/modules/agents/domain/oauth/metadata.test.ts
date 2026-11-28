@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
+import { SCOPES } from '../scopes'
 import { DISCOVERY_HEADERS } from './constants'
 import {
   authorizationServerMetadata,
   bearerChallenge,
   discoveryResponse,
+  insufficientScopeChallenge,
   protectedResourceMetadata,
 } from './metadata'
 
@@ -61,10 +63,26 @@ describe('authorizationServerMetadata (RFC 8414)', () => {
   })
 })
 
+describe('scopes advertised', () => {
+  it('lists every scope in both documents, so a standard client can ask for them; the record decides', () => {
+    expect(protectedResourceMetadata(ORIGIN).scopes_supported).toEqual([...SCOPES])
+    expect(authorizationServerMetadata(ORIGIN).scopes_supported).toEqual([...SCOPES])
+    expect(SCOPES).toContain('suggest')
+  })
+})
+
+describe('insufficientScopeChallenge', () => {
+  it('names the error, the scope the call needs and where to sign in (MCP, scope challenge)', () => {
+    expect(insufficientScopeChallenge(ORIGIN, 'suggest')).toBe(
+      'Bearer error="insufficient_scope", scope="suggest", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+    )
+  })
+})
+
 describe('bearerChallenge', () => {
-  it('points at the protected-resource metadata for the MCP address', () => {
+  it('names every scope and points at the protected-resource metadata for the MCP address', () => {
     expect(bearerChallenge(ORIGIN)).toBe(
-      'Bearer resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
+      'Bearer scope="read suggest", resource_metadata="https://sprechereast.com/.well-known/oauth-protected-resource/api/mcp"',
     )
   })
 })

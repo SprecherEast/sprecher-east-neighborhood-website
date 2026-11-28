@@ -143,6 +143,37 @@ export async function listForeignKeys(database: TestDatabase): Promise<ForeignKe
 export const statementOf = (query: Parameters<RawDb['run']>[0]) =>
   (query.queryChunks as { value: string[] }[]).map((chunk) => chunk.value.join('')).join('')
 
+/**
+ * A row written straight to a table, the way an older release left it: for a database that is
+ * behind the config, where Payload's own writes would name a column or a table that comes later.
+ * Each required column without a default that `values` leaves out gets a placeholder. Returns its id.
+ */
+export async function insertRawRow(
+  database: TestDatabase,
+  table: string,
+  values: Record<string, string | number>,
+): Promise<number> {
+  const columns = await database.query<{
+    name: string
+    type: string
+    notnull: number
+    dflt_value: unknown
+    pk: number
+  }>(`SELECT name, type, "notnull", dflt_value, pk FROM pragma_table_info('${table}')`)
+  const row: Record<string, string | number> = { ...values }
+  for (const column of columns) {
+    if (column.pk || column.name in row || !column.notnull || column.dflt_value !== null) continue
+    row[column.name] = column.type.toLowerCase() === 'integer' ? 1 : 'x'
+  }
+  const names = Object.keys(row)
+  const literal = (value: string | number) =>
+    typeof value === 'number' ? String(value) : `'${value.replaceAll("'", "''")}'`
+  const [created] = await database.query<{ id: number }>(
+    `INSERT INTO "${table}" (${names.map((name) => `"${name}"`).join(', ')}) VALUES (${names.map((name) => literal(row[name] as string | number)).join(', ')}) RETURNING id`,
+  )
+  return Number(created?.id)
+}
+
 /** A media row, written the way the database sees it: no file on disk. Returns its id. */
 export async function createMedia(database: TestDatabase, alt: string): Promise<number> {
   const row = await database.payload.db.create({

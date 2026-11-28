@@ -111,3 +111,10 @@ storybook-static/
 
 # Change history and open-issue snapshot of the system map, written by `npm run knowledge:map -- --extras` (#1462)
 .knowledge-map/
+
+# The system map's data, built from the sources by `npm run knowledge:map`; never committed (#1581)
+/docs/knowledge/graph.json
+/docs/knowledge/catalog.md
+
+# Rules built from the guidelines and notes by scripts/agent-context-rules.mjs; rebuilt where needed, never committed (#1593)
+/.claude/rules/generated/

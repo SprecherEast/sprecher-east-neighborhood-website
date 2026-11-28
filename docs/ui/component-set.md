@@ -24,8 +24,9 @@ belong to one business area, what isn't needed yet, and the coverage table.
   lines.
 - **A component of a split area** (a chart's files, say) is described by that area's own note,
   not the UI kit's: add it to its note's map entry and the parent's `exclude` in
-  `docs/knowledge/map.json`. Adding any file to a folder a parent's generated rule lists one by
-  one needs `npm run agent-context -- --write`, or the check fails.
+  `docs/knowledge/map.json`. A parent's generated rule lists its folders and files one by
+  one, so a new file in such a folder is picked up when the rules are next built (session start, or
+  `npm run agent-context -- --write`).
 - **Variants with `cva`**, named by purpose (`primary`, `muted`), never by colour. Colours come
   from semantic tokens only ([rule 9](../architecture/README.md#dependency-rules)).
 - **Plain typed props.** No component imports Payload; it gets `ImageRef`, `RichTextValue` or the

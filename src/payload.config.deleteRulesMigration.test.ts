@@ -31,15 +31,15 @@ const rulesOf = async () => {
   const keys = await listForeignKeys(database)
   return keys.map((key) => `${key.table}.${key.column}:${key.onDelete}`)
 }
-// The config also holds what later migrations add (the OAuth tables, #1501), which this one
-// stops short of: compare only the keys on the tables and columns the database has.
+// The config also holds what later migrations add (the OAuth tables, #1501, and the API keys'
+// scopes, #1499), which this one stops short of: compare only the keys on the tables and columns the database has.
 const rulesOfSchema = () =>
   schemaKeys
     .filter(
       (key) => !LATER.some((later) => key.table.startsWith(later) || key.column.startsWith(later)),
     )
     .map((key) => `${key.table}.${key.column}:${key.onDelete}`)
-const LATER = ['oauth_']
+const LATER = ['oauth_', 'payload_mcp_api_keys_scopes']
 
 beforeAll(async () => {
   const fromSchema = await createSchemaDatabase()

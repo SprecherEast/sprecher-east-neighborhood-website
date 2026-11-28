@@ -11,7 +11,7 @@ const request: ConsentRequest = {
   state: 'xyz',
   codeChallenge: 'a'.repeat(43),
   resource: 'https://sprechereast.com/api/mcp',
-  scope: 'mcp',
+  scope: 'read',
 }
 
 const ticket = signConsent(request, { adminId: 7, now: NOW, secret: SECRET })

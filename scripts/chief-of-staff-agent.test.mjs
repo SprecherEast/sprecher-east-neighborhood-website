@@ -99,8 +99,8 @@ describe('the chief of staff agent file', () => {
     expect(refuses(disallowed, 'Bash', command)).toBe(false)
   })
 
-  it('may start only the worker and the reviewer', () => {
+  it('may start only the worker, the reviewer and the outsider reviewer', () => {
     const agentTools = allowed.filter((t) => t === 'Agent' || t.startsWith('Agent('))
-    expect(agentTools).toEqual(['Agent(worker, qa-reviewer)'])
+    expect(agentTools).toEqual(['Agent(worker, qa-reviewer, outsider-reviewer)'])
   })
 })

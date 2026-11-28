@@ -12,9 +12,10 @@ Guard rails load into every session ([`CLAUDE.md`](../../CLAUDE.md) imports them
 [`AGENTS.md`](../../AGENTS.md) summarizes them). Every other reference loads by itself as soon as the
 work reads or edits a file that matches its globs, so a session only carries what its task needs.
 Read one by hand whenever a task needs it and it hasn't loaded (#144). This table is the one place
-the globs are written: `scripts/agent-context.mjs` copies each listed reference into the Claude Code
-adapter with them, and CI fails when a copy is out of date or when what loads at session start passes
-its token budget (`BUDGET_TOKENS` in that script, #737; counted with an offline approximation of Claude's
+the globs are written: `scripts/agent-context-rules.mjs` copies each listed reference into the Claude Code
+adapter with them. The copies are build output: git ignores them, the session-start hook builds them in a
+fresh clone and in a worktree, and `npm run agent-context -- --write` builds them by hand. CI fails when a
+listed file or glob is missing or when what loads at session start passes its token budget (`BUDGET_TOKENS` in that script, #737; counted with an offline approximation of Claude's
 tokenizer, so treat it as a close guide, not an exact figure).
 
 | Reference                                                | Loads by itself when the work touches                                                                                                                                                                         | Read it when                                                                                     |

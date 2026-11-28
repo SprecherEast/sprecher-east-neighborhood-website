@@ -1,4 +1,5 @@
-import { DISCOVERY_HEADERS, OAUTH_GRANTS, OAUTH_PATHS, OAUTH_SCOPE } from './constants'
+import { SCOPES, type Scope } from '../scopes'
+import { DISCOVERY_HEADERS, OAUTH_GRANTS, OAUTH_PATHS } from './constants'
 import { mcpResource, siteOrigin } from './resource'
 
 /**
@@ -10,7 +11,7 @@ export const protectedResourceMetadata = (origin: string) => ({
   resource: mcpResource(origin),
   authorization_servers: [siteOrigin(origin)],
   bearer_methods_supported: ['header'],
-  scopes_supported: [OAUTH_SCOPE],
+  scopes_supported: [...SCOPES],
   resource_name: 'Sprecher East neighborhood agents',
 })
 
@@ -30,7 +31,7 @@ export const authorizationServerMetadata = (origin: string) => {
     // RFC 9207: the redirect back carries `iss`, so a client can check which server answered
     authorization_response_iss_parameter_supported: true,
     token_endpoint_auth_methods_supported: ['none'],
-    scopes_supported: [OAUTH_SCOPE],
+    scopes_supported: [...SCOPES],
   }
 }
 
@@ -38,6 +39,20 @@ export const authorizationServerMetadata = (origin: string) => {
 export const discoveryResponse = (document: object): Response =>
   Response.json(document, { headers: DISCOVERY_HEADERS })
 
-/** The `WWW-Authenticate` value of a 401 from the MCP address (RFC 9728, section 5.1). */
+const metadataUrl = (origin: string) =>
+  `${siteOrigin(origin)}${OAUTH_PATHS.protectedResource}${OAUTH_PATHS.mcp}`
+
+/**
+ * The `WWW-Authenticate` value of a 401 from the MCP address (RFC 9728, section 5.1): where to
+ * sign in, and every scope this address offers (the MCP authorization specification's scope selection), so a
+ * client can ask for what it needs; the client's record caps what it is given.
+ */
 export const bearerChallenge = (origin: string): string =>
-  `Bearer resource_metadata="${siteOrigin(origin)}${OAUTH_PATHS.protectedResource}${OAUTH_PATHS.mcp}"`
+  `Bearer scope="${SCOPES.join(' ')}", resource_metadata="${metadataUrl(origin)}"`
+
+/**
+ * The `WWW-Authenticate` value of a 403 from a call the client's scopes do not cover (RFC 6750,
+ * section 3.1, and the MCP specification's scope challenge): the scope the call needs.
+ */
+export const insufficientScopeChallenge = (origin: string, needed: Scope): string =>
+  `Bearer error="insufficient_scope", scope="${needed}", resource_metadata="${metadataUrl(origin)}"`

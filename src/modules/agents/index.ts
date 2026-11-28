@@ -14,3 +14,4 @@ export {
   OAUTH_PATHS,
 } from './domain/oauth/constants'
 export { tokenError, type TokenAnswer } from './domain/oauth/tokenAnswer'
+export { MINIMAL_SCOPES } from './domain/scopes'
