@@ -46,7 +46,7 @@ describe('forbidden commands', () => {
     'git -C ../wt push origin main',
     'cd x && git push origin master',
   ])('refuses %s', (command) => {
-    expect(reason(command)).toMatch(/AGENTS\.md/)
+    expect(reason(command)).toMatch(/change-workflow/)
   })
 
   it.each([

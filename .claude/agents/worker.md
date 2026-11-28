@@ -12,3 +12,9 @@ You are a worker for Sprecher East. Before anything else, read your role guide,
 the guidelines and skills it points to.
 
 This file only registers the role as a Claude Code subagent. Edit the role guide, not this file.
+
+Claude Code specifics: wait for checks by polling `gh pr checks <number>` in the background
+(`run_in_background`), about once a minute for at most 15 minutes, without pushing; after that, tell
+the user. Run `/self-review` before opening or updating the pull request, ask for the review from a
+new `qa-reviewer` subagent, never from the context that wrote the change, and run `/wrapped` after
+every merge.

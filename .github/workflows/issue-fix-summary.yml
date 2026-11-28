@@ -1,7 +1,7 @@
 name: Issue Fix Summary
 
 # When a PR is merged, comment on each issue it links with how it was fixed, so the
-# issue itself records both the problem and the fix (AGENTS.md step 5).
+# issue itself records both the problem and the fix (the `change-workflow` skill, step 5 of the path to main).
 # pull_request_target is safe here because it runs only code from the trusted base branch: the
 # checkout has no `ref`, so it is `main`, never the PR's head, and it takes only .github/scripts
 # (the shared description parser, #716) without keeping the token. The PR's text is read from the

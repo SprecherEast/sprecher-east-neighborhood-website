@@ -252,7 +252,7 @@ isolation check proves it before and after every preview deploy. What holds now:
 - **Agents never change their own guardrails.** `AGENTS.md`, the tool adapters, `.agents/`,
   `.github/`, `docs/guidelines/`, `docs/roles/` and `docs/process/` set the rules. A change to any of
   them is a pull request the owner decides, and the independent review lists it as a policy change
-  ([`AGENTS.md`](../../AGENTS.md), step 3). Wording, link and fact fixes under `docs/process/`
+  ([`change-workflow`](../../.agents/skills/change-workflow/SKILL.md#the-path-to-main), step 3). Wording, link and fact fixes under `docs/process/`
   are not policy changes. `.github/CODEOWNERS` maps these paths to the owner.
 - **Code-owner review is not required yet** (#694). The `main` ruleset needs a pull request and the
   checks but no approvals, and agents open pull requests through the owner's own account; GitHub

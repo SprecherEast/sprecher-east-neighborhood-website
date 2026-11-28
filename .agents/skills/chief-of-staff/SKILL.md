@@ -116,7 +116,7 @@ Before every claim, after [looking for changes made elsewhere](#8-look-for-chang
 Look the level up in the [scrutiny table](../../../docs/process/agent-operating-model.md#6-how-much-scrutiny-a-change-gets).
 It is a lookup, not an agent: take the highest level any row matches. **The levels do not take
 effect yet** (#1450 does that). Until then review depth follows the model and
-effort rule in [`CLAUDE.md`](../../../CLAUDE.md), and the level you look up is only a proposal in
+effort rule in [`claude-code-setup.md`](../../../.claude/rules/claude-code-setup.md), and the level you look up is only a proposal in
 the brief, which no one is bound by. Start the reviewer as a new subagent that gets only the pull
 request and its issue.
 

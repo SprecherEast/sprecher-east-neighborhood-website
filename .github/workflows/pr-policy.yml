@@ -1,6 +1,6 @@
 name: PR Policy
 
-# Enforces AGENTS.md steps 1–2 on every pull request: it closes exactly one issue, that issue is
+# Enforces steps 1–2 of the path to main (the `change-workflow` skill) on every pull request: it closes exactly one issue, that issue is
 # claimed (assigned), planned (milestone), labeled (one type, an area, a priority) and groomed (no
 # `needs grooming` label), the issue
 # shows the PR on its timeline, the PR description is fully filled in, a knowledge note is updated

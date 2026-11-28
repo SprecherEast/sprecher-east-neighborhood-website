@@ -101,7 +101,8 @@ test Payload, Next.js or styling. How: [`references/tests.md`](references/tests.
 ## Expert guidance for React and Next.js
 
 The owner asked for established engineering practice over guesswork (2026-10-26, #424). For React
-and Next.js code, also follow Vercel's official skills, vendored in this repo:
+and Next.js code, also follow Vercel's official skills, vendored in this repo unchanged (MIT, a
+`SOURCE.md` in each, #424):
 
 - [`vercel-react-best-practices`](../vercel-react-best-practices/SKILL.md): data fetching, bundle
   size, server components and re-renders. Apply the CRITICAL and HIGH rules to every change.

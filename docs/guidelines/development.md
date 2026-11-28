@@ -112,7 +112,7 @@ fields).
 
 When modifying a file, fix all issues in it — not just the ones related to the current task. Pre-existing problems (wrong abstractions, inline SVGs, raw HTML where components exist, hardcoded colors) are bugs. Leaving them means they ship to production. The rule: **if you read a file and see something wrong, fix it in the same PR**.
 
-This also applies during code review. Every review finding must either be fixed or encoded as a rule so it doesn't recur. A new rule is a policy change: unless the owner asked for it, file it labeled `needs owner` ([`AGENTS.md`](../../AGENTS.md) step 3).
+This also applies during code review. Every review finding must either be fixed or encoded as a rule so it doesn't recur. A new rule is a policy change: unless the owner asked for it, file it labeled `needs owner` ([`change-workflow`](../../.agents/skills/change-workflow/SKILL.md#the-path-to-main), step 3).
 
 ## Documentation Is Code
 

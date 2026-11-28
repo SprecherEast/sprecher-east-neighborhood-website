@@ -1,12 +1,74 @@
 ---
 name: change-workflow
-description: Mandatory procedure for any code, config, or docs change to this repo — create a labeled GitHub issue, work on a branch, open a PR from the template (on a native stack when it depends on another open PR), get it independently reviewed, wait for all checks to go green, then merge it yourself once it's green and reviewed (which deploys). Use before starting any change.
+description: Mandatory procedure for any code, config or docs change to this repo, from issue to merge. Use when you file an issue, start a change, open or update a pull request, answer its review, check its status, or merge it (and when a change goes through a native stack, a preview or an infra step).
 ---
 
 # Change workflow
 
-The rules are in [`AGENTS.md`](../../../AGENTS.md). This file is the step-by-step procedure.
-Commands use the GitHub CLI (`gh`). Without it, do the same steps in the GitHub web UI.
+[`AGENTS.md`](../../../AGENTS.md) holds the core rules. This file owns the path to `main`: the five
+rules first, then the step-by-step procedure. Commands use the GitHub CLI (`gh`). Without it, do
+the same steps in the GitHub web UI.
+
+## The path to `main`
+
+Merging to `main` deploys to production automatically (`.github/workflows/deploy.yml`). So every
+change follows these five steps:
+
+1. **Issue first,** created with a form in `.github/ISSUE_TEMPLATE/`, with the problem (or goal) and
+   acceptance criteria. Labels, from `.github/label-policy.json` (the forms apply them):
+   exactly one **type** (`bug`, `enhancement`, `documentation`, `tech-debt`, `process`), one or
+   more **areas** (`frontend`, `cms`, `auth`, `ci`, `infra`, `dependencies`…), and one
+   **priority** (`priority: high`, `priority: medium`, `priority: low`). The issue is groomed into
+   **Ready** first, and set **In progress** when you start, one task at a time, or more when their
+   files don't overlap ([how we work](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
+2. **Branch and pull request.** Work on a branch, never on `main`; the PR closes one issue
+   ([the rule](#one-issue-one-pull-request)) and fills in every section of
+   `.github/pull_request_template.md` (**What changed**, **Why**, **How**, **How to test**,
+   **Risk & rollback**, **Self-review**, **Knowledge**: did behavior change?).
+3. **Review.** Every PR gets an **independent review** by a reviewer that did not write it (a
+   separate agent session following [`pr-review`](../pr-review/SKILL.md), or a human),
+   posted on the PR and ending with **Ready to merge**, and every review comment is answered and
+   resolved. Without Copilot's review agent, a new session reviews each PR (`pr-review` step 0). Changes to the process are policy changes the review calls out explicitly:
+   `AGENTS.md`, `.agents/`, `docs/guidelines/`, `docs/roles/`, `.github/`, the Claude Code adapter
+   (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (the flow rules, Ready or
+   Done, the levels of work, the board's columns and fields), not wording, links or facts. A policy
+   change the owner (Amine) asked for follows the normal path. Agents file issues through his
+   account, so the issue or PR records a short summary of what he decided, with the date and where;
+   the reviewer checks the change stays within it. A policy change an agent proposes on its own is
+   labeled `needs owner` when it's filed, and waits for him.
+4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
+   `ESLint`, `Dependency Audit`, `PR Policy` (steps 1–2, and the knowledge note: decision 0019
+   §6), `Knowledge sync` and `Agent context` (the session-start token budget, #737). Never bypass
+   a failing or missing check. The deploy waits for the same set, except `PR Policy`, which runs on
+   pull requests only. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
+   the issue and description rules only; they still need green checks and a review, and whoever
+   picks one up (usually the ops lead) owns and merges it.
+5. **Merge, then CI/CD takes over.** The agent that owns the PR squash-merges it once every required
+   check passes on its current head, the review of that head says **Ready to merge**, and no
+   conversation is open. A review of an earlier head still counts only when the head changed because
+   a PR below it merged (or `main` moved) and the PR's own diff is unchanged; if a PR below changed
+   after the review, this PR needs a new review even when its own diff didn't change; it can be
+   short, checking it against what changed below. The owner can merge, hold or revert anything, and a visual change with a pull request preview waits for his feedback.
+   A PR labeled `needs owner`, or whose issue is, waits for his answer. A stack merges one layer at
+   a time from the bottom, waiting for each layer's checks on its rebased head and, if the merge
+   started a deploy, for the deploy to succeed (step 6 below). After the merge, the
+   linked issue closes with a comment on how it was fixed
+   (`.github/workflows/issue-fix-summary.yml`).
+
+### One issue, one pull request
+
+- **A PR closes exactly one issue** (`Closes #N`); bigger work splits into sub-issues.
+- **Dependent PRs sit on a native GitHub stack,** so GitHub enforces the order
+  ([`stacked-prs`](../stacked-prs/SKILL.md)); independent ones run in parallel.
+- **Every issue has a milestone** (Backlog until planned). **An epic is optional,** for multi-part
+  work; a lone issue has none. Its sub-issues sit under it.
+
+### How GitHub enforces this
+
+The `main` ruleset requires a pull request, the required checks in step 4
+and resolved conversations, and blocks force pushes and deletion.
+Agents work through the owner's account, which has admin rights, so until they have their own
+GitHub identity (#106) the no-bypass rule rests on every agent merging with `bypass_rules: false`.
 
 ## 1. Issue
 
@@ -82,7 +144,7 @@ steps 2 and 3. Never hand over dependent PRs with the merge order written in pro
 check fails otherwise:
 
 - `Closes #<issue>` — the one issue this PR closes
-  ([one issue, one pull request](../../../AGENTS.md#one-issue-one-pull-request)).
+  ([one issue, one pull request](#one-issue-one-pull-request)).
 - **What changed**, **Why**, **How**, **How to test** (numbered steps someone else can
   follow), **Risk & rollback**, **Self-review** (one line each for reuse, quality, efficiency,
   guidelines and visual), **Knowledge** (`Behavior change: yes` and which note, page or doc now says so,
@@ -127,11 +189,11 @@ request carries the `preview` label, which you add once the owner says yes to on
      resolve it. Never leave a conversation unresolved.
 4. **Ready:** every required check passes on the current head, and a review says **Ready to merge**
    for that head (its `commit_id`) or for an earlier head that still counts
-   ([`AGENTS.md`](../../../AGENTS.md) step 5). Every finding is addressed and every conversation
+   (step 5 of the path to `main`). Every finding is addressed and every conversation
    resolved. To check that the PR's own diff is unchanged since the review, run
    `git range-diff <old base>..<reviewed head> <new base>..<current head>`; it should show only `=`
    lines. Unless the PR waits for the owner (an issue or PR labeled `needs owner`, or a policy
-   change he didn't ask for, `AGENTS.md` step 3), note the head SHA and go to step 6. If it waits
+   change he didn't ask for, step 3 of the path to `main`), note the head SHA and go to step 6. If it waits
    for him, label the PR `needs owner`, ask him one plain question, and stop
    ([waits for owner](../../../docs/process/waits-for-owner.md)).
    A change to how pages look that has a pull request preview also waits for the owner's feedback
@@ -184,3 +246,8 @@ For `.env.local`, Caddy, PM2, DNS, Mailgun, Porkbun, or Hostinger changes:
 3. Comment on the issue with what you changed. Never include secret values.
 
 Code is never edited on the server. Code changes always go through steps 1–6.
+
+Server configuration is not code, but it is still tracked. `.env.local`, the Caddy config, PM2,
+DNS records and third-party dashboards (Mailgun, Porkbun, Hostinger) live only on the servers.
+Before changing any of them, open an `infra` issue saying what will change, why, and how to roll it
+back; afterwards, comment what actually changed. Never put secret values in the issue.

@@ -12,9 +12,26 @@ Part of the Claude Code adapter, moved out of `CLAUDE.md` so it loads only when 
 adapter, the skills or the workflows (#144). Like `CLAUDE.md`, it holds only what is specific to
 Claude Code.
 
-- **Self-review alias:** because a project `simplify` skill exists, Claude Code runs it before each
-  commit that isn't docs or tests (Claude Code v2.1.286 or later; a personal
-  `~/.claude/skills/simplify` would win over it).
+- **Skills:** each `.claude/skills/<name>/SKILL.md` points to `.agents/skills/<name>/SKILL.md`
+  (`simplify` is the one alias, below). Edit that copy. A new skill gets a pointer too, with the
+  same `name` and `description`.
+- **Self-review alias:** `/simplify` and `/self-review` both run this repo's
+  [`self-review`](/.agents/skills/self-review/SKILL.md), with its reviews as parallel subagents.
+  Because a project `simplify` skill exists, Claude Code runs it, replacing its generic built-in
+  one, before each commit that isn't docs or tests (Claude Code v2.1.286 or later; a personal
+  `~/.claude/skills/simplify` would win over it). Run it again before opening or updating a PR.
+- **Models and effort** (#522): other sessions start on `opusplan` at `medium` effort, and the agents in
+  `.claude/agents/` on `sonnet` at `medium`. Start the reviewer on `opus` at `high` only when the PR
+  touches sign-in or accounts, access rules, migrations, the deploy or server scripts, or other
+  security code. Fallback reviewer: `sonnet[1m]`, `medium`. Use the plain aliases, never a version.
+  Never `fable` in unattended runs.
+- **Independent review and wrap-up:** run [`pr-review`](/.agents/skills/pr-review/SKILL.md) in a
+  separate session or a new subagent (for example `qa-reviewer`), never in the context that wrote the
+  change. After every merge, run [`wrapped`](/.agents/skills/wrapped/SKILL.md).
+- **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),
+  about once a minute and for at most 15 minutes, without pushing; after that, tell the user.
+- **Browser and dev server:** `.claude/settings.json` allows the Playwright MCP tools used for
+  screenshots, and `.claude/launch.json` starts `npm run dev`.
 - **Agent team** ([operating model](/docs/process/agent-operating-model.md), #685, #721). The chief
   of staff is built (#695 piece one): `.claude/agents/chief-of-staff.md`, run with
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
@@ -22,7 +39,7 @@ Claude Code.
   holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer, outsider-reviewer)` as
   the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the reviewer stays
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
-  their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
+  their own. Review depth today is the models and effort rule above and nothing wider. Never `fable` in
   unattended runs: it can bill to usage credits, and in `-p` runs without asking
   ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the subagent docs:
   `isolation: worktree` branches from the default branch, not the parent's `HEAD`; the
@@ -59,7 +76,7 @@ Claude Code.
   with `main`, one repository-wide reminder follows, once per session (#770). Neither blocks
   (#717; the rule is in `AGENTS.md`, the skills and CI). It compares with `main`, so it is quiet in a shallow clone and does not see a
   note a lower PR in a stack changed. Before each Bash command, the
-  commands `AGENTS.md` forbids (`--admin`, `bypass_rules: true`, a push to `main`) are refused, and
+  commands the [`change-workflow`](/.agents/skills/change-workflow/SKILL.md#the-path-to-main) path forbids (`--admin`, `bypass_rules: true`, a push to `main`) are refused, and
   so is a commit whose `src/payload-types.ts` change is only `next dev` reformatting it. Before a
   browser script runs (`javascript_tool` of any browser MCP), one that writes to `/api/media`, or writes an
   image field (`heroImage`, `image`) through any `/api/` route or GraphQL, is refused unless it carries `image-review: passed`, which says the
@@ -75,7 +92,8 @@ Claude Code.
 - **How instructions load** (#144): a rule in
   `.claude/rules/` with `paths` loads when Claude reads or edits a matching file, and one without
   `paths` loads at session start. An `@import` inside a rule loads at session start whatever the
-  rule's `paths` say, so the generated rules carry the text itself. Symlinked rules work, but git
+  rule's `paths` say, so the generated rules carry the text itself. Never edit a copy in `.claude/rules/generated/`: edit the reference or the load map in
+  `docs/guidelines/README.md`, then run `npm run agent-context -- --write`. Symlinked rules work, but git
   on Windows checks symlinks out as plain text unless symlinks are enabled, so they aren't used.
 - **Generated rules are build output, not in git** (#1593): `.claude/rules/generated/` is ignored, so
   an edit to a guideline or note is one edit and conflicts once. The `session-start.mjs` hook builds

@@ -9,7 +9,7 @@ depends on a particular tool or model.
 you find a disagreement, fix the role guide in the same PR.
 
 Role guides are policy files: the review calls out a change to one, and a change the owner didn't
-ask for waits for him ([`AGENTS.md`](../../AGENTS.md), step 3).
+ask for waits for him ([`change-workflow`](../../.agents/skills/change-workflow/SKILL.md#the-path-to-main), step 3).
 
 | Role                       | Guide                                     | Use it for                                                               |
 | -------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |

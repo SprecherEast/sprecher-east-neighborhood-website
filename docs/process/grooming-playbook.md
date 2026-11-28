@@ -79,7 +79,7 @@ Ready, and refuses while the issue has `needs owner` or fails the issue check.
 ### In review to Done
 
 - Required checks pass on the current head, the independent review says it is ready, and no
-  conversation is open ([`AGENTS.md`](../../AGENTS.md#the-only-way-code-reaches-main-and-production)).
+  conversation is open ([`change-workflow`](../../.agents/skills/change-workflow/SKILL.md#the-path-to-main)).
 - The knowledge note is updated or behavior change is declared absent, and any deploy is verified
   ([`wrapped`](../../.agents/skills/wrapped/SKILL.md)).
 - The issue is closed with a summary. Then its parent (the epic, or an issue under it) is
