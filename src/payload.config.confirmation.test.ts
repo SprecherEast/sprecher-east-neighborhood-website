@@ -25,8 +25,7 @@ beforeAll(async () => {
 type Validate = (value: unknown, options: unknown) => unknown
 const fieldNamed = (collection: CollectionConfig, name: string) =>
   collection.fields.find((f) => 'name' in f && f.name === name) as
-    | { type: string; validate: Validate }
-    | undefined
+    { type: string; validate: Validate } | undefined
 
 /** Runs a field's own validation, as Payload does before saving. */
 const validate = (collection: CollectionConfig, name: string, value: string) =>

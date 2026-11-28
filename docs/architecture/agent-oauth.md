@@ -22,7 +22,7 @@ scope="read suggest", resource_metadata="https://<site>/.well-known/oauth-protec
    challenge, state, `resource` and, if it wants more than `read`, `scope`. This visit comes from the tool's own site
    (`Sec-Fetch-Site: cross-site`). This page reads no session, so it shows no account; the approval
    ignores one on a request from another site (`getViewer`, `isFromAnotherSite`; from Payload 3.94
-   Payload's own check would accept the cookie on such a visit): it checks the request (below),
+   Payload's own check would accept the cookie on such a visit). This page then checks the request (below),
    says who is asking and where it returns to, and offers **Continue to approval**.
    That link goes to `/oauth/approve` on this site, carrying the checked request and nothing
    secret, so the browser sends the session and the page checks everything again. There a signed-in

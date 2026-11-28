@@ -55,11 +55,7 @@ export type SignUpFailure = 'rejected' | 'robot-check' | 'too-many'
  * or something broke.
  */
 export type VerifyAccountFailure =
-  | 'already-verified'
-  | 'invalid-link'
-  | 'needs-password'
-  | 'robot-check'
-  | 'server-error'
+  'already-verified' | 'invalid-link' | 'needs-password' | 'robot-check' | 'server-error'
 
 /** What a server action that changes something returns. Failures are fixed codes, never text. */
 export type { ActionResult } from '@/platform/lib'

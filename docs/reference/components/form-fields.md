@@ -59,7 +59,7 @@ Source: `src/platform/ui/Field.client.tsx`
 | `type`        | `"number" \| "search" \| "text" \| "email" \| "password"`                                                                                                                 | no       |                                                                                |
 | `leadingIcon` | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
 
-308 more props from package types (HTML attributes and the like) are not listed.
+309 more props from package types (HTML attributes and the like) are not listed.
 
 ### `Field.Money`
 
@@ -70,7 +70,7 @@ Source: `src/platform/ui/Field.client.tsx`
 | `value`         | `string`                                                                                                                                                                  | yes      | The box's text, as `formatMoneyTyping` writes it                               |
 | `onValueChange` | `(value: string) => void`                                                                                                                                                 | yes      | The new text, already grouped, whenever the reader changes the box             |
 
-305 more props from package types (HTML attributes and the like) are not listed.
+306 more props from package types (HTML attributes and the like) are not listed.
 
 ### `Field.TextArea`
 
@@ -137,7 +137,7 @@ Source: `src/platform/ui/FieldInput.client.tsx`
 | `type`        | `"number" \| "search" \| "text" \| "email" \| "password"`                                                                                                                 | no       |                                                                                |
 | `leadingIcon` | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
 
-308 more props from package types (HTML attributes and the like) are not listed.
+309 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 
@@ -156,7 +156,7 @@ Source: `src/platform/ui/FieldMoney.client.tsx`
 | `value`         | `string`                                                                                                                                                                  | yes      | The box's text, as `formatMoneyTyping` writes it                               |
 | `onValueChange` | `(value: string) => void`                                                                                                                                                 | yes      | The new text, already grouped, whenever the reader changes the box             |
 
-305 more props from package types (HTML attributes and the like) are not listed.
+306 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 

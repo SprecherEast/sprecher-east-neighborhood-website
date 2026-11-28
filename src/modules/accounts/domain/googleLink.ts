@@ -61,8 +61,7 @@ export function decideStartLink({
 
 /** What the callback of a link flow may do. */
 export type FinishLinkDecision =
-  | { kind: 'link' }
-  | { kind: 'refuse'; result: Exclude<LinkResult, 'linked' | 'too-many'> }
+  { kind: 'link' } | { kind: 'refuse'; result: Exclude<LinkResult, 'linked' | 'too-many'> }
 
 /**
  * Whether Google's checked answer may be attached, asked again when the flow comes back (the

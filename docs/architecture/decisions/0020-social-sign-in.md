@@ -61,8 +61,10 @@ confirmed this approach, so the record stays Proposed until he does.
   `getFieldsToSign`) and Payload's cookie (`generatePayloadCookie`). Payload's `local-jwt` then
   reads it; no strategy is added. The callback answers a small page of ours that moves on to
   `/account` (a meta refresh and a link, no script) rather than a redirect: the provider's
-  return is a cross-site navigation, and a redirect would carry that on, so Payload's CSRF check
-  (`Sec-Fetch-Site`) would ignore the new cookie on the account page.
+  return is a cross-site navigation, and a redirect would carry that on. Up to Payload 3.91,
+  Payload's CSRF check (`Sec-Fetch-Site`) then ignored the new cookie on the account page; from
+  3.94 it accepts it, and the page is kept so the next request is same-origin and no cross-site
+  rule can drop the new sign-in (2026-11-28, #1579).
 - **Google is on only when both its keys are set** (`GOOGLE_CLIENT_ID` and
   `GOOGLE_CLIENT_SECRET`). Without them the button doesn't show and the routes send the person
   back to `/login`.

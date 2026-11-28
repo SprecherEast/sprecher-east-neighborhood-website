@@ -92,16 +92,14 @@ export function toBreakdown(spec: Breakdown): BreakdownModel {
         .map((piece) => ({ ...piece, area: area.label })),
     ),
   )
-  const smaller = folded.map(
-    (piece, rank): SmallerPiece => ({
-      key: piece.key,
-      label: piece.label,
-      value: piece.value,
-      share: share(piece.value),
-      step: stepOf(rank, folded.length),
-      area: piece.area,
-    }),
-  )
+  const smaller = folded.map((piece, rank): SmallerPiece => ({
+    key: piece.key,
+    label: piece.label,
+    value: piece.value,
+    share: share(piece.value),
+    step: stepOf(rank, folded.length),
+    area: piece.area,
+  }))
   const biggest = Math.max(...areas.map((area) => area.share))
   const barScale = Math.min(BAR_SCALE, 100 / biggest)
   return { barScale, total, squareCount, showSquares, areas, smaller }

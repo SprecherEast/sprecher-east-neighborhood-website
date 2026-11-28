@@ -203,8 +203,9 @@ npm run dev                         # → http://localhost:3000
 | `PASSKEYS_ENABLED`                                                                        | Passkeys (#1313, decision 0021): on only when exactly `true`; off by default. Needs an https `NEXT_PUBLIC_SERVER_URL` on a domain name       |
 
 System-level env vars (not in .env.local):
-| Var | Purpose |
-|-----|---------|
+
+| Var                 | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
 | `HOSTINGER_API_KEY` | Hostinger API for VPS snapshots and management |
 
 ## Known Gotchas

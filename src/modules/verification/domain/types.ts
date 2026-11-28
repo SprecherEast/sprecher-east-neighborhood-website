@@ -44,5 +44,4 @@ export type ConfirmResult =
  * needs the Confirm button; the others are final, so the page shows their message and no button.
  */
 export type LinkStatus =
-  | 'pending'
-  | Extract<ConfirmOutcome, 'already-confirmed' | 'expired' | 'invalid'>
+  'pending' | Extract<ConfirmOutcome, 'already-confirmed' | 'expired' | 'invalid'>

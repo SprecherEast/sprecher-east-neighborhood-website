@@ -66,7 +66,7 @@ function loadCards({ run, policy, repository, number, project, appSlug }) {
   const seen = new Set()
   const onBoard = (child) =>
     child.projects.some((entry) => entry.owner === project.org && entry.number === project.number)
-  for (let queue = [{ repository, number }]; queue.length > 0; ) {
+  for (let queue = [{ repository, number }]; queue.length > 0;) {
     const next = queue.shift()
     const card = factsFromIssue(readIssue(run, next.repository, next.number), policy, appSlug)
     if (seen.has(card.key)) continue

@@ -116,7 +116,7 @@ export function safeKitFiles({ files, readFile, resolve }) {
   candidates.forEach(visit)
   // Then spread "unsafe" to every importer until nothing changes, so the answer cannot depend on
   // the order of the files or on where a circle is entered
-  for (let changed = true; changed; ) {
+  for (let changed = true; changed;) {
     changed = false
     for (const node of graph.values()) {
       if (!node.unsafe && node.imports.some((target) => graph.get(target).unsafe)) {

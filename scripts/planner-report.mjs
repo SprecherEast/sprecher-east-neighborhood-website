@@ -103,7 +103,7 @@ export function renderTable(rows, total, unreadable = []) {
 /** A parent of a card that was skipped is not read in full either: its status follows that child. */
 function withoutParentsOfSkipped(cards, skipped, unreadable) {
   let rest = cards
-  for (let changed = true; changed; ) {
+  for (let changed = true; changed;) {
     const parents = rest.filter((card) =>
       card.facts.subIssues.some((child) => skipped.has(child.key)),
     )
