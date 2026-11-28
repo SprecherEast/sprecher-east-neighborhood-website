@@ -1013,7 +1013,7 @@
               "options": null
             }
           ],
-          "inherited": 308
+          "inherited": 309
         },
         {
           "name": "Field.Money",
@@ -1052,7 +1052,7 @@
               "options": null
             }
           ],
-          "inherited": 305
+          "inherited": 306
         },
         {
           "name": "Field.TextArea",
@@ -1302,7 +1302,7 @@
           "options": null
         }
       ],
-      "inheritedProps": 308,
+      "inheritedProps": 309,
       "parts": [],
       "usedBy": {
         "count": 2,
@@ -1350,7 +1350,7 @@
           "options": null
         }
       ],
-      "inheritedProps": 305,
+      "inheritedProps": 306,
       "parts": [],
       "usedBy": {
         "count": 1,
