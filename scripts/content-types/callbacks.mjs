@@ -65,16 +65,74 @@ export function describeHooks(hooks = {}, locate = noFiles) {
 /**
  * Custom endpoints in config order: those this site or a plugin adds. The REST routes Payload
  * gives every collection (find, create, delete, login and the rest) are left out, since every
- * type has them. `endpoints: false` and no endpoints both give none.
+ * type has them, unless `builtIn` asks for them too. `endpoints: false` and no endpoints both
+ * give none.
  */
-export function describeEndpoints(endpoints, locate = noFiles) {
+export function describeEndpoints(endpoints, locate = noFiles, { builtIn = false } = {}) {
   if (!Array.isArray(endpoints)) return []
-  return endpoints
-    .map((endpoint) => ({
-      method: String(endpoint.method).toUpperCase(),
-      path: endpoint.path,
-      name: functionLabel(endpoint.handler, 'handler').name,
-      file: locate(endpoint.handler),
+  const described = endpoints.map((endpoint) => ({
+    method: String(endpoint.method).toUpperCase(),
+    path: endpoint.path,
+    name: functionLabel(endpoint.handler, 'handler').name,
+    file: locate(endpoint.handler),
+  }))
+  return described
+    .map((endpoint, index) => ({
+      ...endpoint,
+      ...replacement(described.slice(0, index), endpoint),
     }))
-    .filter((endpoint) => endpoint.file !== 'payload')
+    .filter((endpoint) => builtIn || endpoint.file !== 'payload')
+    .map((endpoint) => (builtIn ? endpoint : withoutReplacement(endpoint)))
+}
+
+const withoutReplacement = ({ replacedBy, replacedWhen, ...endpoint }) => endpoint
+
+function replacement(earlier, endpoint) {
+  for (const candidate of earlier) {
+    const taken = takesFirst(candidate, endpoint)
+    if (taken) return { replacedBy: candidate, replacedWhen: taken.when }
+  }
+  return { replacedBy: null, replacedWhen: null }
+}
+
+/**
+ * Payload takes the first endpoint of a type whose method and path match the request. An earlier
+ * endpoint takes every request a later one would get when its pattern matches the later pattern
+ * as a request (`:id` stands for any one segment). A later path with an optional segment (`:id?`)
+ * is asked both with and without it: it is `taken` when every form is matched, `partly` when only
+ * some are (those forms are in `when`).
+ */
+function takesFirst(earlier, later) {
+  if (earlier.method !== later.method) return null
+  const forms = requestForms(later.path)
+  const matched = forms.filter((form) => matches(earlier.path, form))
+  if (matched.length === 0) return null
+  return { when: matched.length === forms.length ? null : matched }
+}
+
+/** The request paths a pattern can get: each optional segment once present and once absent. */
+function requestForms(path) {
+  const segments = path.split('/').filter(Boolean)
+  return segments
+    .reduce(
+      (forms, segment) => {
+        const name = segment.replace(/\?$/, '')
+        if (!segment.endsWith('?')) return forms.map((form) => [...form, name])
+        return forms.flatMap((form) => [form, [...form, name]])
+      },
+      [[]],
+    )
+    .map((form) => `/${form.join('/')}`)
+}
+
+function matches(pattern, request) {
+  const source = pattern
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => {
+      if (!segment.startsWith(':')) return `/${segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
+      return segment.endsWith('?') ? '(?:/[^/]+)?' : '/[^/]+'
+    })
+    .join('')
+  return new RegExp(`^${source || '/'}$`).test(request)
 }

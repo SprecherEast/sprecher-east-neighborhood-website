@@ -3,6 +3,7 @@
 # Pages (`pages`)
 
 - Kind: collection
+- Owner: module `site`, defined in `src/modules/site/cms/pages.ts`
 - Drafts: yes (autosave every 100 ms, scheduled publishing)
 - Versions: the last 50 of each document
 

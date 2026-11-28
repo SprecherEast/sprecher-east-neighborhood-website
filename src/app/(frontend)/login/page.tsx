@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { ACCOUNT_PATH, SOCIAL_RESULT_PARAM } from '@/modules/accounts'
+import { ACCOUNT_PATH, RETURN_PARAM, safeReturnPath, SOCIAL_RESULT_PARAM } from '@/modules/accounts'
 import {
   arePasskeysOn,
   getCurrentUser,
@@ -10,6 +10,7 @@ import {
   SocialSignIn,
   SocialSignInMessage,
 } from '@/modules/accounts/server'
+import { OAUTH_PATHS } from '@/modules/agents'
 import { message } from '@/platform/lib'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
 import { PageHeader } from '@/platform/ui/PageHeader'
@@ -28,13 +29,18 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
  * Where a visitor logs in. The quick ways come first and together (#1365): a passkey while the
  * switch is on (#1315), then Google when it's on (#188), then one divider line, then the email and
  * password form as the fallback. A provider sign-in that didn't open an account comes back here
- * with `?social=<outcome>`, and the page shows its fixed message above them. While passkeys are on,
+ * with `?social=<outcome>`, and the page shows its fixed message above them. A page that needs
+ * a log in first (the connection approval, #1501) sends `?next=` and gets the visitor back, only
+ * when its path is on the list given here (`safeReturnPath`). While passkeys are on,
  * one line of fine print at the foot credits the passkey icon to its owner, as its terms ask.
  */
 export default async function LoginPage({ searchParams }: Props) {
+  const query = await searchParams
+  // Only a page that asked to be returned to, so this page is never an open redirect
+  const returnTo = safeReturnPath(query[RETURN_PARAM], [OAUTH_PATHS.approve])
   // Already signed in: nothing to do here
-  if (await getCurrentUser()) redirect(ACCOUNT_PATH)
-  const result = (await searchParams)[SOCIAL_RESULT_PARAM]
+  if (await getCurrentUser()) redirect(returnTo ?? ACCOUNT_PATH)
+  const result = query[SOCIAL_RESULT_PARAM]
   const passkeys = arePasskeysOn()
 
   return (
@@ -48,6 +54,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <SocialSignInMessage result={result} />
         <SignInForm
           passkeys={passkeys}
+          returnTo={returnTo ?? ACCOUNT_PATH}
           social={<SocialSignIn providers={getEnabledSocialProviders()} />}
         />
         {passkeys && <Text variant="small">{message('accounts.passkey.iconCredit')}</Text>}

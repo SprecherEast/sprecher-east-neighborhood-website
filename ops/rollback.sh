@@ -12,6 +12,7 @@ set -Eeuo pipefail
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/releases-lib.sh"
 
 UP_SECONDS="${UP_SECONDS:-90}"
 target="releases/$(basename "$CODE_DIR")"

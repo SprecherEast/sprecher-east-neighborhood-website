@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 // Only what the layout composes is checked, so nothing is rendered: the parts that load data,
 // fonts or styles at import are replaced with stand-ins.
-vi.mock('next/font/google', () => ({ Poppins: () => ({ variable: 'font-poppins' }) }))
+vi.mock('next/font/local', () => ({ default: () => ({ variable: 'font-poppins' }) }))
 const draft = vi.hoisted(() => ({ isEnabled: false }))
 vi.mock('next/headers', () => ({ draftMode: async () => draft }))
 vi.mock('@/modules/site/server', () => ({ SiteHeader: () => null, SiteFooter: () => null }))

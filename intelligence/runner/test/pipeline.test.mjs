@@ -7,7 +7,7 @@ import { runPipeline } from '../lib/pipeline.mjs'
 import { takeTurns } from '../lib/process.mjs'
 import { robotsChecker } from '../lib/fetchSource.mjs'
 import { curation, draft, feedsHttp, verification } from './fixtures.mjs'
-import { contract } from './helpers.mjs'
+import { contract, contractOn } from './helpers.mjs'
 
 // A whole run over the four pilot feeds, with a fake model and a dry-run CMS: scout, the model
 // stages, submit and the run log, and what a second run does with the state the first left.
@@ -40,6 +40,8 @@ const model = (calls = []) =>
       : draft()
   })
 
+const onRunDay = contractOn('2026-10-25')
+
 const run = async ({
   state = { sources: {}, seen: {} },
   http = feedsHttp(),
@@ -50,8 +52,8 @@ const run = async ({
   cms.taxonomy = async () => [{ slug: 'community', title: 'Community', parent: null }]
   const result = await runPipeline({
     contract: pipeline
-      ? { ...contract, pipeline: { ...contract.pipeline, ...pipeline } }
-      : contract,
+      ? { ...onRunDay, pipeline: { ...contract.pipeline, ...pipeline } }
+      : onRunDay,
     cms,
     ask,
     state,
@@ -168,7 +170,14 @@ describe('a run', () => {
     const calls = []
     const second = await run({ state: first.state, ask: model(calls) })
     assert.equal(calls.length, 0)
-    assert.ok(second.log.sourcesChecked.every((s) => s.status === 'not-modified'))
+    // A list over several pages is read whole every run (sources.yaml `pages`), so it isn't asked
+    // for a 304; with nothing changed it still sends nothing to a model
+    const wholeEveryRun = new Set(
+      contract.registry.sources.filter((s) => s.pages > 1).map((s) => s.id),
+    )
+    for (const s of second.log.sourcesChecked) {
+      assert.equal(s.status, wholeEveryRun.has(s.sourceId) ? 'ok' : 'not-modified', s.sourceId)
+    }
   })
 
   it('stops at the draft cap and keeps the rest for the next run', async () => {
@@ -179,9 +188,9 @@ describe('a run', () => {
     assert.equal(log.counts.deferred, 1)
     assert.equal(log.status, 'partial')
     // The deferred item's source keeps its old ETag, so it is fetched again
-    // (the four HTML pages here have no items, so all four save theirs too, #390)
+    // (the ten HTML pages and the police feed here have no items, so all eleven save theirs too, #390, #993, #995, #994)
     const kept = Object.keys(state.sources)
-    assert.equal(kept.length, 7)
+    assert.equal(kept.length, 14)
   })
 
   it('logs a disabled run and fetches nothing when the kill switch is off', async () => {

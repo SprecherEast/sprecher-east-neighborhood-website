@@ -8,13 +8,14 @@ import { FieldCheckbox } from './FieldCheckbox.client'
 import { FieldInput } from './FieldInput.client'
 import { FieldMoney } from './FieldMoney.client'
 import { FieldSelect } from './FieldSelect.client'
+import { FieldSwitch } from './FieldSwitch.client'
 import { FieldTextArea } from './FieldTextArea.client'
 import { FieldContext, type FieldControlProps } from './fieldContext'
 
 /**
  * One form field (docs/ui/component-set.md): the label, the required mark, a hint, the error and
  * exactly one control, a part of `Field`: `Field.Input`, `Field.TextArea`, `Field.Select` or
- * `Field.Checkbox`. The field gives the control its id, `aria-describedby` and `aria-invalid`.
+ * `Field.Checkbox` or `Field.Switch`. The field gives the control its id, `aria-describedby` and `aria-invalid`.
  *
  * Use it in client components: its parts are properties of `Field`, which a server component
  * can't reach through the client boundary.
@@ -23,7 +24,7 @@ export const fieldVariants = cva('flex min-w-0', {
   variants: {
     layout: {
       stacked: 'flex-col gap-2',
-      // A checkbox, then its label, hint and error in a column beside it
+      // A checkbox or switch, then its label, hint and error in a column beside it
       inline: 'flex-row items-start gap-3',
       // The label above; under it the control and an action button side by side (a box with its
       // own Estimate or Search button); hint and error go under both
@@ -77,7 +78,7 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   hint?: ReactNode
   /** Shown under the control, announced, and marks the control invalid */
   error?: string
-  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it */
+  /** Defaults to `inline` for a checkbox or switch and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it */
   layout?: VariantProps<typeof fieldVariants>['layout']
   /** The control's id; generated when left out */
   id?: string
@@ -128,7 +129,9 @@ export function Field({
     ...(describedBy && { 'aria-describedby': describedBy }),
     ...(error && { 'aria-invalid': true }),
   }
-  const resolvedLayout = layout ?? (control.type === FieldCheckbox ? 'inline' : 'stacked')
+  const resolvedLayout =
+    layout ??
+    (control.type === FieldCheckbox || control.type === FieldSwitch ? 'inline' : 'stacked')
 
   const labelElement = (
     <label
@@ -230,3 +233,4 @@ Field.Money = FieldMoney
 Field.TextArea = FieldTextArea
 Field.Select = FieldSelect
 Field.Checkbox = FieldCheckbox
+Field.Switch = FieldSwitch

@@ -120,6 +120,24 @@ describe('hasPaths', () => {
     expect(hasPaths("---\r\npaths:\r\n  - 'src/**'\r\n---\r\n\r\nText")).toBe(true)
     expect(hasPaths('# No frontmatter\r\n')).toBe(false)
   })
+
+  it('keeps counting a rule whose closing line has trailing spaces or more dashes (old behavior)', () => {
+    expect(hasPaths("---\npaths:\n  - 'src/**'\n---   \n\nText")).toBe(true)
+    expect(hasPaths("---\npaths:\n  - 'src/**'\n----\n\nText")).toBe(true)
+  })
+
+  it('keeps treating a rule whose opening line has trailing spaces as always loaded (old behavior)', () => {
+    expect(hasPaths("---  \npaths:\n  - 'src/**'\n---\n\nText")).toBe(false)
+  })
+
+  it('counts a rule that ends right after the closing delimiter (as before)', () => {
+    expect(hasPaths("---\npaths:\n  - 'src/**'\n---")).toBe(true)
+  })
+
+  it('does not count frontmatter without paths, or a dash line in the body', () => {
+    expect(hasPaths('---\nname: x\n---\n')).toBe(false)
+    expect(hasPaths('# Title\n\n---\npaths:\n---\n')).toBe(false)
+  })
 })
 
 describe('importsOf', () => {
@@ -307,12 +325,29 @@ describe('run, with a knowledge map', () => {
     expect(problemsOf(root)).toEqual([])
   })
 
-  it('fails when the rule is out of date or the note is gone', () => {
+  it('does not compare with a copy on disk: the rules are build output (#1593)', () => {
     const root = repo(files)
     problemsOf(root, { write: true })
-    fs.appendFileSync(path.join(root, 'src/mod/README.md'), 'More.\n')
-    expect(problemsOf(root)).toEqual([`${rule} is out of date`])
+    fs.appendFileSync(path.join(root, rule), 'Edited by hand.\n')
+    expect(problemsOf(root)).toEqual([])
+    fs.rmSync(path.join(root, '.claude/rules/generated'), { recursive: true })
+    expect(problemsOf(root)).toEqual([])
+    expect(fs.existsSync(path.join(root, rule))).toBe(false)
+  })
 
+  it('rebuilds a missing, stale or hand-edited rule, and drops one no map lists', () => {
+    const root = repo(files)
+    problemsOf(root, { write: true })
+    const before = fs.readFileSync(path.join(root, rule), 'utf8')
+    fs.writeFileSync(path.join(root, rule), 'Edited by hand.\n')
+    fs.writeFileSync(path.join(root, '.claude/rules/generated/old.md'), 'gone\n')
+    problemsOf(root, { write: true })
+    expect(fs.readFileSync(path.join(root, rule), 'utf8')).toBe(before)
+    expect(fs.existsSync(path.join(root, '.claude/rules/generated/old.md'))).toBe(false)
+  })
+
+  it('fails when the note is gone', () => {
+    const root = repo(files)
     fs.rmSync(path.join(root, 'src/mod/README.md'))
     expect(problemsOf(root)).toContain(
       "docs/knowledge/map.json lists src/mod/README.md, which doesn't exist",

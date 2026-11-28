@@ -2,7 +2,7 @@
 
 What the team keeps an eye on, so a problem is seen the first time it repeats and not after it has
 cost a week. The chief of staff reads it at the start of a session and in the
-[sweep](grooming-playbook.md#the-sweep). The [feedback loop](agent-operating-model.md#7-the-feedback-loop)
+[sweep](grooming-playbook.md#the-sweep). The [feedback loop](feedback-loop.md)
 turns what it finds into a fix. This page holds principles only: what to watch and where the signal
 comes from, never a number or a threshold.
 
@@ -21,7 +21,7 @@ comes from, never a number or a threshold.
   Assistance from AI tends to raise both, so neither is read alone
   ([DORA](https://dora.dev/guides/dora-metrics/)).
 - **Fix at the root, with the strongest tool that works:** a test or check, then a hook, then a
-  written rule ([the loop](agent-operating-model.md#7-the-feedback-loop)).
+  written rule ([the loop](feedback-loop.md)).
 - **Keep it small.** A signal nobody acts on is removed. A new one is added only after it would
   have caught something real.
 
@@ -79,7 +79,7 @@ consistency ([grooming playbook](grooming-playbook.md#the-sweep)). Two more belo
 
 | Watch                                   | Signal                                 | Today          |
 | --------------------------------------- | -------------------------------------- | -------------- |
-| Work carried over from sprint to sprint | The sprint field at rollover           | Chief of staff |
+| Work left In progress without movement  | Cards with no recent activity          | Chief of staff |
 | An idea filed and never looked at again | Open issues with no activity or parent | Chief of staff |
 
 ## The live site

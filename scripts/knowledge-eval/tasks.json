@@ -242,7 +242,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["news"],
-    "covers": "Links between fields (authors -> populatedAuthors -> byline)",
+    "covers": "How the pieces link (authors -> populatedAuthors -> byline)",
     "prompt": "Post bylines show people's names, but visitors can't read user accounts. How do the names get onto a post, how are several names joined, and what happens when an author account is gone? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["populatedAuthors"],
@@ -259,7 +259,7 @@
     "level": 2,
     "style": "specific",
     "modules": ["news"],
-    "covers": "Links between fields (sourceName/sourceUrl -> card source)",
+    "covers": "How the pieces link (sourceName/sourceUrl -> card source)",
     "prompt": "How do a post's sourceName and sourceUrl become the source shown on its card and page: what is shown if only the link is set, what if the link is not an absolute web address, and what if neither is set? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["toPostSource"],
@@ -329,7 +329,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["directory"],
-    "covers": "Links (category + photo + photoCredit -> portrait)",
+    "covers": "How the pieces link (category + photo + photoCredit -> portrait)",
     "prompt": "On the resources page, the card for one city official shows a portrait and the card for another doesn't. What decides whether a portrait shows, and whose credit appears under it? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["resourcePortrait"],
@@ -345,7 +345,7 @@
     "level": 2,
     "style": "specific",
     "modules": ["directory"],
-    "covers": "Links (category options = section headings)",
+    "covers": "How the pieces link (category options = section headings)",
     "prompt": "How do the FAQ and resource category options stay in step with the headings on the pages (name the constants), and where does an entry with no category, or with one no longer on the list, appear on each page? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["FAQ_CATEGORIES"],
@@ -362,7 +362,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["directory"],
-    "covers": "Links (order) + Known gaps (200 entries)",
+    "covers": "How the pieces link (order) + Known gaps (200 entries)",
     "prompt": "How do editors control the order of entries on the FAQ and resources pages, what happens if they leave that empty, and how many entries can a page list? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["orderField", "cms/orderField.ts"],
@@ -421,7 +421,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["site"],
-    "covers": "Links between fields (column sizes -> layout)",
+    "covers": "How the pieces link (column sizes -> layout)",
     "prompt": "An editor's content block with several columns shows as a row of cards on one page and as plain text with a side card on another. What decides which look it gets, and what are the possible looks? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["toContentLayout"],
@@ -438,7 +438,7 @@
     "level": 2,
     "style": "specific",
     "modules": ["site"],
-    "covers": "Links between fields (hero type -> look) + Behaviors (empty hero)",
+    "covers": "How the pieces link (hero type -> look) + Behaviors (empty hero)",
     "prompt": "How does a page's hero type setting map to the look it draws, which look splits its rich text into a title and a description, and when does a hero draw nothing? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["toPageHeroProps"],
@@ -456,7 +456,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["site", "news"],
-    "covers": "Links (archive block fields -> postQuery -> news) + Known gaps (limit default)",
+    "covers": "How the pieces link (archive block fields -> postQuery -> news) + Known gaps (limit default)",
     "prompt": "On the home page the 'Recent News' block lists posts, yet the site module never queries posts. How does the block get its posts, and how many does it show if the editor leaves the count empty? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["pageBlocks.tsx"],
@@ -504,7 +504,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["site-navigation", "news"],
-    "covers": "Links (footer forumUrl -> forum links)",
+    "covers": "How the pieces link (footer forumUrl -> forum links)",
     "prompt": "The forum link at the bottom of every page and on each news post has vanished. Where is the forum address kept, and what could make both links disappear? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["forumUrl"],
@@ -728,7 +728,7 @@
     "level": 3,
     "style": "specific",
     "modules": ["verification"],
-    "covers": "generated reference + Links between things",
+    "covers": "generated reference + How the pieces link",
     "prompt": "From the email-confirmations content type: who may create, read, update and delete, which fields nobody can write (not even an admin), what the custom endpoint is (method and path), and which pair of fields feeds the per-address send limit and which function reads them? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["isAdmin"],
@@ -780,7 +780,7 @@
     "level": 2,
     "style": "vague",
     "modules": ["accounts"],
-    "covers": "Behaviors and events; Links between fields and flags",
+    "covers": "Behaviors and events; How the pieces link",
     "prompt": "A neighbor signed up but cannot sign in, and says the link in the email did nothing. How does verifying an account work here, why does a mail scanner opening the link not verify it, and how many times can the link be sent again? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["/verify-account"],
@@ -800,7 +800,7 @@
     "level": 2,
     "style": "specific",
     "modules": ["accounts"],
-    "covers": "Links between fields and flags (read first); Known gaps",
+    "covers": "How the pieces link; Known gaps",
     "prompt": "How does the users collection stop a signed-in user from changing their own password or email through the REST API without proof? Name the request-context flag for each, what sets it, which hook checks it, and whether the email flow exists yet. Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["CURRENT_PASSWORD_CONFIRMED"],
@@ -1164,7 +1164,7 @@
     "level": 2,
     "style": "specific",
     "modules": ["richtext"],
-    "covers": "Links between fields and values",
+    "covers": "How the pieces link",
     "prompt": "Where are the size limits of the key facts, timeline and fact tabs blocks written once, where are the block type slugs shared by configs and Markdown tags, and where are a chart's limits? What are the most key facts and the most timeline entries? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["editorialLimits.ts"],

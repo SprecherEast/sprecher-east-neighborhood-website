@@ -68,7 +68,7 @@ describe('About page seed (#764, #1419)', () => {
 
   it('gives the map block the Sprecher East My Maps address, which the site accepts', () => {
     expect(map.embedUrl).toBe(
-      'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g',
+      'https://www.google.com/maps/d/embed?mid=1s01PqINuXETUwDSf1dd2_n_8EeikgDU',
     )
     expect(toGoogleMapsEmbedUrl(map.embedUrl)).toBe(map.embedUrl)
     expect(map.preview).toBe(7)

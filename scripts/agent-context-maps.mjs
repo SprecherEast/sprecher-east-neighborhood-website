@@ -55,8 +55,9 @@ export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
 }
 
 /**
- * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths }`, one per note,
- * giving the paths the note describes. Each entry becomes a path-scoped rule like a guideline's.
+ * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths, exclude? }`, one per
+ * note, giving the paths the note describes (and, optionally, paths another note takes out of
+ * them). Each entry becomes a path-scoped rule like a guideline's.
  * Throws on a map it would misread, so a mistyped entry fails instead of being dropped.
  */
 export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
@@ -68,19 +69,25 @@ export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
   }
   if (!Array.isArray(list)) throw new Error(`${mapPath} must be a list of { note, paths }`)
   return list.map((entry, index) => {
-    const { note, paths } = entry ?? {}
+    const { note, paths, exclude } = entry ?? {}
     const valid =
       typeof note === 'string' &&
       note.endsWith('.md') &&
       Array.isArray(paths) &&
       paths.length > 0 &&
       paths.every((glob) => typeof glob === 'string' && glob !== '')
+    const validExclude =
+      exclude === undefined ||
+      (Array.isArray(exclude) && exclude.every((glob) => typeof glob === 'string' && glob !== ''))
+    if (!validExclude) {
+      throw new Error(`${mapPath}: entry ${index + 1}: "exclude" must be a list of globs`)
+    }
     if (!valid) {
       throw new Error(
         `${mapPath}: entry ${index + 1} needs a "note" (a .md path) and a non-empty "paths" list of globs`,
       )
     }
-    return { source: note, paths, origin: mapPath }
+    return { source: note, paths, ...(exclude && { exclude }), origin: mapPath }
   })
 }
 
@@ -105,10 +112,49 @@ export function globToRegExp(glob) {
 }
 
 /**
- * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs and is not a
- * test. The one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the
- * Claude Code hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
+ * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs, none of its
+ * `exclude` globs (a split note's own area, carved out of its parent's), and is not a test. The
+ * one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the Claude Code
+ * hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
  */
-export function describes({ paths }, file) {
-  return !isTestFile(file) && paths.some((glob) => globToRegExp(glob).test(file))
+export function describes({ paths, exclude = [] }, file) {
+  const matches = (globs) => globs.some((glob) => globToRegExp(glob).test(file))
+  return !isTestFile(file) && matches(paths) && !matches(exclude)
+}
+
+const dirOf = (file) => (file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '')
+
+/**
+ * The globs a note's path-scoped rule lists. Claude Code's `paths` has no way to leave files out,
+ * so an entry with `exclude` is written out as the folders and files it describes among `tracked`:
+ * a folder as one `dir/**` when everything under it is described, `dir/*` when only its direct
+ * files all are, else each file; folders with some described file are searched further.
+ */
+export function rulePaths(entry, tracked) {
+  if (!entry.exclude) return entry.paths
+  const matches = (globs, file) => globs.some((glob) => globToRegExp(glob).test(file))
+  const described = new Set(
+    tracked.filter((file) => matches(entry.paths, file) && !matches(entry.exclude, file)),
+  )
+  const globs = []
+  const walk = (dir) => {
+    const prefix = dir === '' ? '' : `${dir}/`
+    const under = tracked.filter((file) => file.startsWith(prefix))
+    const some = under.filter((file) => described.has(file))
+    if (some.length === under.length && dir !== '') return globs.push(`${dir}/**`)
+    const direct = under.filter((file) => dirOf(file) === dir)
+    const directDescribed = direct.filter((file) => described.has(file))
+    if (dir !== '' && direct.length > 0 && directDescribed.length === direct.length)
+      globs.push(`${dir}/*`)
+    else globs.push(...directDescribed)
+    const subdirs = new Set(
+      under
+        .map((file) => file.slice(prefix.length).split('/'))
+        .filter((p) => p.length > 1)
+        .map((p) => p[0]),
+    )
+    for (const sub of [...subdirs].sort()) walk(`${prefix}${sub}`)
+  }
+  walk('')
+  return globs
 }

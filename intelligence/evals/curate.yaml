@@ -14,7 +14,7 @@ cases:
       locationText: East Towne Mall, Madison
     expected: { decision: reject, coverage: outside, route: none }
     why: District 17, north of I-94, with no stated benefit to the area.
-  - id: catchment-door-creek-cleanup
+  - id: core-door-creek-cleanup
     stage: curate
     input:
       sourceId: madison365-news
@@ -22,8 +22,8 @@ cases:
       title: Volunteers wanted for a Door Creek Park cleanup
       startsAt: 2026-11-07T09:00:00-06:00
       locationText: Door Creek Park, Madison
-    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
-    why: A park residents use, a date, and a clear way to help.
+    expected: { decision: accept, coverage: core, route: submitSuggestion }
+    why: A park inside the area, a date, and a clear way to help.
   - id: catchment-pinney-storytime
     stage: curate
     input:
@@ -127,9 +127,10 @@ cases:
       title: Free flu shots for residents 65 and older at Pinney Library
       startsAt: 2026-11-05T10:00:00-06:00
       locationText: Pinney Library
-    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    expected: { decision: accept, coverage: catchment, safety: false, route: submitSuggestion }
     graders:
       - { check: contains, field: $.audiences, value: seniors }
+      - { check: equals, field: $.safety, value: false }
     why: The audience comes from the text, as one of the CMS's values.
   - id: curate-neutral-forum
     ref: C16

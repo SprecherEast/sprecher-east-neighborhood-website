@@ -4,6 +4,7 @@
 
 - Kind: collection
 - Purpose: Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in another way (password, Google, or forgot password).
+- Owner: module `accounts`, defined in `src/modules/accounts/cms/passkeys.ts`
 - Drafts: no
 - Versions: none kept
 

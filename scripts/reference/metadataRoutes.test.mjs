@@ -1,0 +1,160 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+
+import { collectAppFiles, describeMetadataFiles, publicEntries } from './metadataRoutes.mjs'
+
+describe('describeMetadataFiles', () => {
+  it('turns each metadata file convention into the URL Next.js serves it at', () => {
+    const rows = describeMetadataFiles([
+      'robots.ts',
+      'sitemap.ts',
+      'favicon.ico',
+      'icon.svg',
+      'apple-icon.png',
+      'manifest.ts',
+      '(frontend)/events/opengraph-image.tsx',
+      'twitter-image.png',
+    ])
+    expect(rows.map((row) => [row.url, row.file, row.generated])).toEqual([
+      ['/apple-icon', 'src/app/apple-icon.png', false],
+      ['/events/opengraph-image', 'src/app/(frontend)/events/opengraph-image.tsx', true],
+      ['/favicon.ico', 'src/app/favicon.ico', false],
+      ['/icon', 'src/app/icon.svg', false],
+      ['/manifest.webmanifest', 'src/app/manifest.ts', true],
+      ['/robots.txt', 'src/app/robots.ts', true],
+      ['/sitemap.xml', 'src/app/sitemap.ts', true],
+      ['/twitter-image', 'src/app/twitter-image.png', false],
+    ])
+  })
+
+  it('sorts two files that give the same URL by file name', () => {
+    expect(describeMetadataFiles(['icon.svg', 'icon.png']).map((row) => row.file)).toEqual([
+      'src/app/icon.png',
+      'src/app/icon.svg',
+    ])
+  })
+
+  it('ignores a file whose extension only starts like one of the convention’s', () => {
+    expect(
+      describeMetadataFiles([
+        'robots.tsx',
+        'sitemap.xmlx',
+        'sitemap.tsx',
+        'favicon.icox',
+        'manifest.jsonx',
+        'manifest.tsx',
+        'icon.pngx',
+        'icon.tsxx',
+        'apple-icon.pngx',
+        'apple-icon.tsxx',
+        'opengraph-image.gifx',
+        'opengraph-image.tsxx',
+        'twitter-image.gifx',
+        'twitter-image.tsxx',
+      ]),
+    ).toEqual([])
+  })
+
+  it('takes every extension of each convention, and says which files are code', () => {
+    const files = [
+      ...['txt', 'ts', 'js'].map((e) => `robots.${e}`),
+      ...['xml', 'ts', 'js'].map((e) => `sitemap.${e}`),
+      'favicon.ico',
+      ...['json', 'webmanifest', 'ts', 'js'].map((e) => `manifest.${e}`),
+      ...['ico', 'jpg', 'jpeg', 'png', 'svg', 'ts', 'js', 'tsx'].map((e) => `icon.${e}`),
+      ...['jpg', 'jpeg', 'png', 'ts', 'js', 'tsx'].map((e) => `apple-icon.${e}`),
+      ...['jpg', 'jpeg', 'png', 'gif', 'ts', 'js', 'tsx'].map((e) => `opengraph-image.${e}`),
+      ...['jpg', 'jpeg', 'png', 'gif', 'ts', 'js', 'tsx'].map((e) => `twitter-image.${e}`),
+    ]
+    const rows = describeMetadataFiles(files)
+    expect(rows.map((row) => row.file.replace('src/app/', '')).sort()).toEqual([...files].sort())
+    const code = (name) => rows.find((row) => row.file === `src/app/${name}`).generated
+    expect(['robots.txt', 'manifest.json', 'manifest.webmanifest', 'icon.svg'].map(code)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ])
+    expect(['robots.ts', 'manifest.js', 'icon.tsx'].map(code)).toEqual([true, true, true])
+  })
+
+  it('takes only a whole folder name in parentheses as a route group', () => {
+    expect(
+      describeMetadataFiles(['(a)/icon.png', 'x(b)/icon.png', '(c)y/icon.png']).map((r) => r.url),
+    ).toEqual(['/(c)y/icon', '/icon', '/x(b)/icon'])
+  })
+
+  it('ignores a file whose extension only ends like one of the convention’s', () => {
+    expect(
+      describeMetadataFiles([
+        'robots.xts',
+        'sitemap.xxml',
+        'favicon.xico',
+        'manifest.xjson',
+        'icon.apng',
+        'apple-icon.xpng',
+        'opengraph-image.xgif',
+        'twitter-image.xgif',
+      ]),
+    ).toEqual([])
+  })
+
+  it('ignores tests, other files, and a top-level-only file in a folder', () => {
+    expect(
+      describeMetadataFiles([
+        'sitemap.test.ts',
+        'icons.test.ts',
+        'layout.tsx',
+        'a/robots.ts',
+        'a/favicon.ico',
+        'a/manifest.ts',
+      ]),
+    ).toEqual([])
+  })
+})
+
+describe('collectAppFiles and publicEntries', () => {
+  it('reads the app folder, says which generated file calls Payload, and lists public/', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'reference-meta-'))
+    const write = (file, text) => {
+      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
+      fs.writeFileSync(path.join(root, file), text)
+    }
+    write('src/app/sitemap.ts', 'const p = await getPayload({ config })\n')
+    write('src/app/robots.ts', 'export default () => ({})\n')
+    write(
+      'src/app/(frontend)/events/sitemap.ts',
+      "import { list } from '@/modules/events/server'\n",
+    )
+    write('src/app/sitemap.test.ts', '')
+    write('public/brand/logo.svg', '')
+    write('public/ads.txt', '')
+    const found = [
+      collectAppFiles(root),
+      publicEntries(root),
+      publicEntries(path.join(root, 'none')),
+    ]
+    fs.rmSync(root, { recursive: true, force: true })
+    expect(found[0].map((row) => [row.url, row.readsContent])).toEqual([
+      ['/events/sitemap.xml', true],
+      ['/robots.txt', false],
+      ['/sitemap.xml', true],
+    ])
+    expect(found[1]).toEqual(['/ads.txt', '/brand/…'])
+    expect(found[2]).toEqual([])
+  })
+})
+
+describe('publicEntries order', () => {
+  it('lists the entries sorted, whatever order the folder is read in', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+    vi.spyOn(fs, 'readdirSync').mockReturnValue([
+      { name: 'zebra.txt', isDirectory: () => false },
+      { name: 'brand', isDirectory: () => true },
+      { name: 'ads.txt', isDirectory: () => false },
+    ])
+    expect(publicEntries('/any')).toEqual(['/ads.txt', '/brand/…', '/zebra.txt'])
+  })
+})

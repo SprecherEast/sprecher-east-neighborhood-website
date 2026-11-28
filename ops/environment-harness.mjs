@@ -18,6 +18,7 @@ export const HOUSEKEEPING = [
   'caddy-limits',
   'caddy-https',
   'caddy-previews',
+  'developer-site',
   'install-preview-access',
   'install-umami',
 ]
@@ -39,6 +40,7 @@ export function setUpEnvironmentHarness() {
       'lib.sh',
       'environment.sh',
       'migrate-lib.sh',
+      'releases-lib.sh',
       'preview-settings.sh',
       'preview-accounts.sh',
       'secret-lib.sh',
@@ -48,8 +50,14 @@ export function setUpEnvironmentHarness() {
       path.join(release, 'ecosystem.config.cjs'),
       fs.readFileSync(path.join(OPS, '..', 'ecosystem.config.cjs')),
     )
-    for (const f of ['backup', ...HOUSEKEEPING])
-      write(path.join(release, 'ops', `${f}.sh`), `echo "${f}.sh $*" >> "$STUB_LOG"\n`)
+    // Each housekeeping script is a stand-in that logs; one fails when its STUB_<NAME>_FAILS is set
+    for (const f of ['backup', ...HOUSEKEEPING]) {
+      const fails = `STUB_${f.toUpperCase().replaceAll('-', '_')}_FAILS`
+      write(
+        path.join(release, 'ops', `${f}.sh`),
+        `echo "${f}.sh $*" >> "$STUB_LOG"\n[ -z "$${fails}" ] || exit 1\n`,
+      )
+    }
     write(
       path.join(release, '.release-info'),
       `node=${process.version}\nserver_url=${url}\nturnstile_site_key=${turnstile}\n`,

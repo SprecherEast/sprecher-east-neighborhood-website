@@ -1,6 +1,6 @@
 ---
 name: worker
-description: Does one Ready issue from start to merge: claims it, writes the tests first, makes the change on a branch, runs the self-review, opens the pull request, answers the review and merges once the checks and the independent review allow. The chief of staff starts one per issue with a brief.
+description: 'Does one Ready issue from start to merge: claims it, writes the tests first, makes the change on a branch, runs the self-review, opens the pull request, answers the review and merges once the checks and the independent review allow. The chief of staff starts one per issue with a brief.'
 tools: Read, Edit, Write, Grep, Glob, Bash, WebFetch, WebSearch, Skill
 model: sonnet
 effort: medium

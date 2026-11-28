@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { message } from '@/platform/lib'
 import { Alert, Button } from '@/platform/ui'
+import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
@@ -122,7 +123,7 @@ export function PasskeyOffer({ eligible }: { eligible: boolean }) {
       {notice?.logInAgain && (
         <LogInAgainButton onFailed={() => setNotice(toAddPasskeyNotice('offline'))} />
       )}
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <ButtonRow>
         <Button
           type="button"
           loading={busy}
@@ -135,7 +136,7 @@ export function PasskeyOffer({ eligible }: { eligible: boolean }) {
         <Button type="button" variant="secondary" onClick={notNow} fullWidth="mobile">
           {message('accounts.passkeyOffer.notNow')}
         </Button>
-      </div>
+      </ButtonRow>
     </Card>
   )
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeAccess, describeEndpoints, describeHooks } from './callbacks.mjs'
+import { describeAccess, describeHooks } from './callbacks.mjs'
 import { describeContentType } from './describe.mjs'
 
 function isAdmin() {}
@@ -54,33 +54,6 @@ describe('describeHooks', () => {
   })
 })
 
-describe('describeEndpoints', () => {
-  it('lists method, path and where the handler lives', () => {
-    const endpoints = [{ path: '/verify/:token', method: 'post', handler: isAdmin }]
-    expect(describeEndpoints(endpoints, locate)).toEqual([
-      {
-        method: 'POST',
-        path: '/verify/:token',
-        name: 'isAdmin',
-        file: 'src/platform/payload/roles.ts',
-      },
-    ])
-  })
-
-  it('leaves out the routes Payload itself gives every type', () => {
-    const endpoints = [
-      { path: '/', method: 'get', handler: function findHandler() {} },
-      { path: '/verify/:token', method: 'post', handler: isAdmin },
-    ]
-    expect(describeEndpoints(endpoints, locate).map((e) => e.path)).toEqual(['/verify/:token'])
-  })
-
-  it('is empty when a type has none, or switches them off', () => {
-    expect(describeEndpoints(undefined, locate)).toEqual([])
-    expect(describeEndpoints(false, locate)).toEqual([])
-  })
-})
-
 describe('describeContentType', () => {
   it('gathers the title, purpose, drafts, access, hooks, endpoints and fields', () => {
     const model = describeContentType(
@@ -105,7 +78,45 @@ describe('describeContentType', () => {
       access: [{ operation: 'read' }],
       hooks: [{ phase: 'beforeChange' }],
       endpoints: [{ method: 'GET', path: '/x' }],
+      allEndpoints: [{ method: 'GET', path: '/x' }],
+      graphQL: true,
       fields: [{ path: 'title' }],
     })
+  })
+
+  it('gives every route of allEndpoints the two keys of what took it, null when nothing did', () => {
+    const route = () => true
+    const { allEndpoints } = describeContentType(
+      { slug: 'events', endpoints: [{ path: '/a', method: 'get', handler: route }] },
+      'collection',
+      { locate },
+    )
+    expect(allEndpoints).toStrictEqual([
+      {
+        method: 'GET',
+        path: '/a',
+        name: 'route',
+        file: 'payload',
+        replacedBy: null,
+        replacedWhen: null,
+      },
+    ])
+  })
+
+  it('keeps the routes Payload adds only in allEndpoints', () => {
+    const payloadRoute = () => true
+    const model = describeContentType(
+      {
+        slug: 'events',
+        endpoints: [
+          { path: '/x', method: 'get', handler: isAdmin },
+          { path: '/count', method: 'get', handler: payloadRoute },
+        ],
+      },
+      'collection',
+      { locate },
+    )
+    expect(model.endpoints.map((e) => e.path)).toEqual(['/x'])
+    expect(model.allEndpoints.map((e) => e.path)).toEqual(['/x', '/count'])
   })
 })

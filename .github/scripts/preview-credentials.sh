@@ -28,10 +28,8 @@ OPS_DIR="${OPS_DIR:-ops}"
 # shellcheck source=../../ops/preview-access-lib.sh
 . "$OPS_DIR/preview-access-lib.sh"
 
-# Below this the key is not worth sealing to, and a smaller one would not hold the file anyway (OAEP with
-# SHA-256 takes the key's bytes minus 66).
-MIN_KEY_BITS=3072
-MAX_KEY_BITS=8192
+# shellcheck source=../../ops/public-key-lib.sh
+. "$OPS_DIR/public-key-lib.sh" # the one rule for a public key: PEM, RSA, PUBLIC_KEY_MIN_BITS to PUBLIC_KEY_MAX_BITS
 OAEP_OVERHEAD=66
 
 fail() {
@@ -49,15 +47,8 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 key="$work/public.pem"
 printf '%s' "$PUBLIC_KEY_B64" | base64 -d >"$key" 2>/dev/null || fail "the public key is not valid base64"
-# A private key must never be sent here at all, and some openssl versions read the public half of one with
-# `-pubin`: so the file must be a PEM public key and nothing else, checked before openssl reads it.
-[ "$(head -n 1 "$key")" = "-----BEGIN PUBLIC KEY-----" ] && ! grep -q 'PRIVATE' "$key" ||
-  fail "the key must be a PEM public key (BEGIN PUBLIC KEY); never send a private key"
-details=$(openssl pkey -pubin -in "$key" -noout -text 2>/dev/null) || fail "that is not a public key in PEM form"
-[[ "$details" =~ ^Public-Key:\ \(([0-9]+)\ bit\) ]] && [[ "$details" == *Modulus:* ]] || fail "the public key must be an RSA key"
-bits=${BASH_REMATCH[1]}
-{ [ "$bits" -ge "$MIN_KEY_BITS" ] && [ "$bits" -le "$MAX_KEY_BITS" ]; } ||
-  fail "the RSA key must be between $MIN_KEY_BITS and $MAX_KEY_BITS bits"
+public_key_problem "$key" || fail "$PUBLIC_KEY_PROBLEM"
+bits=$PUBLIC_KEY_BITS
 
 # On a refusal the wrapper prints its fixed one-line reason on stdout (`refuse`, ops/preview-access-lib.sh). That
 # line is shown, and only when it has exactly that form; whatever else came back is never printed.

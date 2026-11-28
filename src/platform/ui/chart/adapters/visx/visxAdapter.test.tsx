@@ -103,7 +103,8 @@ describe('visxAdapter', () => {
       (t) => t.textContent,
     )
     expect(lines.filter((l) => note.includes(l ?? '#')).join(' ')).toBe(note)
-    expect(lines.length).toBeGreaterThan(3)
+    // the long note takes two lines at the site's small text size, the short one takes one
+    expect(lines.length).toBeGreaterThanOrEqual(3)
     expect(lines.every((l) => (l?.length ?? 0) <= 43)).toBe(true)
   })
 

@@ -14,7 +14,8 @@
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
-#   7. refresh the backup job, the Caddy settings (request limits, HTTPS), the preview account and Umami analytics, and keep the newest
+#   7. refresh the backup job, the Caddy settings (request limits, HTTPS), the developer site (a failure there is
+#      a warning only), the preview account and Umami analytics, and keep the newest
 #      $KEEP_RELEASES releases (a preview does only the last of these)
 #
 # It acts on production, or on one pull request preview when PREVIEW_NUMBER is set: the folder, PM2
@@ -27,6 +28,7 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/releases-lib.sh"
 . "$(dirname "$0")/migrate-lib.sh"
 
 # The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
@@ -236,6 +238,9 @@ if ! is_preview; then # these change production's backup job, Caddyfile and anal
   bash "$RELEASE/ops/caddy-https.sh" || failed=1
   # Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
   bash "$RELEASE/ops/caddy-previews.sh" || failed=1
+  # The developer site (#1459): the showcase and an index page at dev.sprechereast.com. It never turns the
+  # deploy red or touches the live release: a failure is a warning and the previous developer site stays.
+  bash "$RELEASE/ops/developer-site.sh" || report "WARNING: the developer site was not updated; production is unaffected"
   # The restricted account, wrapper and sudo rule for preview deploys (#1345). Changes nothing on any doubt.
   bash "$RELEASE/ops/install-preview-access.sh" || failed=1
   # After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
@@ -243,13 +248,7 @@ if ! is_preview; then # these change production's backup job, Caddyfile and anal
   UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
 fi
 
-keep="$KEEP_RELEASES"
-[ "$keep" -ge 2 ] 2>/dev/null || keep=2
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d -name '.incoming-*' -exec rm -rf {} +
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%T@ %f\n' | sort -rn |
-  tail -n +"$((keep + 1))" | while read -r _ old; do
-  [ "releases/$old" = "releases/$name" ] || [ "releases/$old" = "$previous" ] || rm -rf "${RELEASES:?}/$old"
-done
+prune_releases "$RELEASES" "$KEEP_RELEASES" "$name" "$previous"
 releases_left=$(find "$RELEASES" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | wc -l)
 
 echo "::notice title=Server::disk $(df -h / | awk 'NR == 2 { print $4 " free of " $2 }'), database $(du -h "$APP_DIR/data/payload.db" 2>/dev/null | cut -f1), media $(du -sh "$APP_DIR/public/media" 2>/dev/null | cut -f1), $releases_left releases kept"

@@ -133,7 +133,7 @@ request carries the `preview` label, which you add once the owner says yes to on
    lines. Unless the PR waits for the owner (an issue or PR labeled `needs owner`, or a policy
    change he didn't ask for, `AGENTS.md` step 3), note the head SHA and go to step 6. If it waits
    for him, label the PR `needs owner`, ask him one plain question, and stop
-   ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
+   ([waits for owner](../../../docs/process/waits-for-owner.md)).
    A change to how pages look that has a pull request preview also waits for the owner's feedback
    on it (step 4); with no `preview` label there is none, and nothing waits; apply what he asks, or record why not, before you go on.
    Also re-read the description's `End-to-end exemption:` line: if it is not `none`, it must be the

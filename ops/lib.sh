@@ -83,12 +83,11 @@ site_url() {
   printf '%s://%s' "$scheme" "${rest%%\?*}"
 }
 
-# A request to the public site, sent to Caddy on this machine rather than out through DNS. Extra
-# curl arguments follow the path. Fails when no site address is known or nothing answers.
-site_curl() { # <path> [curl args…]
-  local path="$1" url hostport host port
-  shift
-  url=$(site_url)
+# A request to an address this server serves (the site, a preview, the developer site), sent to Caddy on
+# this machine rather than out through DNS. Extra curl arguments follow the path. Fails with no origin.
+origin_curl() { # <origin, e.g. https://dev.example.com> <path> [curl args…]
+  local url="$1" path="$2" hostport host port
+  shift 2
   [ -n "$url" ] || return 1
   hostport="${url#*://}"
   host="${hostport%%:*}"
@@ -97,6 +96,13 @@ site_curl() { # <path> [curl args…]
     if [ "${url%%://*}" = http ]; then port=80; else port=443; fi
   fi
   curl -s --max-time 15 --resolve "$host:$port:127.0.0.1" "$@" "$url$path"
+}
+
+# A request to the public site (as origin_curl). Fails when no site address is known.
+site_curl() { # <path> [curl args…]
+  local path="$1"
+  shift
+  origin_curl "$(site_url)" "$path" "$@"
 }
 
 # The HTTP status of a request to the public site (as site_curl). Extra curl arguments (method,
@@ -151,20 +157,14 @@ site_is_up() { # [build id]
 }
 
 # True once the site is up (as site_is_up), waiting up to the given number of seconds (default
-# 90). Use it right after a restart or reload, while the app may still be starting.
+# SITE_UP_WAIT, environment.sh). Use it right after a restart or reload, while the app may still be starting.
 wait_until_up() { # [seconds] [build id]
-  local deadline=$((SECONDS + ${1:-90}))
+  local deadline=$((SECONDS + ${1:-$SITE_UP_WAIT}))
   while [ "$SECONDS" -lt "$deadline" ]; do
     if site_is_up "${2:-}"; then return 0; fi
     sleep 2
   done
   return 1
-}
-
-# Points `current` at a target relative to $APP_DIR, atomically: a new link renamed over the old.
-point_current_at() {
-  ln -sfn "$1" "$APP_DIR/.current-new"
-  mv -Tf "$APP_DIR/.current-new" "$APP_DIR/current"
 }
 
 # Pages prerendered at build time, and the data cache. Next renders a page that has no cached
@@ -179,10 +179,10 @@ drop_page_cache() { # <release dir>
 
 # Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
 # well), for the caller to roll back and report.
-caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]
+caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default SITE_UP_WAIT_AFTER]
   if ! $RELOAD_CADDY >/dev/null 2>&1; then
     echo "Caddy would not reload with $1"
-  elif ! wait_until_up "${2:-20}"; then
+  elif ! wait_until_up "${2:-$SITE_UP_WAIT_AFTER}"; then
     echo "the site stopped answering after adding $1"
   fi
 }

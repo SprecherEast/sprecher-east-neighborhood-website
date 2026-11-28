@@ -5,8 +5,8 @@ live status:**
 
 - **Milestones:** dated outcomes.
 - **Epics:** issues labeled `epic`, with their sub-issues.
-- **[The project board](https://github.com/orgs/SprecherEast/projects/1):** the current sprint. It's
-  private to the organization.
+- **[The project board](https://github.com/orgs/SprecherEast/projects/1):** what is being worked on, what was
+  finished recently and what comes next. It's private to the organization.
 
 This file lists only the milestones and their epics, as a snapshot. GitHub is the source: this
 command prints the open epics by milestone, and the tables below must match it. Update the tables
