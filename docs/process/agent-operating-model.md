@@ -45,7 +45,7 @@ Session of 2026-11-23 (voice, recorded on #695):
 
 - The repository describes only the agents in use: the chief of staff, one worker and one reviewer.
   Agent files nobody uses are removed or folded into skills, as #695 lays out, and nothing is more
-  complicated than that.
+  complicated than that. Since then, #1580 added the outsider reviewer (a read-only fourth agent).
 
 Decisions of 2026-11-24 (voice session, recorded on #1452 and #695), settling the three points
 PR #1452 raised, including the departure from the 2026-11-06 line above:
@@ -57,7 +57,7 @@ PR #1452 raised, including the departure from the 2026-11-06 line above:
   rules first should mean less rework. No failure of the old order was measured, so the
   [weekly review](weekly-review.md) checks whether it helps; no benefit means revisiting it.
 - The tool lists of the removed agents are dropped. Reason: each also allowed a shell, so they never
-  limited anything. The three remaining agents keep their own lists.
+  limited anything. The remaining agents keep their own lists.
 
 ## 1. At a glance
 

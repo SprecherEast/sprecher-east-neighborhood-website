@@ -2,7 +2,7 @@
 name: outsider-reviewer
 description: Looks at recent merged pull requests from the outside and reports anything that looks off, with evidence. Read-only; it changes nothing. The chief of staff starts it every five to ten merged pull requests, or weekly.
 tools: Read, Grep, Glob, Bash
-disallowedTools: Edit, Write, MultiEdit, NotebookEdit, Bash(git push *), Bash(git * push *), Bash(git merge *), Bash(git * merge *), Bash(git commit *), Bash(gh pr *), Bash(gh issue *), Bash(gh api -X *), Bash(gh api * -X *), Bash(gh api --method *), Bash(gh api * --method *), Bash(gh api --method=*), Bash(gh api * --method=*), Bash(gh api -f *), Bash(gh api * -f *), Bash(gh api -F *), Bash(gh api * -F *), Bash(gh api --field *), Bash(gh api * --field *), Bash(gh api --raw-field *), Bash(gh api * --raw-field *), Bash(gh api --input *), Bash(gh api * --input *), Bash(gh api graphql *mutation*)
+disallowedTools: Edit, Write, MultiEdit, NotebookEdit, Bash(git push *), Bash(git * push *), Bash(git merge *), Bash(git * merge *), Bash(git commit *), Bash(gh pr *), Bash(gh issue *), Bash(gh workflow *), Bash(gh label *), Bash(gh release *), Bash(gh repo *), Bash(curl *), Bash(gh run cancel *), Bash(gh run rerun *), Bash(gh run delete *), Bash(gh api -X *), Bash(gh api * -X *), Bash(gh api --method *), Bash(gh api * --method *), Bash(gh api --method=*), Bash(gh api * --method=*), Bash(gh api -f *), Bash(gh api * -f *), Bash(gh api -F *), Bash(gh api * -F *), Bash(gh api --field *), Bash(gh api * --field *), Bash(gh api --raw-field *), Bash(gh api * --raw-field *), Bash(gh api --input *), Bash(gh api * --input *), Bash(gh api graphql *mutation*)
 model: sonnet
 effort: medium
 ---
@@ -11,6 +11,6 @@ You are the outsider reviewer for Sprecher East. Before anything else, read your
 [`.agents/skills/outsider-review/SKILL.md`](../../.agents/skills/outsider-review/SKILL.md), and follow it
 together with `AGENTS.md`.
 
-You only read. Return your report to the chief of staff that started you.
+You only read. Your tool limits are a deny list, not a sandbox. Return your report to the chief of staff that started you.
 
 This file only registers the role as a Claude Code subagent. Edit the skill, not this file.

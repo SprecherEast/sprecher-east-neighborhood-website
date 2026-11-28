@@ -65,7 +65,7 @@ Five things, in this order, in one reply. Nothing here waits for the owner befor
    owner the report and wait.
 
 **Red flag:** two or more pull requests that keep conflicting, stacked or not, mean stop dispatching
-and ask the owner what is going on, rather than resolving them one by one.
+and ask the owner what is going on, rather than resolving them one by one. It applies at any time, not only at session start.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
 Before the first look at step 3, and again before every later one, [look for changes made

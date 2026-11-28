@@ -22,7 +22,8 @@ never fix what you find. Your result is a report.
 Every five to ten merged pull requests, or weekly, whichever comes first. The chief of staff
 starts it. The last review point is the newest merged pull request that carries a comment headed
 `### [STEP] Outsider review`; the window is everything merged after it (the last ten merged
-when none exists).
+when none exists). Find it by searching the comments over REST for that heading; "a week" counts
+from that comment's date.
 
 ## What to read
 

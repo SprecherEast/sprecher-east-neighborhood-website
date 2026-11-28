@@ -40,8 +40,9 @@ Claude Code.
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
   the key is always used when present, which switches usage from the subscription to API billing
   ([authentication](https://code.claude.com/docs/en/authentication)).
-- **Subagents:** `.claude/agents/` holds only the chief of staff, the `worker` and the reviewer
-  (`qa-reviewer`), each pointing at its skill or [role guide](/docs/roles/README.md); edit that, not the
+- **Subagents:** `.claude/agents/` holds only the chief of staff, the `worker`, the reviewer
+  (`qa-reviewer`) and the outsider reviewer, each pointing at its skill or [role guide](/docs/roles/README.md)
+  (the chief of staff and the outsider reviewer work from their skills); edit that, not the
   agent file. Other role guides load by name through the brief, not as agents. The `worker` does each
   issue. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): at session
