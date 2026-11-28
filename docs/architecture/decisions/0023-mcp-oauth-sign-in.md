@@ -59,6 +59,7 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
    `WWW-Authenticate` through Payload's `req.responseHeaders`.
 7. Only an admin sees the approval; a signed ticket binds it to that admin and request.
 8. Two pages, because of the browser: the tool sends the admin's browser from its own site, where Payload's CSRF check (kept as it is) ignores the session cookie, so `/oauth/authorize` reads no session and shows no account, and its link to `/oauth/approve` is opened from this site, where the session is read (Payload reads it on a same-origin or same-site request). Both pages send `frame-ancestors 'none'`, `/oauth/approve` included, so a page on a sibling subdomain cannot frame the approval. The link carries the checked request and no secret; it is read again from scratch. A visitor is sent to log in and back to the same request, only to that path.
+   _Note (2026-11-28, #1597):_ from Payload 3.94 Payload's own check accepts the cookie on a top-level visit from another site, so `getViewer` now ignores the session on any cross-site request itself (`isFromAnotherSite`); the two pages work as described.
 9. Per-client scopes (#1499): the scope names (`read`, `suggest`, and the reserved `publish` that grants
    nothing) and what each lets through are pure rules in `domain/scopes.ts`; `cms/scopes.ts` applies them
    in `overrideAuth` to OAuth clients and API keys alike, from fields on both records. A scope only

@@ -18,8 +18,10 @@ vi.mock('@/modules/accounts/server', () => ({
   continuePage: mocks.continuePage,
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect, notFound: mocks.notFound }))
+const request = vi.hoisted(() => ({ site: 'same-origin' }))
 vi.mock('next/headers', () => ({
-  headers: async () => new Headers({ 'x-forwarded-for': '203.0.113.9' }),
+  headers: async () =>
+    new Headers({ 'x-forwarded-for': '203.0.113.9', 'sec-fetch-site': request.site }),
 }))
 
 import { GET as callback } from './callback/route'
@@ -34,6 +36,7 @@ const callbackRequest = (search: string) =>
 
 beforeEach(() => {
   for (const fn of Object.values(mocks)) fn.mockClear()
+  request.site = 'same-origin'
 })
 
 describe('/auth/[provider]', () => {
@@ -59,7 +62,22 @@ describe('/auth/[provider]/link', () => {
     await expect(
       link(new Request('https://sprechereast.com/auth/google/link'), params('google')),
     ).rejects.toThrow('NEXT_REDIRECT https://accounts.google.com/auth')
-    expect(mocks.startSocialSignIn).toHaveBeenCalledWith('google', '203.0.113.9', { link: true })
+    expect(mocks.startSocialSignIn).toHaveBeenCalledWith('google', '203.0.113.9', {
+      link: true,
+      fromAnotherSite: false,
+    })
+  })
+
+  it('says when the start came from a link on another site, so the module ignores the session', async () => {
+    request.site = 'cross-site'
+    mocks.startSocialSignIn.mockResolvedValue('/account')
+    await expect(
+      link(new Request('https://sprechereast.com/auth/google/link'), params('google')),
+    ).rejects.toThrow('NEXT_REDIRECT /account')
+    expect(mocks.startSocialSignIn).toHaveBeenCalledWith('google', '203.0.113.9', {
+      link: true,
+      fromAnotherSite: true,
+    })
   })
 
   it('answers 404 for a provider the site doesn’t know', async () => {
