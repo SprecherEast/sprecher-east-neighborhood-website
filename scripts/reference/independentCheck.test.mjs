@@ -1,7 +1,7 @@
 /**
  * An independent comparison (#1461): the generated pages that claim completeness are checked
  * against what the loaded config and the code say, found a different way from the generator.
- * Needs the committed pages to be current, which `npm run docs:check` already requires.
+ * Needs the pages to be built, which `npm test` does first (`npm run docs:generate`).
  *
  * - Endpoints: which routes of each content type Payload really reaches, using Payload's own
  *   matcher (`path-to-regexp`, as `handleEndpoints` does), compared with the "taken first" table.

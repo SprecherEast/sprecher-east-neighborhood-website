@@ -10,6 +10,10 @@ const importPath = (file) => file.replace(/^src\//, '@/').replace(/\.tsx?$/, '')
 
 export const SHOWCASE_REGISTRY_FILE = 'src/platform/ui/showcaseRegistry.ts'
 
+/** Where the reference is built (not in git, #1594) and the showcase index inside it. */
+export const REFERENCE_DIR = 'docs/reference'
+export const SHOWCASE_INDEX_FILE = `${REFERENCE_DIR}/showcase-index.json`
+
 /** The text of `showcaseRegistry.ts` for an index (the generator formats it). */
 export function renderShowcaseRegistry(index) {
   const files = [...new Set(index.components.flatMap((c) => c.examples?.files ?? []))].sort()

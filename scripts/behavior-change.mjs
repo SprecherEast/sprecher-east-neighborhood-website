@@ -8,7 +8,7 @@
  * - `doc`: Markdown anywhere, or anything under `docs/`. A change to one is a doc change.
  * - `test`: a test, spec, fixture or end-to-end file (`isTestFile`). Cannot change what a visitor,
  *   an editor or an agent gets.
- * - `exempt`: a lockfile, the generated Payload types, a package.json whose only change is a
+ * - `exempt`: a lockfile, the generated Payload types, the reference built from the code (not in git), a package.json whose only change is a
  *   dependency patch version in a section in view, or a diff that touches only comments (any
  *   file type with a comment rule) or only formatting (JS, TS and CSS only).
  * - `behavior`: everything else. The default, so a new kind of file is checked until a rule here
@@ -18,8 +18,12 @@
  * Input is a file of GitHub's `pulls.listFiles`: `{ filename, previous_filename?, status, patch? }`.
  */
 
+import { REFERENCE_DIR, SHOWCASE_REGISTRY_FILE } from './reference/showcaseRegistry.mjs'
+
 /** Paths that can't change behavior, checked against the path alone. */
 const DOC = [/\.mdx?$/i, /^docs\//]
+/** Build output (#1594): not in git, so it never counts as a doc change or as behavior, even in an old branch's diff. */
+const BUILD_OUTPUT = [`${REFERENCE_DIR}/`, SHOWCASE_REGISTRY_FILE]
 const TEST = [
   /\.(test|spec)\.[^/]+$/,
   /(^|\/)__(tests|mocks|fixtures)__\//,
@@ -38,6 +42,7 @@ export const isTestFile = (path) => matches(TEST, path)
 /** The kind a path alone decides, or null when only the diff can say. */
 function kindOfPath(path) {
   if (isTestFile(path)) return 'test'
+  if (BUILD_OUTPUT.some((out) => path === out || path.startsWith(out))) return 'exempt'
   if (matches(DOC, path)) return 'doc'
   if (LOCKFILE.test(path) || matches(GENERATED, path)) return 'exempt'
   return null

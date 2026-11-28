@@ -1,8 +1,8 @@
 /**
  * The entry script of the reference (#1461), run as a program on a small repository (two content
- * types, an endpoint, a tool, a job and a timer: `entryFixture.mjs`): what `--check` says and exits
- * with, and what a write does to a stale, missing or stray page. The real tree is checked by the
- * `Knowledge sync` job (`docs:check`), so this test stays fast enough for the full suite.
+ * types, an endpoint, a tool, a job and a timer: `entryFixture.mjs`): what a build does to a stale,
+ * missing or stray page. The real tree is built by the `Knowledge sync` job (`docs:generate`, which
+ * fails when the build fails, #1594), so this test stays fast enough for the full suite.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -51,26 +51,21 @@ beforeAll(() => {
 afterAll(() => fs.rmSync(copy, { recursive: true, force: true }))
 
 describe('scripts/generate-reference.mjs', () => {
-  it('checks, fails on a stale, missing or stray page, and writes them right', () => {
-    // A repository with no pages yet: a check says so, a write makes them
-    const empty = run('--check')
-    expect(empty.status, describeRun(empty)).toBe(1)
+  it('builds every page and the import map, and rebuilds a stale, missing or stray page right', () => {
+    // A repository with nothing built yet: a run makes every page
     const first = run()
     expect(first.status, describeRun(first)).toBe(0)
-
-    const current = run('--check')
-    expect(current.status, describeRun(current)).toBe(0)
-    expect(current.stdout).toContain(`docs/reference is current (${pagesOf().length} pages, `)
+    expect(first.stdout).toContain(`Wrote ${pagesOf().length} pages to docs/reference (`)
 
     // the tool passes a collection to a helper: the loader tells the tool reader which collections exist
     expect(read('mcp-tools.md')).toMatch(/echo[\s\S]*events/)
 
-    // the showcase index (#1532) is checked like a page, and a stale one is rewritten
+    // the showcase index (#1532) is written like a page
     expect(JSON.parse(read('showcase-index.json')).coverage).toMatchObject({
       total: expect.any(Number),
     })
 
-    // a file that is not a Markdown page is left alone, by a check and by a write
+    // a file that is not a Markdown page is left alone by a build
     fs.writeFileSync(path.join(copy, 'docs/reference/notes.txt'), 'kept\n')
 
     const original = {
@@ -84,22 +79,15 @@ describe('scripts/generate-reference.mjs', () => {
     fs.rmSync(path.join(copy, 'docs/reference/jobs.md'))
     fs.appendFileSync(path.join(copy, 'docs/reference/endpoints.md'), 'stale\n')
     fs.writeFileSync(path.join(copy, 'docs/reference/stray.md'), 'stray\n')
-    const stale = run('--check')
-    expect(stale.status, describeRun(stale)).toBe(1)
-    for (const name of ['jobs.md', 'endpoints.md', 'stray.md', 'showcase-index.json', REGISTRY]) {
-      expect(stale.stderr).toContain(name)
-    }
 
-    const written = run()
-    expect(written.status, describeRun(written)).toBe(0)
-    expect(written.stdout).toContain(`Wrote ${pagesOf().length} pages to docs/reference (`)
+    const rebuilt = run()
+    expect(rebuilt.status, describeRun(rebuilt)).toBe(0)
+    expect(rebuilt.stdout).toContain(`Wrote ${pagesOf().length} pages to docs/reference (`)
     expect(read('jobs.md')).toBe(original.jobs)
     expect(read('endpoints.md')).toBe(original.endpoints)
     expect(read('showcase-index.json')).toBe(original.index)
     expect(fs.readFileSync(path.join(copy, REGISTRY), 'utf8')).toBe(original.registry)
     expect(fs.existsSync(path.join(copy, 'docs/reference/stray.md'))).toBe(false)
     expect(read('notes.txt')).toBe('kept\n')
-    const again = run('--check')
-    expect(again.status, describeRun(again)).toBe(0)
   }, 600_000)
 })

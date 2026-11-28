@@ -8,7 +8,7 @@ relationships: []
 
 # Accounts
 
-How a neighbor signs up, confirms the account, signs in (email and password, Google or a passkey), connects Google, adds and removes passkeys, and resets or changes a password. It is the site's largest security surface and is not the admin panel. In the CMS: the `users` collection (an agent account is a user too), `passkeys`, `passkey-challenges` and `social-link-requests`, all written by server code only; nothing here is an editor's content. Fields, access and hooks: the [users content type](../../../docs/reference/content-types/users.md) and its neighbours in the [content types](../../../docs/reference/content-types/README.md).
+How a neighbor signs up, confirms the account, signs in (email and password, Google or a passkey), connects Google, adds and removes passkeys, and resets or changes a password. It is the site's largest security surface and is not the admin panel. In the CMS: the `users` collection (an agent account is a user too), `passkeys`, `passkey-challenges` and `social-link-requests`, all written by server code only; nothing here is an editor's content. Fields, access and hooks: the [users content type](../../../docs/reference/content-types/users.md) (build it with `npm run docs:generate`) and its neighbours in the [content types](../../../docs/reference/content-types/README.md).
 
 ## Screens
 

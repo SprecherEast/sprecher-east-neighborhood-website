@@ -8,7 +8,7 @@ relationships: [{ 'type': 'depends-on', 'target': 'src/modules/news/README.md' }
 
 # Events
 
-The neighborhood calendar: the `events` collection, its listings and pages, and the "this week" block for CMS pages. In the CMS: `events` (drafts, scheduled publish, review-queue fields, an optional title band photo) and the `eventsThisWeek` block; not in the CMS: the upcoming and past rules, the paging and the filter row. Fields, access and hooks: [events content type](../../../docs/reference/content-types/events.md); the screens: [screens reference](../../../docs/reference/routes.md).
+The neighborhood calendar: the `events` collection, its listings and pages, and the "this week" block for CMS pages. In the CMS: `events` (drafts, scheduled publish, review-queue fields, an optional title band photo) and the `eventsThisWeek` block; not in the CMS: the upcoming and past rules, the paging and the filter row. Fields, access and hooks: [events content type](../../../docs/reference/content-types/events.md) (build it with `npm run docs:generate`); the screens: [screens reference](../../../docs/reference/routes.md).
 
 ## Screens
 

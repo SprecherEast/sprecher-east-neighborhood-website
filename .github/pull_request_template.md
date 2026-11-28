@@ -67,7 +67,7 @@ For each, what you checked and what you fixed; "not applicable, because ..." onl
 or get differently (a screen, a message, fields, access, a route, an email, a job, a limit).
 Not one: a refactor that keeps behavior, tests, comments, formatting.
 If this PR changes anything that can alter behavior, anywhere (tests, comments, formatting, docs
-and lockfile patches don't count), change the note, guideline or reference that describes it in
+and lockfile patches don't count), change the note or guideline that describes it in
 the same PR (and the note docs/knowledge/map.json names for that code), or write
 "Behavior change: none" and why (20+ characters). A doc you name by path here must be in the diff.
 The reviewer checks it against the diff. How to decide: docs/guidelines/development.md#documentation-follows-behavior -->

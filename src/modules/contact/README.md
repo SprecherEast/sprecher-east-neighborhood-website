@@ -8,7 +8,7 @@ relationships: [{ 'type': 'depends-on', 'target': 'src/modules/verification/READ
 
 # Contact
 
-What happens when a neighbor sends a form on the site: the checks it passes, why its emails wait for the sender to confirm their address, who gets which email, and when messages are deleted. The forms and submissions are the form-builder plugin's; this module adds the hooks. The confirmation link itself belongs to the [verification module](../verification/README.md). Fields, access and hook names: [forms](../../../docs/reference/content-types/forms.md) and [form submissions](../../../docs/reference/content-types/form-submissions.md).
+What happens when a neighbor sends a form on the site: the checks it passes, why its emails wait for the sender to confirm their address, who gets which email, and when messages are deleted. The forms and submissions are the form-builder plugin's; this module adds the hooks. The confirmation link itself belongs to the [verification module](../verification/README.md). Fields, access and hook names: [forms](../../../docs/reference/content-types/forms.md) (build it with `npm run docs:generate`) and [form submissions](../../../docs/reference/content-types/form-submissions.md).
 
 ## Screens
 

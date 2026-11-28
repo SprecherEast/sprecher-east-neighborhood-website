@@ -78,10 +78,9 @@ treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
    ([what counts](../../../docs/architecture/decisions/0019-knowledge-layer.md)): screens,
    messages, fields, access, hooks, routes, emails, jobs, limits.
 2. For each, find the sentence in the note that describes it (`docs/knowledge/map.json` names it)
-   or in the generated page in `docs/reference/`; for a path the map doesn't list, in the doc that
+   (the generated pages in `docs/reference/` are built, not committed, and never count); for a path the map doesn't list, in the doc that
    describes it (a guideline, the setup notes, a skill). None: update it in this PR. A module with
-   no note yet needs none. Run `npm run docs:generate` for a content type (routes and components
-   once #718 lands).
+   no note yet needs none. Run `npm run docs:generate` to read a content type's page.
 3. Nothing changed? Check the PR's `Behavior change: none` reason is true of the diff ([how to decide](../../../docs/guidelines/development.md#documentation-follows-behavior)).
 4. A change to `docs/knowledge/map.json` can drop a module from the check: say why in the PR.
 5. Run `npm run knowledge:check -- --body-file <your draft description>` on the committed diff. It applies the rule CI applies, so a missing note shows now and not after the pull request opens. Fix what it reports; a pass here is advisory and CI decides, and is not a reason to skip step 3. Compare against the pull request's real base after fetching it (`--base`), which for a pull request in a stack is the pull request below.

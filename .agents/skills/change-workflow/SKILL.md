@@ -57,7 +57,7 @@ npx tsc --noEmit                    # zero errors
 npx eslint . --max-warnings=10
 npx prettier --check .              # fix with: npx prettier --write <files>
 npm run build                       # when code or dependencies changed
-npm run docs:check                  # the generated reference matches the code (content types; routes and components once #718 lands)
+npm run docs:generate               # the reference builds from the code (it is not committed, #1594)
 ```
 
 Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds.

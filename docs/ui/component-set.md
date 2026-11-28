@@ -44,7 +44,7 @@ belong to one business area, what isn't needed yet, and the coverage table.
   errors announced, `aria-current` on the current page.
 
 Each group below links its generated page: every component with its props, variants and the
-modules and routes that import it (`npm run docs:generate`, checked by `npm run docs:check`, #718).
+modules and routes that import it (built by `npm run docs:generate`, not committed, #718).
 The page you are reading keeps what code cannot say. Which inventory element each component covers is
 in the [coverage check](component-set-modules.md#coverage).
 

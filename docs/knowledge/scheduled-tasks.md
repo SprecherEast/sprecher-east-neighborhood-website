@@ -2,7 +2,7 @@
 
 Some tasks run on a schedule in the owner's cloud account, not in this repository, so no file here
 defines them. This page lists them. What runs inside the application and in GitHub is generated,
-in [`docs/reference/jobs.md`](../reference/jobs.md).
+in [`docs/reference/jobs.md`](../reference/jobs.md) (build it with `npm run docs:generate`).
 
 **This page is written by hand and updated by hand whenever one of these tasks changes.** The
 facts below were read from the owner's account on 2026-11-24, except the Instructions bullet,

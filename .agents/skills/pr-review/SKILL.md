@@ -122,7 +122,7 @@ change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-laye
 4. A change to `docs/knowledge/map.json` is a behavior-change surface and a policy change: list it
    under **Policy changes**. Check every entry it adds points to a note that exists, and every
    entry it drops or narrows has a stated reason. Otherwise **Blocker**.
-5. Run `npm run docs:check` for a change to a content type (routes and components once #718 lands).
+5. Run `npm run docs:generate` for a change to a content type, to read its page. It is built, not committed: it never appears in the diff, so the note or declaration is what the diff must show.
 
 ## 2d. Check the browser tests (UI changes)
 

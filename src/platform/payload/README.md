@@ -8,7 +8,7 @@ relationships: []
 
 # Shared Payload code
 
-The helpers every collection is built from (`src/platform/payload/`). The rules a module note states (staff see drafts, suggestions wait as drafts, publishes are scheduled) are defined here. In the CMS it supplies the `media` collection and the shared fields and access of the others; what each collection allows is on its page in the [content types](../../../docs/reference/content-types/README.md). Pure helpers are in the [shared helpers note](../lib/README.md); email, the robot check, analytics, metadata and the service wrapper are in [platform services](../service/README.md); what a preview copies is in [Preview copy](previewCopy/README.md).
+The helpers every collection is built from (`src/platform/payload/`). The rules a module note states (staff see drafts, suggestions wait as drafts, publishes are scheduled) are defined here. In the CMS it supplies the `media` collection and the shared fields and access of the others; what each collection allows is on its page in the [content types](../../../docs/reference/content-types/README.md) (build it with `npm run docs:generate`). Pure helpers are in the [shared helpers note](../lib/README.md); email, the robot check, analytics, metadata and the service wrapper are in [platform services](../service/README.md); what a preview copies is in [Preview copy](previewCopy/README.md).
 
 ## How the pieces link
 

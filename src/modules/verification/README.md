@@ -11,7 +11,7 @@ relationships: []
 Checks that an email address belongs to whoever typed it, by a link sent to it. Contact asks for a
 confirmation; this module sends the link, follows it and keeps the result. It is not an
 account system and holds no messages. Sign-up does not use it: an account is verified by Payload's own
-verify, in the [accounts note](../accounts/README.md). In the CMS: the `email-confirmations` collection, whose token hash and send counters only the server writes; the hourly retention job is in the [jobs reference](../../../docs/reference/jobs.md). Fields, access and the confirm endpoint:
+verify, in the [accounts note](../accounts/README.md). In the CMS: the `email-confirmations` collection, whose token hash and send counters only the server writes; the hourly retention job is in the [jobs reference](../../../docs/reference/jobs.md) (build it with `npm run docs:generate`). Fields, access and the confirm endpoint:
 [email-confirmations content type](../../../docs/reference/content-types/email-confirmations.md); the
 page's URL: [screens](../../../docs/reference/routes.md).
 

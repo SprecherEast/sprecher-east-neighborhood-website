@@ -16,6 +16,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { KNOWLEDGE_MAP } from '../agent-context-maps.mjs'
 import { checkKnowledge, mapNotes } from './check.mjs'
+import { REFERENCE_DIR, SHOWCASE_REGISTRY_FILE } from '../reference/showcaseRegistry.mjs'
+import { listFiles as listBuilt } from '../reference/listFiles.mjs'
 import { renderIndex } from './indexLines.mjs'
 import { unknownKind } from './rules.mjs'
 
@@ -53,7 +55,11 @@ export function summarize(found) {
   ].join('\n')
 }
 
-/** The files of the repository: those git tracks or would, that still exist (never an empty entry). */
+/**
+ * The files of the repository: those git tracks or would, that still exist (never an empty entry),
+ * and the reference built from the code and the showcase import map (#1594), which git ignores
+ * but the notes link into.
+ */
 export function listFiles(root) {
   const out = execFileSync(
     'git',
@@ -64,7 +70,12 @@ export function listFiles(root) {
       maxBuffer: Infinity,
     },
   )
-  return out.split('\0').filter((file) => file && fs.existsSync(path.join(root, file)))
+  const built = [
+    ...listBuilt(path.join(root, REFERENCE_DIR)).map((file) => `${REFERENCE_DIR}/${file}`),
+    ...[SHOWCASE_REGISTRY_FILE].filter((file) => fs.existsSync(path.join(root, file))),
+  ]
+  const files = out.split('\0').filter((file) => file && fs.existsSync(path.join(root, file)))
+  return [...new Set([...files, ...built])]
 }
 
 /**

@@ -7,7 +7,7 @@ form-builder fields were under `src/blocks/Form/` when this inventory was taken 
 them with `Field`, and #133 moved the form block to `src/modules/contact/ui/`). The login and
 account forms were in `login/` and `account/`; #134 moved them to `src/modules/accounts/ui/`.
 
-> A dated snapshot of the code at `e887427` (2026-10-21), not refreshed. Current screens and components are generated in [`docs/reference/`](../reference/components/README.md) ([routes](../reference/routes.md)).
+> A dated snapshot of the code at `e887427` (2026-10-21), not refreshed. Current screens and components are generated in [`docs/reference/`](../reference/components/README.md) (build it with `npm run docs:generate`) ([routes](../reference/routes.md)).
 
 ## Form fields and form actions (F)
 

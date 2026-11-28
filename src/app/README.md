@@ -8,7 +8,7 @@ relationships: []
 
 # Site shell
 
-The files that put the modules together. The root layout, home page, error and not-found pages and the version and preview routes under `src/app/(frontend)/`; `sitemap.ts`, `robots.ts` and `global-error.tsx` under `src/app/`; the proxy (`src/proxy.ts`); and the Payload config (`src/payload.config.ts`), where every collection, global, plugin and job is listed. Modules never import each other, so this is the one place they meet (decision 0008). Each page's own note is its module's; the list of screens is the [screens reference](../../docs/reference/routes.md), the addresses the [endpoints reference](../../docs/reference/endpoints.md).
+The files that put the modules together. The root layout, home page, error and not-found pages and the version and preview routes under `src/app/(frontend)/`; `sitemap.ts`, `robots.ts` and `global-error.tsx` under `src/app/`; the proxy (`src/proxy.ts`); and the Payload config (`src/payload.config.ts`), where every collection, global, plugin and job is listed. Modules never import each other, so this is the one place they meet (decision 0008). Each page's own note is its module's; the list of screens is the [screens reference](../../docs/reference/routes.md) (build it with `npm run docs:generate`), the addresses the [endpoints reference](../../docs/reference/endpoints.md).
 
 ## How the pieces link
 

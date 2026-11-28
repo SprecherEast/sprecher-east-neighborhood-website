@@ -1,8 +1,9 @@
 /**
- * Writes the generated reference (decision 0019 §4) and checks that the committed pages are current.
+ * Builds the generated reference (decision 0019 §4). It is build output, not in git (#1594): a
+ * fresh clone, a worktree and CI build it (`scripts/ensure-reference.mjs` runs this when it is
+ * missing), and a build that fails fails the job that needed it.
  *
- *   npm run docs:generate    write docs/reference/
- *   npm run docs:check       regenerate in memory and fail if anything differs from what is committed
+ *   npm run docs:generate    write docs/reference/ and the showcase's import map
  *
  * Content types (#714): loads the real Payload config with `loadConfig` from the access-policy
  * tests, no database and no server; the pure parts are in scripts/content-types/. Screens and
@@ -23,7 +24,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import prettier from 'prettier'
 
-import { compareFiles, describeDifferences } from './content-types/compare.mjs'
 import { PAGE_LINE_LIMIT, buildPages } from './content-types/render.mjs'
 import {
   ELEMENT_FILES,
@@ -46,7 +46,12 @@ import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
 import { collectRoutes, renderRoutes } from './reference/routes.mjs'
 import { buildShowcaseIndex, renderShowcaseIndex } from './reference/showcase.mjs'
-import { SHOWCASE_REGISTRY_FILE, renderShowcaseRegistry } from './reference/showcaseRegistry.mjs'
+import {
+  REFERENCE_DIR,
+  SHOWCASE_INDEX_FILE,
+  SHOWCASE_REGISTRY_FILE,
+  renderShowcaseRegistry,
+} from './reference/showcaseRegistry.mjs'
 import {
   componentSourceFiles,
   createSourceProgram,
@@ -54,9 +59,9 @@ import {
 } from './reference/sourceProgram.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const OUTPUT = 'docs/reference'
+const OUTPUT = REFERENCE_DIR
 /** The showcase index (#1532): data for the developer site's showcase pages and its coverage check */
-const SHOWCASE_INDEX = 'showcase-index.json'
+const SHOWCASE_INDEX = path.posix.relative(REFERENCE_DIR, SHOWCASE_INDEX_FILE)
 
 /** The text of a file under the repository, or `undefined` when it is not there. */
 const readIfThere = (file) =>
@@ -115,8 +120,8 @@ async function formatted(files) {
   return out
 }
 
-/** Every Markdown file and the showcase index under the folder, keyed by its path inside it. */
-const readCommitted = (directory) =>
+/** Every Markdown file and the showcase index already built under the folder, keyed by its path inside it. */
+const readBuilt = (directory) =>
   new Map(
     listFiles(directory)
       .filter((file) => file.endsWith('.md') || file === SHOWCASE_INDEX)
@@ -148,38 +153,21 @@ const pages = await formatted(
     ...componentPages,
   ]),
 )
-// The showcase's import map (#1532) is code, so it lives beside the kit, not in docs/reference/
+// The showcase's import map (#1532) is code the app imports, so it lives beside the kit, not in docs/reference/
 const registryFile = (await formatted(new Map([[SHOWCASE_REGISTRY_FILE, registry]]))).get(
   SHOWCASE_REGISTRY_FILE,
 )
 const registryPath = path.join(ROOT, SHOWCASE_REGISTRY_FILE)
 const seconds = ((Date.now() - started) / 1000).toFixed(1)
 
-if (process.argv.includes('--check')) {
-  const message = describeDifferences(compareFiles(pages, readCommitted(directory)), OUTPUT)
-  const onDisk = fs.existsSync(registryPath) ? fs.readFileSync(registryPath, 'utf8') : undefined
-  const registryMessage = describeDifferences(
-    compareFiles(
-      new Map([[SHOWCASE_REGISTRY_FILE, registryFile]]),
-      new Map(onDisk === undefined ? [] : [[SHOWCASE_REGISTRY_FILE, onDisk]]),
-    ),
-    path.posix.dirname(SHOWCASE_REGISTRY_FILE),
-  )
-  if (message || registryMessage) {
-    console.error([message, registryMessage].filter(Boolean).join('\n'))
-    process.exit(1)
-  }
-  console.log(`${OUTPUT} is current (${pages.size} pages, ${seconds} s).`)
-} else {
-  fs.mkdirSync(directory, { recursive: true })
-  for (const file of readCommitted(directory).keys()) {
-    if (!pages.has(file)) fs.rmSync(path.join(directory, file))
-  }
-  for (const [file, text] of pages) {
-    fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true })
-    fs.writeFileSync(path.join(directory, file), text)
-  }
-  fs.mkdirSync(path.dirname(registryPath), { recursive: true })
-  fs.writeFileSync(registryPath, registryFile)
-  console.log(`Wrote ${pages.size} pages to ${OUTPUT} (${seconds} s).`)
+fs.mkdirSync(directory, { recursive: true })
+for (const file of readBuilt(directory).keys()) {
+  if (!pages.has(file)) fs.rmSync(path.join(directory, file))
 }
+for (const [file, text] of pages) {
+  fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true })
+  fs.writeFileSync(path.join(directory, file), text)
+}
+fs.mkdirSync(path.dirname(registryPath), { recursive: true })
+fs.writeFileSync(registryPath, registryFile)
+console.log(`Wrote ${pages.size} pages to ${OUTPUT} (${seconds} s).`)

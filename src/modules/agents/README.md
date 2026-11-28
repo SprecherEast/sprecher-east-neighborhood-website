@@ -11,7 +11,7 @@ relationships: []
 How the neighborhood agents reach the site: one MCP address, a key an admin issues or an AI tool an
 admin allowed in with OAuth, read access to published content, suggestions that arrive as drafts for staff, and a history of each run. Agents
 never publish and never change existing content. Fields, access and hooks:
-[agent runs](../../../docs/reference/content-types/agent-runs.md),
+[agent runs](../../../docs/reference/content-types/agent-runs.md) (build it with `npm run docs:generate`),
 [review items](../../../docs/reference/content-types/agent-review-items.md),
 [API keys](../../../docs/reference/content-types/payload-mcp-api-keys.md),
 [OAuth clients](../../../docs/reference/content-types/oauth-clients.md),

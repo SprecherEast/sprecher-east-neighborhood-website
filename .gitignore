@@ -118,3 +118,8 @@ storybook-static/
 
 # Rules built from the guidelines and notes by scripts/agent-context-rules.mjs; rebuilt where needed, never committed (#1593)
 /.claude/rules/generated/
+
+# The reference and the showcase's import map are built from the code by `npm run docs:generate` (about 15 s); never committed (#1594).
+# Every npm command that reads them builds them first when they are missing (scripts/ensure-reference.mjs).
+/docs/reference/
+/src/platform/ui/showcaseRegistry.ts

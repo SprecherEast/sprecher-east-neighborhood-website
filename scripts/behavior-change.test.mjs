@@ -39,6 +39,18 @@ describe('classifyFile: by path', () => {
     },
   )
 
+  // Build output is not in git (#1594), so a diff holding it comes from an old branch that still
+  // has it. It is neither behavior nor documentation: it must never satisfy "a doc changed".
+  it.each([
+    'docs/reference/routes.md',
+    'docs/reference/components/media.md',
+    'docs/reference/showcase-index.json',
+    'src/platform/ui/showcaseRegistry.ts',
+  ])('treats the build output %s as exempt, not as a doc', (name) => {
+    expect(kind(file(name, { patch: patch('-a', '+b') }))).toBe('exempt')
+    expect(kind(file(name, { status: 'removed' }))).toBe('exempt')
+  })
+
   it('exempts the generated Payload types file', () => {
     expect(kind(file('src/payload-types.ts', { patch: patch('-a', '+b') }))).toBe('exempt')
   })
@@ -329,5 +341,14 @@ describe('classifyChanges', () => {
     ])
     expect(result.behavior.map((f) => f.filename)).toEqual(['src/a.ts'])
     expect(result.docs.map((f) => f.filename)).toEqual(['docs/x.md'])
+  })
+
+  it('does not count the reference pages as a doc change (#1594)', () => {
+    const result = classifyChanges([
+      file('src/a.ts', { patch: patch('-a', '+b') }),
+      file('docs/reference/routes.md', { patch: patch('-a', '+b') }),
+    ])
+    expect(result.behavior.map((f) => f.filename)).toEqual(['src/a.ts'])
+    expect(result.docs).toEqual([])
   })
 })

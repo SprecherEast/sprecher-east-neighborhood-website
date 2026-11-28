@@ -5,7 +5,7 @@ the data each element shows, and the component set the elements point to.
 
 > **A dated snapshot, taken at `e887427` on 2026-10-21.** Routes and components have changed since
 > (the events category pages and the paged lists, for one). For the current list of screens read
-> [`docs/reference/routes.md`](../reference/routes.md), and for the current components
+> [`docs/reference/routes.md`](../reference/routes.md) (build it with `npm run docs:generate`), and for the current components
 > [`docs/reference/components/`](../reference/components/README.md); both are generated from the
 > code and checked on every pull request (#718). This inventory is kept for the screenshots and the
 > element tables, which are not refreshed in place (#495).
