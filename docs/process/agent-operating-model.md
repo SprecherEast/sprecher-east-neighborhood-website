@@ -199,7 +199,7 @@ layer joins with #717.
 
 ## 6. How much scrutiny a change gets
 
-**Status: planned (#1450).** Today review depth follows the one rule in [`CLAUDE.md`](../../CLAUDE.md) (#522); this scale takes effect when #1450 merges.
+**Status: planned (#1450).** Today review depth follows the one rule in [`claude-code-setup.md`](../../.claude/rules/claude-code-setup.md) (#522); this scale takes effect when #1450 merges.
 
 Scrutiny costs time and tokens, so it follows risk. The level is the highest one that matches;
 the author proposes it, the reviewer may raise it. Google's guidance names the same judgment: some

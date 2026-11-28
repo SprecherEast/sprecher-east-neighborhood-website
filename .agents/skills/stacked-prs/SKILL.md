@@ -126,7 +126,7 @@ from the bottom up. Fix a finding in the layer it belongs to, never in a higher 
    ```
 
 6. Ask for a new review of every layer above _k_, even when its own diff didn't change: the code
-   under it did ([`AGENTS.md`](../../../AGENTS.md) step 5). It can be short, checking the layer
+   under it did ([`change-workflow`](../change-workflow/SKILL.md#the-path-to-main), step 5). It can be short, checking the layer
    against what changed below.
 
 `gh stack rebase --upstack` (from layer _k_) does step 3 for the layers above it, and
@@ -138,7 +138,7 @@ After a lower layer is squash-merged, GitHub does not drop its old commits from 
 so they go dirty with their own change unchanged. Rebase each one, from the bottom up, onto `main`
 from the lower branch's old head (`git rebase --onto main <old head of the lower branch>`), then
 regenerate with the repo's own commands, re-run the checks and push. The review of a layer's own
-diff still counts when that diff is unchanged ([`AGENTS.md`](../../../AGENTS.md) step 5).
+diff still counts when that diff is unchanged ([`change-workflow`](../change-workflow/SKILL.md#the-path-to-main), step 5).
 
 ## 5. Review and merge
 

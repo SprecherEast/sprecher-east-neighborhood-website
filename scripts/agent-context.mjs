@@ -44,7 +44,7 @@ export { renderRule, rootLinks, ruleName }
  * It is our own ceiling, not a vendor limit, and the owner may raise or lower it. It is the only
  * place the number lives; the check prints the live count.
  */
-export const BUDGET_TOKENS = 6500
+export const BUDGET_TOKENS = 1725
 
 /** Whether a Markdown file starts with frontmatter that has a `paths` field. */
 export function hasPaths(markdown) {

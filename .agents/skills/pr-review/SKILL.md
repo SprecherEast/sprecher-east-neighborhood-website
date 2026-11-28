@@ -1,11 +1,11 @@
 ---
 name: pr-review
-description: Independent review of a pull request in this repo before it merges — checks the linked issue, PR description, scope, correctness, security, and CI, then posts findings on the PR by severity. Use when asked to review a PR; never review a PR you authored.
+description: Independent review of a pull request before it merges — checks the linked issue, PR description, scope, correctness, security and CI, then posts findings by severity. Use when you are asked to review a PR, start a fresh reviewer for one, or check whether a review still counts; never review a PR you authored.
 ---
 
 # PR review
 
-You are the independent reviewer required by [`AGENTS.md`](../../../AGENTS.md) step 3.
+You are the independent reviewer required by [`change-workflow`](../change-workflow/SKILL.md#the-path-to-main), step 3.
 Review the change as someone who didn't write it. If you wrote any part of this PR, stop and
 say so.
 
@@ -42,7 +42,7 @@ What to do then:
   (2b), behavior changes (2c) and the change itself (3), against every guideline the diff touches.
 - **Post it on the PR's current head** as step 4 says, and say in its first line that Copilot's
   review agent wasn't available and a fallback session reviewed it.
-- A PR that raises the scrutiny level ([`CLAUDE.md`](../../../CLAUDE.md), models and effort) keeps
+- A PR that raises the scrutiny level ([`claude-code-setup.md`](../../../.claude/rules/claude-code-setup.md), models and effort) keeps
   its rule: `opus` at `high`.
 
 ## 1. Gather context
@@ -225,7 +225,7 @@ gh pr review <number> --comment --body-file review.md
 
 For a specific line, add inline comments in the web UI or with `gh api`. Post the review on the PR's
 current head, so its `commit_id` records the head you reviewed. A later head needs a new review
-unless this one still counts ([`AGENTS.md`](../../../AGENTS.md) step 5).
+unless this one still counts ([`change-workflow`](../change-workflow/SKILL.md#the-path-to-main), step 5).
 
 End the review with a verdict. When a PR has findings to fix and also waits for the owner, the
 verdict is **Changes requested**: it's fixed first, so he gets a clean PR.

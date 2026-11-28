@@ -1,6 +1,6 @@
 ---
 name: project-tracking
-description: Keep the project's plan on GitHub. Before starting work, read the issue's epic, milestone, blockers and latest handoff comment; when filing new work, put it at the right level with labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not from memory. Use when picking up, filing or reporting work.
+description: Keep the project's plan on GitHub — read the issue's epic, milestone, blockers and latest handoff comment before starting; when filing new work, set labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not memory. Use when you pick up, file, claim, plan or report work.
 ---
 
 # Project tracking
@@ -151,7 +151,7 @@ For each issue:
 5. **Needs the owner?** Only if he alone can do it (a login, a payment), it needs his decision on
    a genuine product trade-off, a meaningful cost, a legal or privacy commitment, or a decision
    established best practice can't reasonably resolve, or it changes policy he didn't ask for
-   ([`AGENTS.md`](../../../AGENTS.md) step 3). A choice between technically valid approaches
+   ([`change-workflow`](../change-workflow/SKILL.md#the-path-to-main), step 3). A choice between technically valid approaches
    isn't one: decide it, record why on the issue, and carry on. If it does:
    - label it `needs owner`
    - add it to the checklist in the owner-actions epic (#169); its parent stays its own epic

@@ -156,7 +156,7 @@ npm run build
 When an issue keeps coming back, turn it into a rule in the guideline it belongs to (or in
 `AGENTS.md`) through a PR, so every agent catches it. Don't keep it in a tool's private memory. A
 new rule is a policy change: unless the owner asked for it, file it labeled `needs owner`
-([`AGENTS.md`](../../AGENTS.md) step 3).
+([`change-workflow`](../../.agents/skills/change-workflow/SKILL.md#the-path-to-main), step 3).
 Watch for:
 
 - Patterns that cause visual inconsistency

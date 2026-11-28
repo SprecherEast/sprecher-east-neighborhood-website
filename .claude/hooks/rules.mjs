@@ -112,7 +112,7 @@ export function readCommit(args) {
 }
 
 /**
- * The commands AGENTS.md forbids ("Never") that a Bash command contains, with the reason shown to
+ * The commands the path to main forbids (`change-workflow`, and "Never" in AGENTS.md) that a Bash command contains, with the reason shown to
  * the agent, plus what the caller must check against git: pushes that name no branch, and commits.
  * @param {string} command
  */
@@ -127,16 +127,18 @@ export function inspect(command) {
       words.includes('--admin')
     ) {
       result.reason ??=
-        'AGENTS.md: never merge with --admin; merge with rules enforced (bypass_rules: false).'
+        'change-workflow (the path to main): never merge with --admin; merge with rules enforced (bypass_rules: false).'
     }
     if (words[0] === 'gh' && words.some((word) => /^bypass_rules=true$/.test(word))) {
-      result.reason ??= 'AGENTS.md: never bypass a rule; merge with bypass_rules: false.'
+      result.reason ??=
+        'change-workflow (the path to main): never bypass a rule; merge with bypass_rules: false.'
     }
     const git = gitArgs(words)
     if (git?.sub === 'push') {
       const push = readPush(git.args)
       if (push.protectedTarget) {
-        result.reason ??= 'AGENTS.md: never push to main; work on a branch and open a pull request.'
+        result.reason ??=
+          'change-workflow (the path to main): never push to main; work on a branch and open a pull request.'
       }
       if (push.noRefspec) result.barePush = true
     }
@@ -144,7 +146,8 @@ export function inspect(command) {
   }
   // A JSON body piped to `gh api`, such as `{"bypass_rules": true}`
   if (/"bypass_rules"\s*:\s*true\b/.test(command) && /\bgh\s+api\b/.test(command)) {
-    result.reason ??= 'AGENTS.md: never bypass a rule; merge with bypass_rules: false.'
+    result.reason ??=
+      'change-workflow (the path to main): never bypass a rule; merge with bypass_rules: false.'
   }
   return result
 }
