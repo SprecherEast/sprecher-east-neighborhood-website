@@ -104,6 +104,14 @@ describe('beginGoogleLink (from the account page)', () => {
     data.hasLinkedSubject.mockResolvedValue(true)
     expect(await beginGoogleLink('google', new Date())).toEqual({ ok: false, to: '/account' })
   })
+
+  it('starts nothing from a link on another site, and reads no session there', async () => {
+    expect(await beginGoogleLink('google', now, { fromAnotherSite: true })).toEqual({
+      ok: false,
+      to: '/account',
+    })
+    expect(data.getSignInSession).not.toHaveBeenCalled()
+  })
 })
 
 describe('finishGoogleLink (from the account page)', () => {

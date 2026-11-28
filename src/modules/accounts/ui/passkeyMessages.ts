@@ -8,11 +8,7 @@ import { GUARD_MESSAGES } from './guardMessages'
 
 /** How the add-a-passkey card ended, for the message under its button. */
 export type AddPasskeyOutcome =
-  | AddPasskeyFailure
-  | 'added'
-  | 'cancelled'
-  | 'already-here'
-  | 'offline'
+  AddPasskeyFailure | 'added' | 'cancelled' | 'already-here' | 'offline'
 
 /** What the card shows: the message, its tone, and whether it offers to log in again. */
 export type PasskeyNotice = {

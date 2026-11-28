@@ -61,8 +61,10 @@ confirmed this approach, so the record stays Proposed until he does.
   `getFieldsToSign`) and Payload's cookie (`generatePayloadCookie`). Payload's `local-jwt` then
   reads it; no strategy is added. The callback answers a small page of ours that moves on to
   `/account` (a meta refresh and a link, no script) rather than a redirect: the provider's
-  return is a cross-site navigation, and a redirect would carry that on, so Payload's CSRF check
-  (`Sec-Fetch-Site`) would ignore the new cookie on the account page.
+  return is a cross-site navigation, and a redirect would carry that on. Up to Payload 3.91,
+  Payload's CSRF check (`Sec-Fetch-Site`) then ignored the new cookie on the account page; from
+  3.94 it accepts it, and the page is kept so the next request is same-origin and no cross-site
+  rule can drop the new sign-in (2026-11-28, #1579).
 - **Google is on only when both its keys are set** (`GOOGLE_CLIENT_ID` and
   `GOOGLE_CLIENT_SECRET`). Without them the button doesn't show and the routes send the person
   back to `/login`.
@@ -155,6 +157,11 @@ again when it finishes. At the callback Google must have verified the email (the
 `decideSocialSignIn`), the account comes from the session, must be the one that
 started the flow, and the Google identity must be on no account; otherwise nothing changes and
 `/account` shows a fixed message.
+
+_Note (2026-11-28, #1597):_ the start ignores the session on a request from another site
+(`isFromAnotherSite`), because from Payload 3.94 Payload reads the cookie on a top-level visit from
+another site. The finish relies on that same change: on Google's return, a cross-site visit, 3.91
+gave no session, so the connect answered "sign in again"; from 3.94 it is read.
 
 **Afterwards** the Google button signs that neighbor in to the same account, `/account` says
 Google is connected, and a note goes to the account's address with the time and no link

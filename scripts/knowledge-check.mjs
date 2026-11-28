@@ -22,7 +22,7 @@ const STATUS = { A: 'added', C: 'added', D: 'removed', M: 'modified', R: 'rename
 export function parseNameStatus(text) {
   const parts = text.split('\0')
   const files = []
-  for (let at = 0; at < parts.length && parts[at].trim(); ) {
+  for (let at = 0; at < parts.length && parts[at].trim();) {
     const code = parts[at]
     const status = STATUS[code[0]] ?? 'modified'
     if (code[0] === 'R' || code[0] === 'C') {

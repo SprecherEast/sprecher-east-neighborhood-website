@@ -22,8 +22,7 @@ export const passkeysSupported = (): Promise<boolean> =>
 
 /** How making a passkey in the browser ended. `answer` goes to the server as it is. */
 export type CreatePasskeyResult =
-  | { ok: true; answer: unknown }
-  | { ok: false; reason: 'cancelled' | 'already-here' | 'failed' }
+  { ok: true; answer: unknown } | { ok: false; reason: 'cancelled' | 'already-here' | 'failed' }
 
 /**
  * Shows the browser's own prompt and gives its answer. Closing the prompt, a timeout and "not
@@ -60,8 +59,7 @@ export const passkeyAutofillSupported = (): Promise<boolean> =>
 
 /** How asking for a passkey in the browser ended. `answer` goes to the server as it is. */
 export type GetPasskeyResult =
-  | { ok: true; answer: unknown }
-  | { ok: false; reason: 'cancelled' | 'failed' }
+  { ok: true; answer: unknown } | { ok: false; reason: 'cancelled' | 'failed' }
 
 /**
  * Shows the browser's own prompt, or with `autofill` waits in the email field's autofill list

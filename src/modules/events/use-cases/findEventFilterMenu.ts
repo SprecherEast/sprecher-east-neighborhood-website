@@ -16,8 +16,8 @@ import * as categories from '../data/categories'
  * The filter row of /events: the categories with published events and every count, as of today in
  * the site timezone. Cached per request, so the layout, the page and its metadata read it once.
  */
-export const findEventFilterMenu = cache(
-  (): Promise<EventFilterMenu> => categories.findEventFilterMenu(startOfToday()),
+export const findEventFilterMenu = cache((): Promise<EventFilterMenu> =>
+  categories.findEventFilterMenu(startOfToday()),
 )
 
 /**

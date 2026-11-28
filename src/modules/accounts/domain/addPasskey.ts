@@ -46,8 +46,7 @@ export type PasskeyCreationOptions = {
 
 /** What asking for the options answers. */
 export type StartAddPasskeyResult =
-  | { ok: true; options: PasskeyCreationOptions }
-  | { ok: false; failure: AddPasskeyFailure }
+  { ok: true; options: PasskeyCreationOptions } | { ok: false; failure: AddPasskeyFailure }
 
 /**
  * The browser's answer to the options (`RegistrationResponseJSON`). Parsed again on the server
