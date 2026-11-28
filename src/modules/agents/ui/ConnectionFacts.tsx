@@ -59,7 +59,7 @@ export function ConnectionFacts({
                     className="gap-1"
                     items={abilities.map((ability) => ({
                       value: (
-                        <Text variant="lead" as="p">
+                        <Text variant="lead" as="span">
                           {ability}
                         </Text>
                       ),

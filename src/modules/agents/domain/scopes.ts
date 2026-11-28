@@ -21,7 +21,7 @@ export const SCOPE_LABELS: Record<Scope, string> = {
   suggest: 'Suggest drafts and items for us to review, and keep its own run log',
 }
 
-/** The set a client gets when it asks for none, and the one the address advertises. */
+/** The set a client gets when it asks for none, and the default of a new client's record. */
 export const MINIMAL_SCOPES: readonly Scope[] = ['read']
 
 type Op = 'find' | 'create' | 'update' | 'delete'
