@@ -1,7 +1,7 @@
 # Source registry for the intelligence agents (#271, #352). Summary: sources.md. Only `valid` is
 # polled; `pilotRank` marks the daily pilot; `fetchStrategy` is `direct` unless stated.
 version: 1
-checkedOn: '2026-11-10'
+checkedOn: '2026-11-25'
 sources:
   - id: legistar-events
     name: City of Madison meetings (Legistar API)
@@ -129,22 +129,35 @@ sources:
     scope: Parks programs, nature events, golf, recreation centers
     audiences: [families, youth, seniors, everyone, volunteers]
     reliability: official
-    access: Public web page. No RSS or iCalendar found; email list only.
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
+    access: Public web page, no feed; parser `parseParksEvents`, two list pages (#995).
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 10
+    pages: 2
     fetchStrategy: direct-then-playwright
     robots:
-      { checked: '2026-10-24', result: allowed, url: https://www.cityofmadison.com/robots.txt }
+      &cityRobotsNov26 {
+        checked: '2026-11-26',
+        result: allowed,
+        url: https://www.cityofmadison.com/robots.txt,
+      }
     treatment: >-
-      Page parsing approved on #352. A direct GET on 2026-10-24 served the list in the HTML (no
-      JavaScript needed), with item links. Stays pending until the collector records a parse.
-    notes: 'Observed 2026-11-10: dated events with a stable link per event; still no feed. Hand check: #995.'
+      Every listed event from today on, from both list pages (10 a page, soonest first, about
+      three months ahead). The page's own date, time and venue; the link on each item is its own
+      page. The venue is read from the item's location field, never from its description. A
+      park in the area or catchment counts as near (coverage.md); a venue's routine programs
+      stay out of the site (curate decides).
     example:
-      title: Bird & Nature Adventures, Aldo Leopold Nature Center
-      date: '2026-10-24'
-      url: https://www.cityofmadison.com/parks/events/2026-10-24/bird-nature-adventures-edna-taylor
+      title: Groove & Glide | Door Creek
+      date: '2027-01-22'
+      url: https://www.cityofmadison.com/parks/events/2027-01-22/groove-glide-door-creek
+    notes: >-
+      Hand check #995, 2026-11-26: a plain GET served 200 text/html with the list in the markup,
+      no JavaScript needed; robots.txt allows /parks/events; 11 events over two pages
+      (`?page=1` holds the last); a Door Creek Park event (Groove & Glide, 2027-01-22, 7035
+      Littlemore Drive) sat 8 weeks out, past the old two-week window. Same markup as the
+      public information meeting list. No Playwright fallback is built, so it reads directly only.
   - id: district16-blog
     name: District 16 alder blog (Alder Sean O'Brien)
     owner: City of Madison Common Council, District 16
@@ -295,105 +308,195 @@ sources:
   - id: madison-police-incident-reports
     name: 'Madison Police incident reports feed'
     owner: 'City of Madison Police Department'
-    canonicalUrl: https://www.cityofmadison.com/feed/incident-reports
+    canonicalUrl: https://www.cityofmadison.com/police/incident-reports
     feedUrl: https://www.cityofmadison.com/feed/incident-reports
     format: rss
     scope: 'Incident reports, with the block address only in the description'
     audiences: [everyone]
     reliability: official
-    access: 'Public feed; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected. A safety item never auto-publishes (coverage.md, "Review passes"); place comes from the description text only.'
-    example: null
-    notes: 'Observed 2026-11-10: Answered as RSS 2.0 with a guid, pubDate and link per item. The block address appears only inside the description; there is no district field. The incident reports page does not link to the feed. Hand check: #993.'
+    access: 'Public feed on a path robots.txt allows (checked 2026-11-25); the City says its website data is public and generally available to copy or distribute, logos and images excepted. Read once a day, logged out; the report pages are never fetched in bulk.'
+    cadence: daily
+    lastChecked: '2026-11-25'
+    result: valid
+    pilotRank: 9
+    robots:
+      { checked: '2026-11-25', result: allowed, url: https://www.cityofmadison.com/robots.txt }
+    treatment: >-
+      Always a safety item: coverage.md, "Review passes", and safety.yaml hold every item for a person,
+      never a suggestion. The block address is read from the start of the description (the parser, #993);
+      the City's boundary places it, never a word in the title. The report's page is the item's id, so a
+      changed report is an update to a known item. A feed item is only a lead: the runner reads the report
+      page once and gives its text to verify (`reportPage`; the models have no tools), which uses it
+      and the tip line it gives, and no number or detail the report does not give is stated.
+    example:
+      title: Armed Carjacking
+      date: '2026-11-20'
+      url: https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking
+    notes: 'Hand check 2026-11-25 (#993): RSS 2.0 with a guid, link and pubDate on every item and no ttl or lastBuildDate; the guid ends in the time of the last update, so the page link is the id. The City posts a few reports a week; one daily read is enough. Each report page gives the incident type, a case id, the block address, an approximate map point and when it was last updated. Of 81 items, 46 begin with a block, 21 with an intersection or a street and 14 with UPDATE and no place.'
   - id: city-traffic-engineering-news
-    name: 'City of Madison Traffic Engineering news'
-    owner: 'City of Madison Traffic Engineering'
-    canonicalUrl: https://www.cityofmadison.com/traffic-engineering/news
+    name: 'City of Madison street and lane closure news'
+    owner: 'City of Madison Mobility & Infrastructure (formerly Traffic Engineering)'
+    canonicalUrl: https://www.cityofmadison.com/news?category=1031
     feedUrl: null
     format: html
-    scope: 'Street and lane closures and traffic changes'
+    scope: 'Street and lane closures, detours and traffic changes: the City news list filtered to its Street & Lane Closures category'
     audiences: [everyone]
     reliability: official
-    access: 'Public web page; no feed link found; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected until a parser exists.'
-    example: null
-    notes: 'Observed 2026-11-10: Dated items with stable links. Hand check: #994.'
+    access: 'Public web page, no feed; parser `parseCityArticles`, the same layout as City news (#994). The first page only: 20 posts, about two months of closures.'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 15
+    robots: *cityRobotsNov26
+    treatment: >-
+      Posts from the last 14 days, all kept: the list cuts each post off before its detour, so a
+      closure outside the area can still send traffic over Sprecher Road or Milwaukee Street and
+      the list text can't show it. Verify reads the post's own page for the closed road, the
+      detour and the start and end dates, never guessing a date; curate rejects a closure
+      elsewhere in the city (coverage.md). The post is a lead: the City's dates stand, and an
+      ended closure is rejected as past.
+    example:
+      title: Highway T Closure at Felland Road Begins October 26
+      date: '2026-10-19'
+      url: https://www.cityofmadison.com/news/2026-10-19/highway-t-closure-at-felland-road-begins-october-26
+    notes: >-
+      Hand check #994, 2026-11-26: 200 text/html with the list in the markup; robots.txt allows
+      /news (it names only /search, /admin, /user and file paths). The Mobility & Infrastructure
+      news page (`/traffic-engineering/news` redirects to `/mobility/news`) lists the same posts
+      but answered 403 once the category was added, so the City news list is the one read. No feed
+      link on either page (/news/feed and /mobility/news/feed answer 404). A post gives the
+      closed road, the dates, the contractor and a detour map; the Highway T post
+      (2026-10-19) names the detour over Sprecher Road, Milwaukee Street and N Thompson Drive on its
+      page only. An official email alert exists: the City's email lists (cityofmadison.com/contact/email-lists)
+      include Transportation, Road Construction and Blooming Grove; it needs an address, so it is the owner's to
+      subscribe to, and the daily read does not depend on it.
   - id: madison-road-closures-layer
     name: 'City of Madison Road Closures (open-data layer)'
     owner: 'City of Madison'
-    canonicalUrl: https://geo.btaa.org/catalog/912f842a975542978e4dc5ffa216ebc8_14
+    canonicalUrl: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA_TE/MapServer/14
     feedUrl: null
     format: json-api
     scope: 'Road closures with start date, end date, closure type and road'
     audiences: [everyone]
     reliability: official
-    access: 'Open-data layer, found through a catalog entry; the live service address is not confirmed.'
+    access: 'City ArcGIS service, no key; JSON and GeoJSON queries. Found at the address above on 2026-11-26.'
     cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
+    lastChecked: '2026-11-26'
+    result: invalid
     pilotRank: null
-    treatment: "Not collected. Confirm the live service address on the City's own site first."
+    treatment: 'Not collected: it is not kept current. Re-check at the next monthly pass, and use it in place of page parsing the day it holds a current closure.'
     example: null
-    notes: 'Observed 2026-11-10: The catalog entry lists fields for start date, end date, closure type and road. Hand check: #994.'
+    notes: >-
+      Hand check #994, 2026-11-26: the live service is Public/OPEN_DATA_TE layer 14 (the same data
+      sits in Traffic/Road_Closures, layer 4). Fields: Start_Date, End_Date, Closure_Type (Full,
+      Partial, Special Event), Comments, Contact, Road_Closed, Text_SDate, Text_EDate and a
+      polyline. It holds 693 closures, and the newest by end date is 2021-12-16 (Madison Night
+      Market); the Full Closure and Future Closure layers return 0. The City describes it as "current
+      and future road closures", but nothing has been added since 2021, so it can't show a closure
+      on a current road, including the 2026 Highway T one. Its terms are the City's data policy
+      (informational, no reuse condition).
   - id: wisconsin-511-events-api
     name: '511 Wisconsin events API'
     owner: 'Wisconsin Department of Transportation'
     canonicalUrl: https://511wi.gov/developers/help
     feedUrl: null
     format: json-api
-    scope: 'Road events and closures across Wisconsin'
+    scope: 'Road events and closures across Wisconsin, state and interstate roads included'
     audiences: [everyone]
     reliability: official
-    access: 'Documented API; whether a free key is needed is not confirmed.'
+    access: 'Documented REST API that requires a developer key, from a registered 511WI account; throttled to 10 calls every 60 seconds; a developer access agreement applies.'
     cadence: none
-    lastChecked: '2026-11-10'
+    lastChecked: '2026-11-26'
     result: pending
     pilotRank: null
-    treatment: 'Not collected. Confirm the key terms first; if a key is needed, it goes through the owner.'
+    robots: { checked: '2026-11-26', result: allowed, url: https://511wi.gov/robots.txt }
+    treatment: "Not collected. The key needs an account and acceptance of the access agreement, which are the owner's to give (#997); until then the City closure news is the road closure source."
     example: null
-    notes: 'Observed 2026-11-10: The developer help page documents the API. Hand check: #994, #997.'
-  - id: door-creek-park-page
-    name: 'Door Creek Park page (City of Madison Parks)'
+    notes: >-
+      Hand check #994, 2026-11-26: the help page says the REST API gives Traffic Speeds, Incidents,
+      Roadwork and Cameras, "requires a developer key" (`key` and `format` on each call) and is
+      throttled; the key is requested on that page after logging in. robots.txt disallows
+      /my511/, /map/map*/, /list/getdata/, /eventdetails/ and /error/, and names no API path.
+      Hand check: #997 for the key.
+  - id: door-creek-park-ski
+    name: 'Door Creek Park ski trails status (City of Madison Parks)'
     owner: 'City of Madison Parks Division'
-    canonicalUrl: https://www.cityofmadison.com/parks/doorcreek
+    canonicalUrl: https://www.cityofmadison.com/parks/find-a-park/winter/ski
     feedUrl: null
     format: html
-    scope: 'Winter status of the rink and ski trails at Door Creek Park'
+    scope: "Winter status of ski trails at the City parks; only the area's own parks go on"
     audiences: [everyone, families]
     reliability: official
-    access: 'Public web page; no feed; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected until a parser exists.'
+    access: 'Public web page, no feed; parser `parseParkStatus` (#995).'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 13
+    robots: *cityRobotsNov26
+    treatment: >-
+      Watches the status tag of Door Creek Park (the area's own park, by area.yaml). "Closed for
+      Season" says nothing; any other status is one item for the winter, so the rink or trails
+      opening is a new item and a later status change an update. A park that goes back to
+      "Closed for Season" after opening is not reported.
     example: null
-    notes: 'Observed 2026-11-10: Winter status of the rink and ski trails is on the page. Hand check: #995.'
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html, robots.txt allows the path, 14 places on the
+      page, each with a name, link, address and a status tag. Door Creek Park read "Closed for
+      Season". The tag text for an open place is not yet seen: re-check on the first open day.
+      The old page /parks/doorcreek now redirects to /parks/find-a-park/door-creek, which holds
+      no status.
+  - id: door-creek-park-ice
+    name: 'Door Creek Park ice rink status (City of Madison Parks)'
+    owner: 'City of Madison Parks Division'
+    canonicalUrl: https://www.cityofmadison.com/parks/find-a-park/winter/ice-skating
+    feedUrl: null
+    format: html
+    scope: "Winter status of ice rinks at the City parks; only the area's own parks go on"
+    audiences: [everyone, families]
+    reliability: official
+    access: 'Public web page, no feed; parser `parseParkStatus` (#995).'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 14
+    robots: *cityRobotsNov26
+    treatment: >-
+      Watches the status tag of Door Creek Park (the area's own park, by area.yaml). "Closed for
+      Season" says nothing; any other status is one item for the winter, so the rink or trails
+      opening is a new item and a later status change an update. A park that goes back to
+      "Closed for Season" after opening is not reported.
+    example: null
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html, robots.txt allows the path, 14 places on the
+      page, each with a name, link, address and a status tag. Door Creek Park read "Closed for
+      Season". The tag text for an open place is not yet seen: re-check on the first open day.
+      The old page /parks/doorcreek now redirects to /parks/find-a-park/door-creek, which holds
+      no status.
   - id: mpo-events
     name: 'Greater Madison MPO events'
     owner: 'Greater Madison Metropolitan Planning Organization'
-    canonicalUrl: https://www.cityofmadison.com/mpo/events/
+    canonicalUrl: https://www.cityofmadison.com/mpo/events
     feedUrl: null
     format: html
     scope: 'Transportation planning meetings and events, one page per event'
     audiences: [everyone, association-leaders]
     reliability: official
-    access: 'Public web pages; no feed; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected until a parser exists.'
-    example: null
-    notes: 'Observed 2026-11-10: Event pages sit under /mpo/events/. Hand check: #995.'
+    access: 'Public web page, no feed; parser `parseCityEvents`, the same layout as the public information meetings (#995).'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 11
+    robots: *cityRobotsNov26
+    treatment: >-
+      Upcoming events, all kept (a regional plan can touch the area without naming it); the
+      page's own times. Meetings are kind `meeting`.
+    example:
+      title: 'Pathways to 2050: Public Involvement Meeting (Virtual)'
+      date: '2027-01-25'
+      url: https://www.cityofmadison.com/mpo/events/2027-01-25/pathways-to-2050-public-involvement-meeting-virtual
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html, robots.txt allows /mpo/events, two events listed
+      (2027-01-25 and 2027-01-27, both virtual), published two months ahead.
   - id: dcfm-holiday-market
     name: "Dane County Farmers' Market holiday market"
     owner: "Dane County Farmers' Market"
@@ -403,14 +506,22 @@ sources:
     scope: 'Holiday market dates and place'
     audiences: [everyone, families]
     reliability: community
-    access: 'Public web page; no feed; robots.txt not checked.'
+    access: 'Public web page, no feed; robots.txt allows it (Crawl-delay 2).'
     cadence: none
-    lastChecked: '2026-11-10'
+    lastChecked: '2026-11-26'
     result: pending
     pilotRank: null
-    treatment: 'Not collected until a parser exists.'
+    robots: { checked: '2026-11-26', result: allowed, url: https://www.dcfm.org/robots.txt }
+    treatment: >-
+      Not collected: no parser. The dates are one sentence of running text with soft hyphens
+      inside the words, and the market is downtown, at Monona Terrace, so at most citywide. A
+      hand-run scout may read the page for the season's dates.
     example: null
-    notes: 'Observed 2026-11-10: Market page for the holiday season. Hand check: #995.'
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html; robots.txt disallows only /craft/. Holiday
+      market Saturdays 2026-11-21, 12-05, 12-12 and 12-19, 7:30 am to noon (to 1 pm on 12-05), at
+      Monona Terrace, 1 John Nolen Drive; closed 11-28 and 12-26. A venue's weekly program, so
+      not a source for the site's events unless a one-off (coverage.md).
   - id: cottage-grove-chamber-events
     name: 'Cottage Grove Chamber of Commerce events'
     owner: 'Cottage Grove Chamber of Commerce'
@@ -420,31 +531,51 @@ sources:
     scope: 'Events in the Village of Cottage Grove, a separate municipality east of the area'
     audiences: [everyone, families]
     reliability: community
-    access: 'Public web page; no feed; robots.txt not checked.'
+    access: 'Public web page, no feed; robots.txt allows it.'
     cadence: none
-    lastChecked: '2026-11-10'
+    lastChecked: '2026-11-26'
     result: pending
     pilotRank: null
-    treatment: 'Not collected until a parser exists. Items are nearby or outside, never inside.'
+    robots:
+      {
+        checked: '2026-11-26',
+        result: allowed,
+        url: https://www.cottagegrovechamber.com/robots.txt,
+      }
+    treatment: >-
+      Not collected: no parser. The page is a few lines of free text, with a past 2026 date and a
+      2027 date among the current ones and no markup that separates one event from the next.
+      Items are nearby or outside, never inside. A hand-run scout may read it as a lead.
     example: null
-    notes: 'Observed 2026-11-10: Events page. The Village is not the area (coverage.md, "Names that are not the area"). Hand check: #995.'
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html; robots.txt disallows only /ajax/ and /apps/.
+      Lists a Holiday Lights Parade on 2026-12-04 (Main Street, 6:30 p.m.) and a Craft Fair on
+      2026-12-05. The Village is not the area (coverage.md, "Names that are not the area").
   - id: henry-vilas-zoo-lights
     name: 'Henry Vilas Zoo holiday lights'
     owner: 'Henry Vilas Zoo'
-    canonicalUrl: https://henryvilaszoo.gov/home/lights
+    canonicalUrl: https://www.henryvilaszoo.gov/home/lights/
     feedUrl: null
     format: html
     scope: 'Holiday lights dates, hours and tickets'
     audiences: [everyone, families]
     reliability: official
-    access: 'Public web page; no feed; robots.txt not checked.'
+    access: 'Public web page, no feed; robots.txt allows everything. The bare host redirects to www.'
     cadence: none
-    lastChecked: '2026-11-10'
+    lastChecked: '2026-11-26'
     result: pending
     pilotRank: null
-    treatment: 'Not collected until a parser exists. Citywide at most.'
+    robots:
+      { checked: '2026-11-26', result: allowed, url: https://www.henryvilaszoo.gov/robots.txt }
+    treatment: >-
+      Not collected: no parser; one seasonal page of running text. Citywide at most. Dates and
+      prices from the zoo; the nightly hours are not on the page, so they only come from a second
+      source that is named. Never a photo from the page: no credit or reuse terms.
     example: null
-    notes: 'Observed 2026-11-10: Holiday lights page. Hand check: #995.'
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html. Opening night Friday 2026-11-20, $12 general
+      admission, a sensory friendly night on 2026-12-13. No nightly hours. The Travel Wisconsin
+      listing says the event has ended and is stale (not a source).
   - id: visit-madison-holiday-guide
     name: 'Visit Madison holiday lights and tree lighting guide'
     owner: 'Destination Madison (Visit Madison)'
@@ -471,14 +602,22 @@ sources:
     scope: 'Citywide meetings and events in one weekly post per district'
     audiences: [everyone, association-leaders]
     reliability: official
-    access: 'Public web pages; no feed; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected until a parser exists. Reads like the District 16 blog, with the same alder-post caution.'
+    access: 'Public web page, no feed; parser `parseCityArticles`, the same layout as the District 16 blog (#995).'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 12
+    robots: *cityRobotsNov26
+    treatment: >-
+      District 3, which borders the area. Posts from the last 14 days; only a post that names the
+      area (area.yaml) goes on to a model, as with City news. A post is a lead: confirm any event
+      in it with its organizer (coverage.md, "Review passes"). Other districts' blogs share the
+      layout; add one only when it covers something this one doesn't.
     example: null
-    notes: "Observed 2026-11-10: The area's own alder blog was quiet for two weeks. District 3's blog lists citywide meetings and events in one weekly post; District 3 borders the area. Hand check: #995."
+    notes: >-
+      Hand check #995, 2026-11-26: 200 text/html, robots.txt allows the path, 10 posts a page with
+      a title link, a posted time and a summary, weekly ("City Meetings and Updates Week of Nov
+      23", posted 2026-11-22). The District 7 blog has the same layout.
   - id: mmsd-boundary-review
     name: 'Madison Metropolitan School District boundary review'
     owner: 'Madison Metropolitan School District'
@@ -546,7 +685,7 @@ sources:
     pilotRank: null
     treatment: 'Not collected. Alerts are safety items and never auto-publish.'
     example: null
-    notes: 'Observed 2026-11-10: Documentation page for the web API. Hand check: #997.'
+    notes: 'Observed 2026-11-10: Documentation page for the web API. Hand check: #997. When it is enabled (#997): its canonicalUrl host (www.weather.gov) will likely not match its alert links, so the runner would not read an alert page (runner/lib/pageRead.mjs) and the gate would hold every reject of an alert for a person. That is the safe side; the source then needs its own check of which pages it may read.'
   - id: city-streets-holiday-collection
     name: 'City of Madison Streets holiday collection schedule'
     owner: 'City of Madison Streets Division'

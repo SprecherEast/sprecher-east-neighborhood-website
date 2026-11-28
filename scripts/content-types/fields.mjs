@@ -70,11 +70,25 @@ function tabLabel(tab) {
   return typeof tab.label === 'string' ? tab.label : (tab.name ?? 'Tab')
 }
 
+/**
+ * What a relationship, upload or join field points at, as data (the `detail` text is for the page):
+ * `{ to, many }` for the first two, `{ collections, on }` for a join (it may read from several), otherwise none.
+ */
+function fieldLink(field) {
+  if (field.type === 'relationship' || field.type === 'upload')
+    return { to: asList(field.relationTo), many: Boolean(field.hasMany) }
+  if (field.type === 'join') return { collections: asList(field.collection), on: field.on }
+  return null
+}
+
 const fieldRow = (field, path, section, locate) => ({
   path,
   type: field.type,
   required: field.required ? 'yes' : 'no',
   detail: fieldDetail(field),
+  link: fieldLink(field),
+  unique: Boolean(field.unique),
+  indexed: Boolean(field.index),
   notes: fieldNotes(field),
   section,
   access: fieldAccess(field.access),
@@ -86,6 +100,9 @@ const blockRow = (path, section) => ({
   type: 'block',
   required: 'no',
   detail: '',
+  link: null,
+  unique: false,
+  indexed: false,
   notes: [],
   section,
   access: [],

@@ -12,6 +12,12 @@ export default [
     ignores: [
       '.next/**',
       'out/**',
+      // The developer pages' build (npm run developer:build): flat config matches these two only at the root
+      'developer/.next/**',
+      'developer/out/**',
+      'storybook-static/**',
+      'developer-site/**', // the developer pages and the showcase built into a release (ops/build-release.sh)
+      'public/showcase/**',
       'build/**',
       'node_modules/**',
       'data/**',
@@ -79,6 +85,32 @@ export default [
       'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
+    },
+  },
+
+  // ─── 4b. One font definition (#1447): the site's fonts are defined in one file and imported ──────
+  {
+    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}', 'developer/**/*.{ts,tsx}'],
+    ignores: ['src/platform/theme/fonts.ts', '**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['next/font/*'],
+              message: 'Define fonts in src/platform/theme/fonts.ts and import them from there',
+            },
+            {
+              // The developer pages import the site, never the other way round (#1530)
+              // the repository's own developer/ folder, however far up the path goes; a `developer/` inside src stays allowed
+              regex: '^(?:\\.\\./)+developer(?:/|$)',
+              message:
+                'The site never imports the developer pages (developer/ is a separate project, #1530)',
+            },
+          ],
+        },
+      ],
     },
   },
 

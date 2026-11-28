@@ -1,0 +1,84 @@
+# Curate eval cases for road closures and traffic changes (#994): what a neighbor can act on is a
+# closure on the area's boundary roads or a detour through them, with its dates. Synthetic unless
+# `why` names a real post. Offsets are America/Chicago (CDT -05:00 until 2026-11-01 02:00).
+version: 1
+asOf: '2026-10-24'
+stage: curate
+cases:
+  - id: closure-detour-through-area-road-outside
+    stage: curate
+    tags: [closure, detour]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Highway T Closure at Felland Road Begins October 26
+      sourceText: >-
+        County Hwy T is closed in both directions east of Felland Road from Monday, October 26 at 9:00am
+        until Friday October 30th at 3pm. The detour route will use Sprecher Road, Milwaukee Street, and
+        N Thompson Drive.
+      startsAt: 2026-10-26T09:00:00-05:00
+      endsAt: 2026-10-30T15:00:00-05:00
+      locationText: County Highway T east of Felland Road; detour over Sprecher Road and Milwaukee Street
+    given:
+      verification: { coverage: catchment, confidence: 0.9 }
+    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    graders:
+      - check: model
+        rubric: >-
+          The reasons say residents are affected through the detour over Sprecher Road and Milwaukee
+          Street although the closed road is outside the area, and say who benefits (everyone who drives
+          it) and what they can do (plan another route, by the dates given).
+    why: >-
+      The real closure of 2026-10-19 that the site missed. A closed road outside the area still
+      matters when its detour runs through the area (the owner's direction, 2026-11-10, #994).
+  - id: closure-on-boundary-road
+    stage: curate
+    tags: [closure]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Lane closures on Cottage Grove Road for resurfacing
+      sourceText: >-
+        Crews close one lane of Cottage Grove Road between Sprecher Road and Door Creek Park Monday,
+        November 2 through Friday, November 6, 7:00am to 4:00pm. Expect delays.
+      startsAt: 2026-11-02T07:00:00-06:00
+      endsAt: 2026-11-06T16:00:00-06:00
+      locationText: Cottage Grove Road between Sprecher Road and Door Creek Park
+    given:
+      verification: { coverage: catchment, confidence: 0.9 }
+    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    why: Synthetic. Cottage Grove Road is the area's southern edge and the dates are in the future.
+  - id: closure-elsewhere-in-the-city
+    stage: curate
+    tags: [closure]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: John Nolen Drive Causeway Closed Overnight on Monday, November 30
+      sourceText: >-
+        Beginning at 7:00pm on Monday, November 30, John Nolen Drive will fully close to traffic between
+        Lakeside Street and North Shore Drive until 6:00am on Tuesday, December 1.
+      startsAt: 2026-11-30T19:00:00-06:00
+      endsAt: 2026-12-01T06:00:00-06:00
+      locationText: John Nolen Drive, between Lakeside Street and North Shore Drive
+    given:
+      verification: { coverage: outside, confidence: 0.9 }
+    expected: { decision: reject, coverage: outside, route: none }
+    why: >-
+      A downtown overnight closure with no detour through the area (a real post, 2026-11-24). Closures
+      elsewhere in the city are not the neighborhood's news.
+  - id: closure-already-over
+    stage: curate
+    tags: [closure, past]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Sprecher Road lane closure ends
+      sourceText: The lane closure on Sprecher Road for utility work ended on Friday, October 16 and all lanes are open.
+      startsAt: 2026-10-12T08:00:00-05:00
+      endsAt: 2026-10-16T17:00:00-05:00
+      locationText: Sprecher Road near Cottage Grove Road
+    given:
+      verification: { coverage: catchment, confidence: 0.9 }
+    expected: { decision: reject, coverage: catchment, flags: [past], route: none }
+    why: Synthetic. A closure that has ended is not news to act on (coverage.md, relevance rule 1).

@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "decision",
+    "safety",
     "reasons",
     "scores",
     "audiences",
@@ -17,6 +18,9 @@
   "properties": {
     "decision": {
       "$ref": "common.schema.json#/$defs/decision"
+    },
+    "safety": {
+      "$ref": "common.schema.json#/$defs/safety"
     },
     "reasons": {
       "type": "array",

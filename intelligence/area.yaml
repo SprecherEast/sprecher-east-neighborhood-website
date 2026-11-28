@@ -6,6 +6,9 @@ version: 1
 # In or bounding the area (coverage.md, "The area" and "Tiers").
 places:
   - sprecher
+  # Door Creek Park: the shelter and the northern part are inside, the southern end is outside
+  # (coverage.md, "Facts to keep straight"). The word can't split the park, so a text naming only
+  # the park counts as the area; an address is decided by the boundary below.
   - door creek
   - cottage grove road
   - cottage grove rd
@@ -26,16 +29,37 @@ neighbors:
   names:
     - north star
     - richmond hill
-# The City's own boundary for the neighborhood, used by verify to test an item's place (prompts/verify.md,
-# pass 2). Observed 2026-11-10 and to be re-verified: the layer is the City's Neighborhood
-# Associations layer above, and Sprecher East is the feature whose NA_ID is 146. Query the layer's
-# `query` operation with that NA_ID as the where clause and geometry returned, then test the
-# item's point or address against the polygon. No coordinates are kept here.
+# The City's own boundary for the neighborhood (#1009). The runner tests an item's street address
+# against it after verify and records the method on `verification.placement`; an item with no
+# address resolved keeps the word match above (runner/lib/place.mjs, coverage.md "Review passes").
+# Verified by hand on 2026-11-24 against the City's Neighborhood Associations layer: Sprecher East
+# is the one feature whose NA_ID is 146 (layer name "Sprecher East", status Active, classification
+# Neighborhood Association). The City says the layer's boundaries are self-reported by the
+# associations, not determined by the City; its terms are the City's data policy (informational,
+# no reuse restriction stated). The polygon is kept as a dated copy in boundary.json (a small file,
+# 89 points, about 3 km2) so a run needs no request for it; `node run.mjs --refresh-boundary`
+# rewrites it, and a run reports a copy older than `maxAgeDays`. A geocoded point on the edge
+# counts as inside. Coordinates are kept in boundary.json only.
 boundary:
   source: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12
+  field: NA_ID
   naId: 146
-  checked: '2026-11-10'
-  verified: false
+  name: Sprecher East
+  # The copy must lie inside this box (longitude and latitude): it catches swapped or projected coordinates
+  bounds: { west: -89.3, south: 43.06, east: -89.21, north: 43.12 }
+  file: boundary.json
+  maxAgeDays: 365
+  terms: https://www.cityofmadison.com/policy/data
+  checked: '2026-11-24'
+  verified: true
+  # The City's own address locator: official, no key, no cost. Only a street address is sent.
+  geocoder:
+    source: https://maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer
+    minScore: 90
+    sameSpotMeters: 30
+    maxPerRun: 30
+    timeoutSeconds: 10
+    maxKilobytes: 100
 # A highway alone names half the city. It counts only when the same item also names one of `with`:
 # an interchange or a cross street at the area's edge.
 highways:

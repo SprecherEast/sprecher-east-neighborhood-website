@@ -44,6 +44,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       build: ${{ steps.plan.outputs.build }}
+      showcase: ${{ steps.plan.outputs.showcase }} # also build the component showcase into the preview (#1459)
     steps:
       - uses: actions/checkout@v7
         with:
@@ -123,6 +124,11 @@ jobs:
           PREVIEW_NUMBER: ${{ github.event.pull_request.number }}
           SHA: ${{ github.event.pull_request.head.sha }}
           NODE_VERSION: ${{ needs.facts.outputs.node }}
+          # A pull request that changes a story, a shared component or the showcase's settings gets the
+          # showcase built into the release's public/ folder (#1459): the preview's own app serves it at
+          # /showcase/index.html, behind the same noindex headers, and it goes with the preview's folder.
+          # Required: a showcase that does not build fails this build and says so in the comment.
+          SHOWCASE_DEST: ${{ needs.gate.outputs.showcase == 'true' && 'public/showcase' || '' }}
           OUT: ${{ runner.temp }}/release.tar.gz
         run: |
           set -euo pipefail
@@ -218,6 +224,7 @@ jobs:
           DEPLOY_URL: ${{ needs.deploy.outputs.url }}
           CAP: ${{ needs.deploy.outputs.cap }}
           HOLDERS: ${{ needs.deploy.outputs.holders }}
+          SHOWCASE: ${{ needs.gate.outputs.showcase }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
           script: |
@@ -238,6 +245,7 @@ jobs:
               url: process.env.DEPLOY_URL,
               cap: process.env.CAP,
               holders: process.env.HOLDERS,
+              showcase: process.env.SHOWCASE,
               time: utcMinutes(new Date()),
               runUrl: `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });

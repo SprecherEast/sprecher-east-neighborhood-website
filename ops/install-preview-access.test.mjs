@@ -325,6 +325,28 @@ describe('install-preview-access.sh: a first install', () => {
   })
 })
 
+describe('install-preview-access.sh: the order it installs the scripts in', () => {
+  it('installs every library before any script that sources it', () => {
+    const list = /^SCRIPTS="([^"]+)"/m
+      .exec(fs.readFileSync(path.join(OPS, 'install-preview-access.sh'), 'utf8'))[1]
+      .split(' ')
+    const sourced = (file) =>
+      [
+        ...fs
+          .readFileSync(path.join(OPS, file), 'utf8')
+          .matchAll(/^\s*(?:\.|source)\s+"[^"]*\/([A-Za-z0-9-]+\.sh)"/gm),
+      ].map((m) => m[1])
+    const pairs = list.flatMap((file) =>
+      sourced(file)
+        .filter((dep) => list.includes(dep))
+        .map((dep) => [dep, file]),
+    )
+    expect(pairs.length).toBeGreaterThan(5) // the rule is read from real `. lib.sh` lines
+    for (const [dep, file] of pairs)
+      expect(list.indexOf(dep), `${dep} before ${file}`).toBeLessThan(list.indexOf(file))
+  })
+})
+
 describe('ops/preview-deploy-key.pub: the committed public key (#1385)', () => {
   const committed = () => fs.readFileSync(path.join(OPS, 'preview-deploy-key.pub'), 'utf8')
 

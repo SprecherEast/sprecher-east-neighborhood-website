@@ -7,6 +7,13 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import yaml from 'js-yaml'
 
+import { boundaryProblems } from '../intelligence/runner/lib/boundary.mjs'
+import { safetyRules, unregisteredSafetySources } from '../intelligence/runner/lib/safety.mjs'
+import { backgroundChecks } from './check-intelligence-background.mjs'
+import { offsetProblems } from './check-intelligence-times.mjs'
+import { routeProblems } from './check-intelligence-routes.mjs'
+import { parseFrontmatter } from './frontmatter.mjs'
+
 const dir = path.resolve(process.argv[2] ?? 'intelligence')
 const problems = []
 const problem = (file, message) =>
@@ -100,23 +107,22 @@ for (const name of evalFiles) {
 }
 for (const id of duplicates(cases.map((c) => c.id))) problem(evalDir, `duplicate case id ${id}`)
 const pipeline = validate(path.join(dir, 'pipeline.yaml'), 'schemas/pipeline.schema.json')
-validate(path.join(dir, pipeline?.area ?? 'area.yaml'), 'schemas/area.schema.json')
+const area = validate(path.join(dir, pipeline?.area ?? 'area.yaml'), 'schemas/area.schema.json')
+// The dated copy of the City's boundary: its schema, then the geometry and that it is the record's feature (#1009)
+if (area?.boundary) {
+  const file = path.join(dir, area.boundary.file)
+  const copy = validate(file, 'schemas/boundary.schema.json')
+  if (copy) for (const message of boundaryProblems(copy, area.boundary)) problem(file, message)
+}
+const safety = validate(
+  path.join(dir, pipeline?.safety ?? 'safety.yaml'),
+  'schemas/safety.schema.json',
+)
+for (const id of unregisteredSafetySources(safety, sources))
+  problem(path.join(dir, 'safety.yaml'), `sources: ${id} is not in sources.yaml`)
 const ROUTE = pipeline?.routes ?? {}
+const rules = safety ? safetyRules(safety) : null
 const registry = new Map(sources?.sources?.map((s) => [s.id, s]) ?? [])
-// An offset that isn't America/Chicago's at that instant, in common.schema.json's grammar
-const DATE_TIME = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)(Z|[+-]\d{2}:\d{2})$/
-const CHICAGO = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'America/Chicago',
-  timeZoneName: 'longOffset',
-})
-const chicagoOffset = (value) =>
-  CHICAGO.formatToParts(new Date(value))
-    .find((p) => p.type === 'timeZoneName')
-    .value.slice(3)
-const dateTimes = (value) =>
-  typeof value === 'string'
-    ? [value].filter((v) => DATE_TIME.test(v))
-    : Object.values(value ?? {}).flatMap(dateTimes)
 for (const c of cases) {
   const others = [c.input?.otherSources, c.input?.alsoReportedBy].flat().filter(Boolean)
   const named = [c.input?.sourceId, ...others.map((o) => o.sourceId)]
@@ -142,24 +148,13 @@ for (const c of cases) {
     if ((c.expected?.runStatus === 'skipped') === (result === 'valid'))
       problem(c.file, `${c.id}: runStatus ${c.expected?.runStatus} with a ${result} source`)
   }
-  if (!c.tags?.includes('wrong-offset')) {
-    for (const value of dateTimes([c.input, c.given, c.graders])) {
-      const offset = DATE_TIME.exec(value)[2].replace('Z', '+00:00')
-      if (chicagoOffset(value) !== offset)
-        problem(c.file, `${c.id}: ${value} should use ${chicagoOffset(value)} in America/Chicago`)
-    }
-  }
-  const e = c.expected
-  if (!e?.decision) continue
-  // duplicate, update and cancel name the known document; nothing else names one
-  const known = ['duplicate', 'update', 'cancel'].includes(e.decision) ? c.known : null
-  if ((e.targetId ?? null) !== (known?.id ?? null))
-    problem(c.file, `${c.id}: targetId must be ${known?.id ?? 'null'}`)
-  if ((e.targetCollection ?? null) !== (known?.collection ?? null))
-    problem(c.file, `${c.id}: targetCollection must be ${known?.collection ?? 'null'}`)
-  if (ROUTE[e.decision] !== e.route)
-    problem(c.file, `${c.id}: ${e.decision} routes to ${ROUTE[e.decision]}`)
+  for (const message of offsetProblems(c)) problem(c.file, message)
+  for (const message of routeProblems(c, { routes: ROUTE, registry, rules }))
+    problem(c.file, message)
 }
+
+// The background files fit the one budget, and the cases that name a background follow it (#1434)
+for (const [file, message] of backgroundChecks(dir, cases, pipeline)) problem(file, message)
 
 // 2. Field paths: `$.a.b`, with `[]` stepping into an array's items
 function lookup(schema, segments, baseId) {
@@ -198,8 +193,7 @@ for (const stage of pipeline?.stages ?? []) {
     continue
   }
   const text = readFileSync(file, 'utf8')
-  const front = /^---\n([\s\S]*?)\n---\n/.exec(text)
-  const meta = front ? yaml.load(front[1], { schema: yaml.JSON_SCHEMA }) : {}
+  const meta = parseFrontmatter(text, { schema: yaml.JSON_SCHEMA })
   if (meta?.stage !== stage.id || meta?.input !== stage.input || meta?.output !== stage.output) {
     problem(
       file,

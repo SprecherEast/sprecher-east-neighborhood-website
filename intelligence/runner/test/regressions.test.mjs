@@ -65,6 +65,7 @@ describe('fixes from the re-check', () => {
     const options = {
       budgets: { ...budgets, maxItemsPerSource: 2 },
       validate: contract.validator('schemas/candidate.schema.json'),
+      lookAheadDays: contract.pipeline.lookAheadDays,
       now: atNoon('2026-10-25'),
     }
     const first = await scoutSource(library, {

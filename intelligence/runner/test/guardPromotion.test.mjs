@@ -29,6 +29,14 @@ describe('guardPromotion', () => {
     }
   })
 
+  it('keeps only readable reasons, each cut to 300 characters', () => {
+    const odd = { decision: 'accept', reasons: [null, '', 7, 'x'.repeat(400), 'fine'] }
+    const held = guardPromotion(pipeline, { confidence: 0.2, flags: [] }, odd)
+    assert.equal(held.reasons.length, 3)
+    assert.match(held.reasons[0], /^Held for review/)
+    assert.deepEqual(held.reasons.slice(1), ['x'.repeat(300), 'fine'])
+  })
+
   it('keeps at most five reasons, the new one first', () => {
     const many = { decision: 'accept', reasons: ['1', '2', '3', '4', '5'] }
     const held = guardPromotion(pipeline, { confidence: 0.2, flags: [] }, many)

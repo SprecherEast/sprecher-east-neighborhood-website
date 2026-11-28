@@ -8,7 +8,7 @@ one: the limits and the routine do not depend on the model, and it saves usage.
 **Refusals.** The agent file lists its limits in `disallowedTools`, and
 `scripts/chief-of-staff-agent.test.mjs` checks that list for each forbidden action. That is a static
 check of the file, not an observed refusal: the harness cannot be started from a cloud session. So
-the refusal is tried by hand on the owner's computer, and the results are recorded here and on #695.
+the refusal is tried by hand on the owner's computer, and the results are recorded here and on #1092.
 Until a row below holds a result, no refusal is claimed.
 
 Procedure, in a scratch clone with a throwaway branch and a draft pull request that can be closed:
@@ -51,7 +51,7 @@ reading is harmless and note the time before you start.
 
 1. Start a new session on the repository: open the repository as the session's source, not an
    existing conversation, and choose the chief of staff agent.
-2. Ask for a dry-run grooming report of the current sprint, with no changes, posted as a comment on
+2. Ask for a dry-run grooming report of the whole backlog, with no changes, posted as a comment on
    an issue you name.
 3. Check, and record in the table:
 

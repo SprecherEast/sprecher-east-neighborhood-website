@@ -45,6 +45,8 @@ beforeEach(() => {
   write(p('pmlogs/sprecher-east-out.log'), SECRET, 0o000)
   write(p('caddy/.local/share/caddy/pki/key.pem'), SECRET, 0o000)
   write(p('copytmp/run.AbC123/snapshot.db'), SECRET, 0o000)
+  write(p('offsite/offsite-rclone.conf'), `token = ${SECRET}\n`, 0o000)
+  write(p('offsite.log'), SECRET, 0o000)
   for (const d of [
     'prod',
     'prod/data',
@@ -65,6 +67,7 @@ beforeEach(() => {
     'caddy/.local/share/caddy/pki',
     'copytmp',
     'copytmp/run.AbC123',
+    'offsite',
   ].reverse())
     fs.chmodSync(p(d), 0o000)
 })
@@ -85,6 +88,8 @@ const check = (env = {}) => {
     PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
     CADDY_STORAGE_DIR: p('caddy'),
     PREVIEW_COPY_TMP: p('copytmp'),
+    OFFSITE_DIR: p('offsite'), // the off-site backup's credential (#1332)
+    OFFSITE_LOG: p('offsite.log'),
     PREVIEW_ROOT: p('proot'),
     CADDY_ADMIN_PORT: '1', // nothing listens on port 1
     ...env,
@@ -187,6 +192,11 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
     'copytmp',
     'copytmp/run.AbC123/snapshot.db',
   )
+  folderCase(
+    'the off-site backup’s credential folder (#1332)',
+    'offsite',
+    'offsite/offsite-rclone.conf',
+  )
   folderCase('Caddy’s certificate storage', 'caddy', 'caddy/.local/share/caddy/pki/key.pem')
 
   it('finds a file eight levels down, and the production database folder on its own', async () => {
@@ -221,6 +231,16 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
   })
 })
 
+describe('preview-isolation-check.sh: the off-site backup’s log (#1332)', () => {
+  it('fails when the account can read it', async () => {
+    fs.chmodSync(p('offsite.log'), 0o644)
+    const { code, out } = await check()
+    expect(code).toBe(1)
+    expect(out).toContain(`the preview account can read ${p('offsite.log')}`)
+    expect(out).not.toContain(SECRET)
+  })
+})
+
 describe('preview-isolation-check.sh: a closed folder the account can enter but not list', () => {
   const enterable = (folder) =>
     it(`fails for ${folder}, though a file in it can be found only by its name`, async () => {
@@ -235,6 +255,7 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
   enterable('umami')
   enterable('pmlogs')
   enterable('copytmp')
+  enterable('offsite')
 
   it('does not say so for PM2’s state or Caddy’s storage, which the guards leave alone', async () => {
     fs.chmodSync(p('pm2'), 0o311)

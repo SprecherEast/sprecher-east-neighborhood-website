@@ -4,13 +4,14 @@
   python3 -m scripts.illustrations.build --out DIR --render   also export JPGs (rsvg-convert + PIL)
   python3 -m scripts.illustrations.build --check              build in memory, check every panel
   python3 -m scripts.illustrations.build --only winter ...    limit to named scenes
+  python3 -m scripts.illustrations.build --audit              also judge the pictures made before the rules
 
 Exit code 1 when a check fails, so a test and CI can rely on it.
 """
 import argparse, json, shutil, subprocess, sys
 from pathlib import Path
 
-from . import parts
+from . import checks, measure, parts
 from .settings import *
 from .scenes import SCENES
 
@@ -21,12 +22,7 @@ def wrap(body):
 
 def text_width(text, size, weight):
     """Rendered width in pixels. Measured with the real Poppins file when it is installed."""
-    try:
-        from PIL import ImageFont
-        font = subprocess.check_output(["fc-match", "-f", "%{file}", f"Poppins:{weight}"]).decode()
-        return ImageFont.truetype(font, size).getlength(text)
-    except Exception:
-        return len(text) * size * GLYPH_EM
+    return measure.text_width(text, size, weight)
 
 
 def check_panel(name, panels):
@@ -79,16 +75,38 @@ def check_clear_zone(name, lowered):
     return []
 
 
-def build(names, event_scenes=EVENT_SCENES):
-    out, problems = {}, []
+def draw(name):
+    """One scene's SVG, with the panel, the parts it drew and the pieces lowered for the badge."""
+    parts.PANELS.clear()
+    parts.LOWERED.clear()
+    parts.PLACED.clear()
+    parts.TEXTS.clear()
+    body = SCENES[name]()
+    return body, list(parts.PANELS), list(parts.PLACED), list(parts.LOWERED), list(parts.TEXTS)
+
+
+def build(names, event_scenes=EVENT_SCENES, strict=False):
+    """SVGs and problems. Scenes in PRE_RULES_SCENES skip the scene checks unless `strict` (the audit).
+    A scene's layout is compared with every other scene's, so each is drawn once here."""
+    out, problems, placed, panels, texts = {}, [], {}, {}, {}
     for name in names:
-        parts.PANELS.clear()
-        parts.LOWERED.clear()
-        body = SCENES[name]()
+        body, panels[name], placed[name], lowered, texts[name] = draw(name)
         out[name] = wrap(body)
-        problems += check_panel(name, list(parts.PANELS))
+        problems += check_panel(name, panels[name])
+        if name not in event_scenes:  # an event's scene is moved after the parts drew their text
+            problems += checks.check_text(name, texts[name])
         if name in event_scenes:
-            problems += check_clear_zone(name, list(parts.LOWERED))
+            problems += check_clear_zone(name, lowered)
+    sigs = {n: checks.signature(p) for n, p in placed.items()}
+    for n in SCENES:
+        if n not in sigs:
+            sigs[n] = checks.signature(draw(n)[2])
+    for name in names:
+        if name in PRE_RULES_SCENES and not strict:
+            continue
+        problems += checks.check_text_registered(name, out[name], panels[name], texts[name])
+        problems += checks.check_scene(name, placed[name], geometry=name not in event_scenes)
+        problems += checks.check_variety(name, sigs[name], sigs, SAME_PLACE)
     return out, problems
 
 
@@ -106,12 +124,13 @@ def main(argv=None):
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--render", action="store_true")
+    ap.add_argument("--audit", action="store_true", help="also run the scene checks on pictures made before the rules")
     a = ap.parse_args(argv)
     names = a.only or list(SCENES)
     unknown = [n for n in names if n not in SCENES]
     if unknown:
         print("unknown scene:", ", ".join(unknown), "| known:", ", ".join(SCENES)); return 2
-    svgs, problems = build(names)
+    svgs, problems = build(names, strict=a.audit)
     for p in problems:
         print("FAIL", p)
     if a.out:

@@ -1,90 +1,51 @@
 /**
- * What the planner app does to a card when its issue is opened, reopened, assigned or labeled: put
- * it in the sprint that is running now, set In progress when work is assigned, and move it between
- * Backlog and Ready as the `ready` label and the blocking labels say. Finished work keeps its
- * sprint and a card never moves back from In progress, In review or Done. Test first.
+ * What the planner app does to a card when an event concerns its issue (#941, #1089, #1435): it
+ * gathers that issue's facts, sets the card to what the one status rule says, and writes the reason
+ * on the issue. No other card, label or assignee changes. Test first.
  */
 import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  decideChanges,
-  findCurrentSprint,
-  OWNER_LABEL,
-  READY_LABEL,
-  readyBlockers,
-} from './planner-board.mjs'
+import * as board from './planner-board.mjs'
+import { moveCard } from './planner-board.mjs'
+import { BOARD_STATUS_MARKER } from './planner-comment.mjs'
+import { CARD_STATUS_FRAGMENT, ORG, PROJECT, STATUS } from './planner-config.mjs'
+import { OWNER_LABEL, READY_LABEL, readyBlockers } from './planner-ready.mjs'
+import { QUERY } from './planner-report.mjs'
 
 const read = (file) => JSON.parse(readFileSync(new URL(file, import.meta.url), 'utf8'))
+const source = (file) => readFileSync(new URL(file, import.meta.url), 'utf8')
 
-const current = { id: 'it-now', title: 'Sprint now', startDate: '2026-11-09', duration: 7 }
-const past = { id: 'it-old', title: 'Sprint old', startDate: '2026-11-02', duration: 7 }
-
-describe('findCurrentSprint', () => {
-  const iterations = [past, current]
-
-  it('finds the sprint that contains today', () => {
-    expect(findCurrentSprint(iterations, '2026-11-09')).toEqual(current)
-    expect(findCurrentSprint(iterations, '2026-11-15')).toEqual(current)
-    expect(findCurrentSprint(iterations, '2026-11-05')).toEqual(past)
-  })
-
-  it('finds nothing between sprints or with no sprints', () => {
-    expect(findCurrentSprint(iterations, '2026-11-16')).toBeUndefined()
-    expect(findCurrentSprint([], '2026-11-09')).toBeUndefined()
+describe('the planner app and sprints', () => {
+  it('has no sprint logic', () => {
+    expect(Object.keys(board).filter((name) => /sprint/i.test(name))).toEqual([])
+    expect(source('./planner-board.mjs')).not.toMatch(/sprint|iteration/i)
   })
 })
 
-describe('decideChanges', () => {
-  it('puts a new issue in the current sprint and leaves its status to the board', () => {
-    const result = decideChanges({ action: 'opened', item: { status: 'Backlog' }, current })
-    expect(result).toEqual({ sprintId: 'it-now' })
+describe('the status logic of the event moves', () => {
+  it('is the rule alone: the old per-event decisions are gone', () => {
+    const text = source('./planner-board.mjs')
+    for (const old of ['NO_BACKWARDS', 'isClaim', 'statusFor', 'readyRemoved', 'readyWasRemoved']) {
+      expect(text, old).not.toContain(old)
+    }
+    expect(text, 'a status name written out').not.toMatch(
+      /'(Backlog|Ready|In progress|In review|Done)'/,
+    )
   })
 
-  it('sets In progress and the current sprint when work is assigned', () => {
-    const result = decideChanges({ action: 'assigned', item: { status: 'Ready' }, current })
-    expect(result).toEqual({ status: 'In progress', sprintId: 'it-now' })
+  it('defines the ready label and its blockers in the rules module, not in the script', () => {
+    expect(board.READY_LABEL).toBeUndefined()
+    expect(board.readyBlockers).toBeUndefined()
+    expect(source('./planner-ready.mjs')).not.toMatch(/planner-(board|status|report|facts)/)
   })
 
-  it('moves unfinished work forward out of a past sprint', () => {
-    const item = { status: 'In progress', sprint: past }
-    expect(decideChanges({ action: 'assigned', item, current })).toEqual({ sprintId: 'it-now' })
-  })
-
-  it('changes nothing when the card is already where it should be', () => {
-    const item = { status: 'In progress', sprint: current }
-    expect(decideChanges({ action: 'assigned', item, current })).toEqual({})
-  })
-
-  it('never moves a card back from In review or Done', () => {
-    expect(
-      decideChanges({
-        action: 'assigned',
-        item: { status: 'In review', sprint: current },
-        current,
-      }),
-    ).toEqual({})
-    expect(decideChanges({ action: 'assigned', item: { status: 'Done' }, current })).toEqual({
-      sprintId: 'it-now',
-    })
-  })
-
-  it('lets finished work keep its sprint', () => {
-    const item = { status: 'Done', sprint: past }
-    expect(decideChanges({ action: 'reopened', item, current })).toEqual({})
-    expect(decideChanges({ action: 'assigned', item, current })).toEqual({})
-  })
-
-  it('changes no sprint when none is running, and still sets the status', () => {
-    expect(decideChanges({ action: 'opened', item: { status: 'Backlog' } })).toEqual({})
-    expect(decideChanges({ action: 'assigned', item: { status: 'Ready' } })).toEqual({
-      status: 'In progress',
-    })
-  })
-
-  it('ignores actions it does not handle', () => {
-    expect(decideChanges({ action: 'labeled', item: { status: 'Ready' }, current })).toEqual({})
+  it('reads a card status with the one fragment the report also uses', () => {
+    expect(QUERY).toContain(CARD_STATUS_FRAGMENT)
+    expect(source('./planner-board.mjs')).toContain('CARD_STATUS_FRAGMENT')
+    expect(source('./planner-board.mjs')).not.toContain('fieldValueByName')
+    expect(source('./planner-report.mjs')).not.toContain('fieldValueByName')
   })
 })
 
@@ -103,155 +64,629 @@ describe('the names the app and the agents rely on', () => {
       expect(field.options.length).toBeGreaterThan(0)
     }
   })
+
+  it('lists what keeps an issue out of Ready: the owner label, then the failed rules', () => {
+    expect(readyBlockers({ labels: ['needs owner'], problems: ['ISSUE-TYPE'] })).toEqual([
+      'needs owner',
+      'ISSUE-TYPE',
+    ])
+  })
 })
 
-describe('decideChanges with the ready label', () => {
-  const open = (labels = [], assignees = [], problems = []) => ({
-    state: 'open',
-    labels,
-    assignees,
-    problems,
-  })
-  const failing = ['ISSUE-MILESTONE: Set a milestone (Backlog until it is planned).']
-  const labeled = (label, issue, status) =>
-    decideChanges({ action: 'labeled', label, issue, item: { status, sprint: current }, current })
+/** A small GitHub: the issues it holds, the cards on the board, and a record of every write. */
+function world({
+  issues,
+  cards = {},
+  branches = [],
+  listed = {},
+  failEdit = false,
+  failDelete = false,
+  failFinalPatch = false,
+}) {
+  const writes = []
+  const reads = []
+  const options = Object.values(STATUS).map((name, index) => ({ id: `opt${index}`, name }))
+  const run = (args) => {
+    const text = args.join(' ')
+    const query = args.find((arg) => arg.startsWith('query=')) ?? ''
+    if (args[0] === 'project' && args[1] === 'item-add') {
+      const number = Number(args[args.indexOf('--url') + 1].split('/').pop())
+      reads.push(`item-add ${number}`)
+      return JSON.stringify({ id: `item${number}` })
+    }
+    if (args[0] === 'project' && args[1] === 'item-edit') {
+      if (failEdit) throw new Error('item-edit failed')
+      writes.push({ kind: 'edit', item: args[args.indexOf('--id') + 1], option: args.at(-1) })
+      return ''
+    }
+    if (query.includes('projectV2(number')) {
+      return JSON.stringify({
+        data: { organization: { projectV2: { id: 'P1', status: { id: 'F1', options } } } },
+      })
+    }
+    if (query.includes('node(id')) {
+      const number = Number(text.match(/id=item(\d+)/)[1])
+      const status = cards[number]
+      return JSON.stringify({ data: { node: { status: status ? { name: status } : null } } })
+    }
+    if (query.includes('refs(')) {
+      const nodes = branches.map((name) => ({ name: name.replace('agent/', '') }))
+      return JSON.stringify({
+        data: { repository: { refs: { pageInfo: { hasNextPage: false }, nodes } } },
+      })
+    }
+    if (query.includes('issue(number')) {
+      const number = Number(text.match(/number=(\d+)/)[1])
+      reads.push(`issue ${number}`)
+      return JSON.stringify({ data: { repository: { issue: issues[number] ?? null } } })
+    }
+    if (args[0] === 'api' && args.includes('--paginate')) {
+      const number = Number(args.find((arg) => arg.startsWith('repos/')).split('/')[4])
+      return (listed[number] ?? []).map((entry) => JSON.stringify(entry)).join('\n')
+    }
+    if (args[0] === 'api' && args.includes('-X')) {
+      const kind = args[args.indexOf('-X') + 1]
+      if (kind === 'DELETE' && failDelete) throw new Error('HTTP 404')
+      if (kind === 'PATCH' && failFinalPatch && writes.some((w) => w.kind === 'edit'))
+        throw new Error('HTTP 404')
+      writes.push({
+        kind,
+        path: args.find((arg) => arg.startsWith('repos/')),
+        body: args.at(-1).replace(/^body=/, ''),
+      })
+      return kind === 'POST' ? '{"id":900}' : '{}'
+    }
+    throw new Error(`unexpected call: ${text}`)
+  }
+  return { run, writes, reads }
+}
 
-  it('moves a Backlog card to Ready when the issue has the label and nothing blocks it', () => {
-    expect(labeled('ready', open(['ready']), 'Backlog')).toEqual({ status: 'Ready' })
+const GOOD_BODY = `### Problem\n\nSomething long enough to count as a summary.\n\n### Acceptance criteria\n\n- [ ] it works\n\n### Files likely touched\n\na.mjs\n\n### Must not touch\n\nNone\n`
+const policy = { types: ['bug', 'enhancement'], areas: ['ci'] }
+const node = (number, over = {}) => ({
+  number,
+  title: `Issue ${number}`,
+  repository: { nameWithOwner: 'o/r' },
+  body: GOOD_BODY,
+  state: 'OPEN',
+  milestone: { title: 'Backlog' },
+  author: { login: 'someone', __typename: 'User' },
+  labels: { nodes: [{ name: 'enhancement' }, { name: 'ci' }, { name: 'priority: low' }] },
+  assignees: { nodes: [] },
+  comments: { nodes: [] },
+  closedByPullRequestsReferences: { nodes: [] },
+  timelineItems: { nodes: [] },
+  parent: null,
+  subIssues: { nodes: [] },
+  ...over,
+})
+const person = (body, authorAssociation = 'OWNER') => ({
+  databaseId: 1,
+  body,
+  authorAssociation,
+  author: { login: 'someone', __typename: 'User' },
+})
+const claim = (branch = 'agent/worker/5-x') => ({
+  nodes: [person(`### [STEP] Claimed\n\n**Branch:** \`${branch}\`.`)],
+})
+/** The planner's own comment on an issue, as GitHub returns it; `set` is the status it last set. */
+const plannerComment = (set, id = 77, login = 'planner') => ({
+  databaseId: id,
+  body: `${BOARD_STATUS_MARKER}\n${set ? `<!-- planner:set=${set} -->\n` : ''}old text`,
+  authorAssociation: 'NONE',
+  author: { login, __typename: 'Bot' },
+})
+const owner = { nodes: [{ login: 'someone' }] }
+const readyLabels = {
+  nodes: [{ name: 'enhancement' }, { name: 'ci' }, { name: 'priority: low' }, { name: 'ready' }],
+}
+const env = (number, action = 'assigned') => ({
+  REPO: 'o/r',
+  ISSUE: String(number),
+  ACTION: action,
+  ORG,
+  PROJECT,
+  PLANNER_APP_SLUG: 'planner',
+})
+const go = (w, number, action) =>
+  moveCard({ run: w.run, env: env(number, action), policy, log: () => {} })
+const editsOf = (w) => w.writes.filter((entry) => entry.kind === 'edit')
+const commentsOf = (w) => w.writes.filter((entry) => entry.kind !== 'edit')
+const optionFor = (status) => `opt${Object.values(STATUS).indexOf(status)}`
+const claimed = (over = {}) => node(5, { assignees: owner, comments: claim(), ...over })
+
+describe('an event moves the card by the rule', () => {
+  it('sets the card to the rule status and writes the reason on the issue', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(editsOf(w)).toEqual([
+      { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
+    ])
+    const posts = commentsOf(w)
+    expect(posts.map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
+    expect(posts[0]).toMatchObject({ kind: 'POST', path: 'repos/o/r/issues/5/comments' })
+    expect(posts[0].body).toContain(BOARD_STATUS_MARKER)
+    expect(posts[0].body).not.toContain('planner:set')
+    expect(posts[1].body).toContain('<!-- planner:set=In progress -->')
   })
 
-  it('catches up on any later label event, so a dropped run does not leave the card behind', () => {
-    expect(labeled('frontend', open(['ready', 'frontend']), 'Backlog')).toEqual({ status: 'Ready' })
+  it.each([
+    'opened',
+    'reopened',
+    'assigned',
+    'labeled',
+    'unlabeled',
+    'edited',
+    'milestoned',
+    'demilestoned',
+    'sync',
+  ])('leaves a claimed issue In progress after a %s event, however quiet it is', (action) => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, action)
+    expect(w.writes).toEqual([])
   })
 
-  it('leaves the card in Backlog while the issue waits for the owner', () => {
-    const issue = open(['ready', 'needs owner'])
-    expect(labeled('ready', issue, 'Backlog')).toEqual({})
-    expect(readyBlockers(issue)).toEqual(['needs owner'])
-  })
-
-  it('leaves the card in Backlog while the issue fails the issue check', () => {
-    const issue = open(['ready'], [], failing)
-    expect(labeled('ready', issue, 'Backlog')).toEqual({})
-    expect(readyBlockers(issue)).toEqual(failing)
-  })
-
-  it('moves a Ready card back when either blocker appears, on any event', () => {
-    expect(labeled('needs owner', open(['ready', 'needs owner']), 'Ready')).toEqual({
-      status: 'Backlog',
+  it('moves a Backlog card forward to Ready on a label event', () => {
+    const w = world({
+      issues: { 5: node(5, { labels: readyLabels }) },
+      cards: { 5: STATUS.backlog },
     })
-    const edited = decideChanges({
-      action: 'edited',
-      issue: open(['ready'], [], failing),
-      item: { status: 'Ready', sprint: current },
-      current,
+    go(w, 5, 'labeled')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.ready))
+  })
+
+  it('treats a pull request that closes the issue, and a remote branch, as work started', () => {
+    const closed = {
+      nodes: [
+        {
+          number: 8,
+          state: 'MERGED',
+          merged: true,
+          mergedAt: '2026-01-01T00:00:00Z',
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
+    }
+    const byPull = world({
+      issues: { 5: node(5, { assignees: owner, closedByPullRequestsReferences: closed }) },
+      cards: { 5: STATUS.backlog },
     })
-    expect(edited).toEqual({ status: 'Backlog' })
-  })
-
-  it('moves the card to Ready on the event that fixes the last gap', () => {
-    const fixed = decideChanges({
-      action: 'milestoned',
-      issue: open(['ready']),
-      item: { status: 'Backlog', sprint: current },
-      current,
+    go(byPull, 5, 'sync')
+    expect(editsOf(byPull)[0].option).toBe(optionFor(STATUS.inProgress))
+    const byBranch = world({
+      issues: { 5: node(5, { assignees: owner }) },
+      cards: { 5: STATUS.backlog },
+      branches: ['agent/worker/5-x'],
     })
-    expect(fixed).toEqual({ status: 'Ready' })
+    go(byBranch, 5, 'sync')
+    expect(editsOf(byBranch)[0].option).toBe(optionFor(STATUS.inProgress))
   })
 
-  it('catches up on a removed label from the history when its own run was dropped', () => {
-    const issue = { ...open(['frontend']), readyRemoved: true }
-    expect(labeled('frontend', issue, 'Ready')).toEqual({ status: 'Backlog' })
+  it('does not count assignment alone as a start', () => {
+    const w = world({ issues: { 5: node(5, { assignees: owner }) }, cards: { 5: STATUS.backlog } })
+    go(w, 5, 'assigned')
+    expect(w.writes).toEqual([])
   })
 
-  it('parks a Ready card in Backlog when the label is removed', () => {
-    const result = decideChanges({
-      action: 'unlabeled',
-      label: 'ready',
-      issue: open([]),
-      item: { status: 'Ready', sprint: current },
-      current,
+  it('moves only the card of the issue the event concerns, children are only read', () => {
+    const onBoard = { nodes: [{ project: { number: Number(PROJECT), owner: { login: ORG } } }] }
+    const sub = (number, projectItems) => ({
+      number,
+      state: 'OPEN',
+      repository: { nameWithOwner: 'o/r' },
+      projectItems,
     })
-    expect(result).toEqual({ status: 'Backlog' })
-  })
-
-  it('leaves a Ready card alone when another label changes and the issue never had the label', () => {
-    expect(labeled('frontend', open(['frontend']), 'Ready')).toEqual({})
-    const result = decideChanges({
-      action: 'unlabeled',
-      label: 'frontend',
-      issue: open([]),
-      item: { status: 'Ready', sprint: current },
-      current,
+    const epic = node(5, {
+      labels: { nodes: [{ name: 'epic' }] },
+      subIssues: { nodes: [sub(6, onBoard), sub(7, { nodes: [] })] },
     })
-    expect(result).toEqual({})
-  })
-
-  it.each(['In progress', 'In review', 'Done'])('never moves a card that is %s', (status) => {
-    expect(labeled('ready', open(['ready']), status)).toEqual({})
-    expect(labeled('needs owner', open(['needs owner']), status)).toEqual({})
-    const removed = decideChanges({
-      action: 'unlabeled',
-      label: 'ready',
-      issue: open([]),
-      item: { status, sprint: current },
-      current,
+    const w = world({
+      issues: {
+        5: epic,
+        6: node(6, { assignees: owner, comments: claim('agent/worker/6-y') }),
+        7: node(7),
+      },
+      cards: { 5: STATUS.backlog, 6: STATUS.ready, 7: STATUS.ready },
     })
-    expect(removed).toEqual({})
-  })
-
-  it('does not pull an old issue into the sprint because a label changed', () => {
-    const item = { status: 'Backlog', sprint: past }
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([
+      { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
+    ])
     expect(
-      decideChanges({ action: 'labeled', label: 'ready', issue: open(['ready']), item, current }),
-    ).toEqual({ status: 'Ready' })
+      commentsOf(w).every((entry) => /issues\/(5\/comments|comments\/\d+)$/.test(entry.path)),
+    ).toBe(true)
+    expect(w.reads).toContain('issue 6')
+    expect(w.reads, 'a sub-issue that is not on the board is not read').not.toContain('issue 7')
   })
 
-  it('does not claim an issue because a label changed while it is assigned', () => {
-    expect(labeled('frontend', open(['frontend'], ['someone']), 'Backlog')).toEqual({})
-  })
-
-  it('changes nothing on a closed issue', () => {
-    const closed = { state: 'closed', labels: ['ready'], assignees: [] }
-    expect(labeled('ready', closed, 'Backlog')).toEqual({})
-  })
-
-  it('still sets In progress when a Ready issue is assigned', () => {
-    const result = decideChanges({
-      action: 'assigned',
-      issue: open(['ready'], ['someone']),
-      item: { status: 'Ready', sprint: current },
-      current,
+  it('moves nothing and writes nothing when the issue could not be read in full', () => {
+    const w = world({
+      issues: { 5: node(5, { comments: { totalCount: 101, nodes: [] } }) },
+      cards: { 5: STATUS.ready },
     })
-    expect(result).toEqual({ status: 'In progress' })
+    expect(() => go(w, 5, 'edited')).toThrow(/cut off/)
+    expect(w.writes).toEqual([])
+  })
+
+  it('leaves a closed issue alone on an event that is not about the card', () => {
+    const w = world({ issues: { 5: node(5, { state: 'CLOSED' }) }, cards: {} })
+    go(w, 5, 'edited')
+    expect(w.reads.filter((entry) => entry.startsWith('item-add'))).toEqual([])
+    expect(w.writes).toEqual([])
+  })
+
+  it('puts a closed issue Done on a manual run, which also brings its card back onto the board', () => {
+    const w = world({
+      issues: { 5: node(5, { state: 'CLOSED' }) },
+      cards: { 5: STATUS.inProgress },
+    })
+    go(w, 5, 'sync')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.done))
+  })
+
+  it('refuses an issue that is not a number, and a run without the app name', () => {
+    expect(() => moveCard({ run: () => '', env: { ...env(5), ISSUE: '5; rm' }, policy })).toThrow(
+      /number/,
+    )
+    const bad = { ...env(5), PLANNER_APP_SLUG: '' }
+    expect(() => moveCard({ run: () => '', env: bad, policy })).toThrow(/app/i)
+  })
+
+  it('sets a card that has no status, as the report shows it', () => {
+    const w = world({ issues: { 5: node(5) }, cards: {} })
+    go(w, 5, 'opened')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
   })
 })
 
-describe('decideChanges on a manual run', () => {
-  const sync = (issue, item) => decideChanges({ action: 'sync', issue, item, current })
+describe('an event never moves a card backwards on its own', () => {
+  const lost = () => node(5) // the rule says Backlog
 
-  it('claims an assigned issue: In progress and the current sprint', () => {
-    const issue = { state: 'open', labels: ['ready'], assignees: ['someone'] }
-    expect(sync(issue, { status: 'Ready', sprint: past })).toEqual({
-      status: 'In progress',
-      sprintId: 'it-now',
+  it('holds a backward move for the owner and says so on the issue', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
+    expect(commentsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0].body).toMatch(/held the move for the owner's confirmation/i)
+  })
+
+  it('writes no second comment when the held move was already written', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    const body = commentsOf(w)[0].body
+    const again = world({
+      issues: { 5: node(5, { comments: { nodes: [{ ...plannerComment(null), body }] } }) },
+      cards: { 5: STATUS.inProgress },
     })
+    go(again, 5, 'edited')
+    expect(again.writes).toEqual([])
   })
 
-  it('brings an unassigned card in line with its labels, both ways', () => {
-    const ready = { state: 'open', labels: ['ready'], assignees: [] }
-    const plain = { state: 'open', labels: [], assignees: [] }
-    expect(sync(ready, { status: 'Backlog', sprint: current })).toEqual({ status: 'Ready' })
-    expect(sync(plain, { status: 'Ready', sprint: current })).toEqual({ status: 'Backlog' })
+  it('moves a card back when the planner itself set its current status', () => {
+    const issue = node(5, { comments: { nodes: [plannerComment(STATUS.ready)] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'unlabeled')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
   })
 
-  it('leaves a closed issue alone, also when it is assigned', () => {
-    const closed = { state: 'closed', labels: [], assignees: ['someone'] }
-    expect(sync(closed, { status: 'In progress', sprint: past })).toEqual({})
+  it('applies a held move on a manual run for the issue, which is the owner confirming it', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'sync')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
   })
 
-  it('does not move an unassigned card into the sprint', () => {
-    const plain = { state: 'open', labels: [], assignees: [] }
-    expect(sync(plain, { status: 'Backlog', sprint: past })).toEqual({})
+  it('still applies a forward move on an event', () => {
+    const w = world({
+      issues: { 5: node(5, { labels: readyLabels }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'labeled')
+    expect(editsOf(w)).toHaveLength(1)
+  })
+})
+
+describe('the reason on the issue', () => {
+  it('writes the reason before the card moves, so no card moves without one', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(w.writes.map((entry) => entry.kind)).toEqual(['POST', 'edit', 'PATCH'])
+  })
+
+  it('edits the one Board status comment in place on a later move', () => {
+    const issue = claimed({ comments: { nodes: [...claim().nodes, plannerComment(null)] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(commentsOf(w).map((entry) => [entry.kind, entry.path])).toEqual([
+      ['PATCH', 'repos/o/r/issues/comments/77'],
+      ['PATCH', 'repos/o/r/issues/comments/77'],
+    ])
+  })
+
+  it('does not take over a look-alike comment from a person or from another app', () => {
+    const body = `${BOARD_STATUS_MARKER}\nfake`
+    const look = [
+      { ...person(body), databaseId: 78 },
+      { ...plannerComment(null, 79, 'github-actions'), body },
+    ]
+    const issue = claimed({ comments: { nodes: [...claim().nodes, ...look] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
+  })
+
+  it("writes the reason for the planner's own moves to In review and Done too", () => {
+    const closing = {
+      nodes: [
+        {
+          number: 8,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
+    }
+    const review = world({
+      issues: { 5: node(5, { closedByPullRequestsReferences: closing }) },
+      cards: { 5: STATUS.inProgress },
+    })
+    go(review, 5, 'sync')
+    expect(editsOf(review)[0].option).toBe(optionFor(STATUS.inReview))
+    expect(commentsOf(review)).toHaveLength(2)
+    const done = world({
+      issues: { 5: node(5, { state: 'CLOSED' }) },
+      cards: { 5: STATUS.inProgress },
+    })
+    go(done, 5, 'sync')
+    expect(editsOf(done)[0].option).toBe(optionFor(STATUS.done))
+    expect(commentsOf(done)).toHaveLength(2)
+  })
+
+  it('is built from fixed sentences: no value read from GitHub text appears in it', () => {
+    const issue = node(5, {
+      title: 'TITLE-SENTINEL',
+      assignees: owner,
+      labels: { nodes: [{ name: 'needs owner' }, { name: 'LABEL-SENTINEL' }] },
+      milestone: { title: 'MILESTONE-SENTINEL' },
+      comments: {
+        nodes: [
+          person('talk: SECRET-SENTINEL www.evil.example'),
+          ...claim('agent/worker/5-BRANCH-SENTINEL').nodes,
+        ],
+      },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    const body = commentsOf(w)[0].body
+    expect(body).not.toMatch(/SENTINEL|evil|agent\/worker/)
+    const remote = world({
+      issues: { 5: node(5, { assignees: owner }) },
+      cards: { 5: STATUS.ready },
+      branches: ['agent/worker/5-REMOTE-SENTINEL'],
+    })
+    go(remote, 5, 'assigned')
+    expect(commentsOf(remote)[0].body).not.toMatch(/SENTINEL|agent\/worker/)
+  })
+
+  it('says what the rule gives and why, so it stays true if the edit fails', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    const body = commentsOf(w)[0].body
+    expect(body).not.toMatch(/moved this card/i)
+    expect(body).toContain('In progress')
+  })
+
+  it('shows a flag in the comment without acting on it', () => {
+    const labels = { nodes: [{ name: 'enhancement' }, { name: 'needs owner' }] }
+    const w = world({ issues: { 5: claimed({ labels }) }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(editsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0].body).toMatch(/owner/i)
+  })
+})
+
+describe('the held comment stays true', () => {
+  it('reads as what the planner found then, so it is still true once the rule agrees with the card', () => {
+    const w = world({ issues: { 5: node(5) }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    const held = commentsOf(w)[0].body
+    expect(held).toContain('When the planner last looked')
+    // later the card is in the rule's own status: nothing is written, and the old comment stands
+    const later = world({
+      issues: { 5: node(5, { comments: { nodes: [{ ...plannerComment(null), body: held }] } }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(later, 5, 'edited')
+    expect(later.writes).toEqual([])
+    expect(held).not.toMatch(/is held|puts this card|nothing was moved/i)
+  })
+
+  it('says a card with no status had none', () => {
+    const w = world({ issues: { 5: node(5) }, cards: {} })
+    go(w, 5, 'opened')
+    expect(commentsOf(w)[0].body).toContain('had no status')
+  })
+
+  it('holds no GitHub text either: not the held sentence, not the held-back reason', () => {
+    const issue = node(5, {
+      title: 'TITLE-SENTINEL',
+      body: 'BODY-SENTINEL',
+      labels: { nodes: [{ name: 'ready' }, { name: 'needs owner' }, { name: 'LABEL-SENTINEL' }] },
+      milestone: { title: 'MILESTONE-SENTINEL' },
+      author: { login: 'AUTHOR-SENTINEL', __typename: 'User' },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
+    expect(commentsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0].body).not.toMatch(/SENTINEL/)
+  })
+})
+
+describe('two runs at once', () => {
+  it('leaves one Board status comment: the oldest stays, a duplicate is removed', () => {
+    const mine = (id) => ({
+      id,
+      type: 'Bot',
+      login: 'planner[bot]',
+      body: `${BOARD_STATUS_MARKER}\nx`,
+    })
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: { 5: [mine(11), mine(10)] },
+    })
+    go(w, 5, 'assigned')
+    const kinds = commentsOf(w).map((entry) => [entry.kind, entry.path.split('/').pop()])
+    expect(kinds).toEqual([
+      ['POST', 'comments'],
+      ['PATCH', '900'],
+      ['PATCH', '10'],
+      ['DELETE', '11'],
+    ])
+  })
+
+  it('still moves the card when the extra comment is already gone (the delete fails)', () => {
+    const mine = (id) => ({
+      id,
+      type: 'Bot',
+      login: 'planner[bot]',
+      body: `${BOARD_STATUS_MARKER}\nx`,
+    })
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: { 5: [mine(10), mine(11)] },
+      failDelete: true,
+    })
+    expect(() => go(w, 5, 'assigned')).not.toThrow()
+    expect(editsOf(w)).toHaveLength(1)
+  })
+
+  it('deletes nothing when only one exists, or when the extra one is not the planner own', () => {
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: {
+        5: [{ id: 3, type: 'User', login: 'x', body: `${BOARD_STATUS_MARKER}\nfake` }],
+      },
+    })
+    go(w, 5, 'assigned')
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
+  })
+})
+
+describe('the record of what the planner set', () => {
+  const recordOf = (entry) => entry.body.match(/planner:set=([^ ]+(?: [^ ]+)*?) -->/)?.[1]
+
+  it('keeps the previous record while the card is written, and records the new status only after', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(w.writes.map((entry) => entry.kind)).toEqual(['PATCH', 'edit', 'PATCH'])
+    expect(recordOf(w.writes[0])).toBe(STATUS.backlog)
+    expect(recordOf(w.writes[2])).toBe(STATUS.inProgress)
+  })
+
+  it('leaves the record unchanged when the card write fails', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready }, failEdit: true })
+    expect(() => go(w, 5, 'assigned')).toThrow(/item-edit failed/)
+    expect(commentsOf(w).map(recordOf)).toEqual([STATUS.backlog])
+  })
+
+  it('records nothing for a first move whose card write fails', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready }, failEdit: true })
+    expect(() => go(w, 5, 'assigned')).toThrow()
+    expect(commentsOf(w).map(recordOf)).toEqual([undefined])
+  })
+
+  it("holds a backward move when the record names a different status than the card's", () => {
+    // the record says Backlog; the card sits in In progress, so the planner did not put it there
+    const issue = node(5, {
+      assignees: owner,
+      comments: { nodes: [plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
+  })
+
+  it('accepted limit: moves a card back when the record names its status, whoever really set it', () => {
+    // the record cannot tell the planner from a person, an AI agent or the board's own workflows
+    const issue = node(5, {
+      assignees: owner,
+      comments: { nodes: [plannerComment(STATUS.inProgress)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w).map((entry) => entry.option)).toEqual([optionFor(STATUS.backlog)])
+  })
+
+  it('does not end the run red when only the final record edit fails after the card moved', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready }, failFinalPatch: true })
+    expect(() => go(w, 5, 'assigned')).not.toThrow()
+    expect(editsOf(w)).toHaveLength(1)
+  })
+})
+
+describe('whose words start work', () => {
+  it('does not start work on a claim comment from an outside author', () => {
+    const outsider = {
+      nodes: [person('### [STEP] Claimed\n\nBranch: `agent/worker/5-x`', 'NONE')],
+    }
+    const w = world({
+      issues: { 5: node(5, { assignees: owner, comments: outsider }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'assigned')
+    expect(w.writes).toEqual([])
+  })
+
+  it('does not count a pull request from an outside fork as started work or In review', () => {
+    const fork = {
+      nodes: [
+        {
+          number: 8,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'FIRST_TIME_CONTRIBUTOR',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
+    }
+    const w = world({
+      issues: { 5: node(5, { assignees: owner, closedByPullRequestsReferences: fork }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'sync')
+    expect(w.writes).toEqual([])
+  })
+})
+
+describe('flags are only reported', () => {
+  it('moves nothing and changes no label or assignee for an issue that is assigned but never started', () => {
+    const w = world({ issues: { 5: node(5, { assignees: owner }) }, cards: { 5: STATUS.backlog } })
+    go(w, 5, 'assigned')
+    expect(w.writes).toEqual([])
+  })
+
+  it('writes nothing but the card status and the one comment, on any path', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    for (const entry of w.writes) {
+      const ok =
+        entry.kind === 'edit' ||
+        (['POST', 'PATCH', 'DELETE'].includes(entry.kind) && /\/comments(\/\d+)?$/.test(entry.path))
+      expect(ok, JSON.stringify(entry)).toBe(true)
+    }
   })
 })

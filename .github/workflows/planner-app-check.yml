@@ -27,7 +27,7 @@ env:
 
 jobs:
   check:
-    name: Read, write and sprint rule
+    name: Read, write and board check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -58,7 +58,7 @@ jobs:
           echo "Read OK: $fields fields, $cards cards"
           if [ "$cards" -ge 1000 ]; then echo "::warning::Read stopped at the 1000-card limit; raise it"; fi
 
-      - name: Check the sprint rule against the real board
+      - name: Check the board can be read the way the status rule needs
         run: node scripts/planner-rules.mjs < items.json
 
       - name: Write to a throwaway issue and its card

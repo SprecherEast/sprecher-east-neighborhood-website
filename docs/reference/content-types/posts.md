@@ -3,6 +3,8 @@
 # Posts (`posts`)
 
 - Kind: collection
+- Owner: module `news`, defined in `src/modules/news/cms/posts.ts`
+- AI agent tools: `findPosts`, `submitSuggestion` ([list](../mcp-tools.md))
 - Drafts: yes (autosave every 100 ms, scheduled publishing)
 - Versions: the last 50 of each document
 

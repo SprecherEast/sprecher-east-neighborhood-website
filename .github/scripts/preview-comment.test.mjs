@@ -111,6 +111,36 @@ describe('commentBody', () => {
   })
 })
 
+describe('commentBody and the component showcase (#1459)', () => {
+  const live = { ...base, state: 'live', url: 'https://pr-7.dev.sprechereast.com' }
+
+  it('links the showcase of a live preview that was built with one, at the preview’s own address', () => {
+    const text = commentBody({ ...live, showcase: 'true' })
+    expect(text).toContain(
+      'Component showcase for this change: https://pr-7.dev.sprechereast.com/showcase/index.html',
+    )
+    expect(text).toContain('**Live.** https://pr-7.dev.sprechereast.com\n')
+  })
+
+  it.each([undefined, '', 'false', 'yes', 'TRUE', true])(
+    'links no showcase unless the gate said exactly true (%j)',
+    (showcase) => {
+      expect(commentBody({ ...live, showcase })).not.toContain('showcase')
+    },
+  )
+
+  it.each(['failed', 'taken-down', 'removed', 'build-failed', 'unavailable'])(
+    'links no showcase when the preview is %s',
+    (state) => {
+      expect(commentBody({ ...base, state, showcase: 'true' })).not.toContain('showcase')
+    },
+  )
+
+  it('still refuses an address that is not the preview’s own, showcase or not', () => {
+    expect(() => commentBody({ ...live, url: 'https://evil.example', showcase: 'true' })).toThrow()
+  })
+})
+
 describe('previewState', () => {
   it('takes the deploy script’s own result first', () => {
     expect(previewState({ deployResult: 'taken-down', buildResult: 'success' })).toBe('taken-down')

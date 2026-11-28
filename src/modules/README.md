@@ -1,7 +1,7 @@
 # Modules
 
-One folder per business area: `events`, `news`, `contact`, `accounts`, `directory` and `site`.
-Each holds that area's rules, data access, CMS config and components, so the folder tree reads like
+One folder per business area: `events`, `news`, `contact`, `accounts`, `verification`, `agents`,
+`directory`, `roadmap` and `site`. Each holds that area's rules, data access, CMS config and components, so the folder tree reads like
 the site.
 
 - **Inside a module:** `domain/`, `use-cases/`, `data/`, `cms/` and `ui/`, with only the folders
