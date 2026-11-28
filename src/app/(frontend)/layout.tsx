@@ -8,7 +8,7 @@ import { ThemeDecoration } from '@/platform/theme/ThemeDecoration'
 import { JsonLd } from '@/platform/ui/JsonLd'
 import { SiteFooter, SiteHeader } from '@/modules/site/server'
 import { AccountMenu, AccountProvider } from '@/modules/accounts/server'
-import { poppins } from '@/platform/theme/fonts'
+import { poppins, poppinsLatinExt } from '@/platform/theme/fonts'
 import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     // data-scroll-behavior: Next keeps page changes instant while in-page jumps glide (#574)
     <html
-      className={cn(poppins.variable)}
+      className={cn(poppins.variable, poppinsLatinExt.variable)}
       data-scroll-behavior="smooth"
       lang="en"
       suppressHydrationWarning

@@ -1,3 +1,4 @@
+import { unreadReport } from './pageRead.mjs'
 import { classifySafety, isObject } from './safety.mjs'
 import { guardPromotion, holdForReview } from './stages.mjs'
 
@@ -9,6 +10,8 @@ import { guardPromotion, holdForReview } from './stages.mjs'
 
 const SUGGESTION = 'submitSuggestion'
 const REPORT = 'reportItem'
+/** The decisions that send an item nowhere, so no person ever sees it. */
+const DROPS = ['reject', 'duplicate']
 
 /** The decisions the curation schema allows; none known when the schema is missing, so all held. */
 const decisionsOf = (contract) =>
@@ -18,7 +21,7 @@ const decisionsOf = (contract) =>
 function routeFor(pipeline, decision) {
   const wanted = pipeline?.routes?.[decision]
   if (decision === 'accept') return [SUGGESTION, REPORT, 'none'].includes(wanted) ? wanted : REPORT
-  if (decision === 'reject' || decision === 'duplicate') return wanted === REPORT ? REPORT : 'none'
+  if (DROPS.includes(decision)) return wanted === REPORT ? REPORT : 'none'
   return REPORT
 }
 
@@ -40,6 +43,15 @@ export function gateItem(contract, item) {
     const found = classifySafety(contract?.safety, { ...item, curation: given })
     if (found.safety) curation = holdForReview(curation, `safety item (${found.why.join('; ')})`)
   }
+  // A reject or a duplicate of an item from an always-held source is held unless verify was given
+  // its page's text (pageRead.mjs): the code knows whether it was, so a report whose page was not
+  // read can only end in review, whatever curate decides. Those two are the decisions that drop an
+  // item; every other one already goes to a person.
+  if (DROPS.includes(curation.decision) && unreadReport(contract?.safety, item))
+    curation = holdForReview(
+      curation,
+      'verify was not given the report page, so it may not have been read',
+    )
   const route = routeFor(pipeline, curation.decision)
   return { curation, route, suggest: route === SUGGESTION }
 }

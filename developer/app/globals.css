@@ -1,0 +1,10 @@
+/*
+ * The developer pages' stylesheet (#1530): the site's own (theme tokens, breakpoints, layout sizes), so the
+ * pages look like the site in light and dark. Next.js builds this project from its own folder, and Tailwind
+ * reads the class names from the folder it builds in, so the kit's and the pages' files are named here: without
+ * these two lines the pages would load with the theme's colours and none of the kit's classes.
+ */
+@import '../../src/app/(frontend)/globals.css';
+
+@source '../../src';
+@source './';

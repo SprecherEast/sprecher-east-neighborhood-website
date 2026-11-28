@@ -6,6 +6,8 @@ import { toBreakdown, valuesAt } from '@/platform/lib/chart/breakdown'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
+import { CHART_BAR_THICKNESS_CLASS } from '../../chartSizes'
+
 import { BreakdownChart } from './BreakdownChart'
 
 afterEach(cleanup)
@@ -64,5 +66,15 @@ describe('BreakdownChart rows read name, percent, then dollars flush right (#118
       // A long one-word name breaks inside its own column rather than run into the percent
       expect(row.querySelector('[data-label]')?.className).toContain('wrap-break-word')
     }
+  })
+})
+
+describe('BreakdownChart bar thickness (#1503)', () => {
+  it('draws its main bars at the thickness every chart of bars shares, and its nested ones thinner', () => {
+    const { container } = draw(1)
+    const bars = Array.from(container.querySelectorAll('[data-breakdown-row] svg'))
+    const classes = bars.map((bar) => bar.getAttribute('class')?.split(' ') ?? [])
+    expect(classes.some((names) => names.includes(CHART_BAR_THICKNESS_CLASS))).toBe(true)
+    expect(classes.some((names) => names.includes('h-2'))).toBe(true)
   })
 })

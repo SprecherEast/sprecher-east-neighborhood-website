@@ -15,8 +15,7 @@ targets the branch of the PR below it, so each PR shows only its own changes. Gi
 enforces the order:
 
 - PRs merge from the bottom up. Merging a PR also merges every PR below it, in order, so nothing
-  can land without what it depends on. The PRs above stay open, are retargeted and rebased
-  automatically.
+  can land without what it depends on. The PRs above stay open and are retargeted to `main`.
 - Branch rules and required checks apply to every PR in the stack as if it targeted `main`, so
   every layer must be green on its own.
 - A stack is a single line: each PR sits on exactly one PR below it.
@@ -135,9 +134,11 @@ from the bottom up. Fix a finding in the layer it belongs to, never in a higher 
 another is rejected. Use the `git push --atomic` above when that matters. The PR page on GitHub
 can also run the cascading rebase on the server when there are no conflicts.
 
-After part of a stack merges, GitHub rebases the PRs left above it. Before working on
-one of them again, reset your local copy to GitHub's: `git fetch origin` then
-`git switch -C <branch> origin/<branch>` (only when you have no unpushed work on it).
+After a lower layer is squash-merged, GitHub does not drop its old commits from the layers above,
+so they go dirty with their own change unchanged. Rebase each one, from the bottom up, onto `main`
+from the lower branch's old head (`git rebase --onto main <old head of the lower branch>`), then
+regenerate with the repo's own commands, re-run the checks and push. The review of a layer's own
+diff still counts when that diff is unchanged ([`AGENTS.md`](../../../AGENTS.md) step 5).
 
 ## 5. Review and merge
 
@@ -145,7 +146,7 @@ one of them again, reset your local copy to GitHub's: `git fetch origin` then
   every check on its own.
 - Merge one layer at a time, from the bottom, with the asynchronous merge API and every rule
   enforced ([`change-workflow`](../change-workflow/SKILL.md), step 6). After each merge, GitHub
-  retargets the next layer to `main` and rebases it. Wait for its checks on the new head, and for
+  retargets the next layer to `main`; bring it current as above. Wait for its checks on the new head, and for
   the previous deploy if that merge started one, before merging it. Merging a higher PR would merge
   everything below it in one go, which skips those checks between layers.
 - To restructure a stack (reorder, drop or insert a layer), use `gh stack modify`; it keeps the

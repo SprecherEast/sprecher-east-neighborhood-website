@@ -4,14 +4,8 @@ import path from 'node:path'
 import ts from 'typescript'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import {
-  describeComponents,
-  findUsers,
-  groupComponents,
-  renderComponentIndex,
-  renderComponentPage,
-  usersLabel,
-} from './components.mjs'
+import { renderComponentPage } from './componentPages.mjs'
+import { describeComponents, findUsers } from './components.mjs'
 
 let root
 const write = (file, text) => {
@@ -41,7 +35,7 @@ beforeAll(() => {
   // A stand-in for the variant helper: props declared in this package count as variants
   write(
     'node_modules/class-variance-authority/index.d.ts',
-    "export interface Variants { tone?: 'info' | 'error' | null }\n",
+    "export interface Variants { tone?: 'info' | 'error' | null; level?: 1 | 2 | null; flag?: boolean | null; mix?: 'a' | boolean | null; loose?: 'x' | string | null }\n",
   )
   write(
     'node_modules/other/index.d.ts',
@@ -96,6 +90,10 @@ export const Field = Object.assign(Frame, { Input })
     'src/platform/ui/Alert.stories.ts',
     "import { Alert } from './Alert'\nexport const Playground = Alert\n",
   )
+  write(
+    'src/platform/ui/Alert.examples.ts',
+    "import { Alert } from './Alert'\nexport const Default = Alert\n",
+  )
 })
 
 afterAll(() => fs.rmSync(root, { recursive: true, force: true }))
@@ -108,6 +106,7 @@ const sources = [
   'src/app/(frontend)/events/page.ts',
   'src/app/(frontend)/events/page.test.ts',
   'src/platform/ui/Alert.stories.ts',
+  'src/platform/ui/Alert.examples.ts',
 ]
 
 describe('describeComponents', () => {
@@ -133,9 +132,33 @@ describe('describeComponents', () => {
     expect(byName.size).toMatchObject({ type: '"sm" | "md"', variant: true })
   })
 
+  it('lists the values of a variant that is a list of literals, and none for other props (#1532)', () => {
+    const [alert] = describeComponents(load(sources), root, files)
+    const byName = Object.fromEntries(alert.props.map((p) => [p.name, p]))
+    expect(byName.tone.options).toEqual(['info', 'error'])
+    expect(byName.size.options).toEqual(['sm', 'md'])
+    expect(byName.heading.options).toBeNull()
+    expect(byName.count.options).toBeNull()
+    // Numbers and booleans are values too; a list that is also open text has no fixed values
+    expect(byName.level.options).toEqual([1, 2])
+    expect(byName.flag.options).toEqual([false, true])
+    expect(byName.mix.options).toEqual(expect.arrayContaining(['a', true, false]))
+    expect(byName.mix.options).toHaveLength(3)
+    expect(byName.loose.options).toBeNull()
+  })
+
   it('counts props inherited from a package instead of listing them', () => {
     const [alert] = describeComponents(load(sources), root, files)
-    expect(alert.props.map((p) => p.name).sort()).toEqual(['count', 'heading', 'size', 'tone'])
+    expect(alert.props.map((p) => p.name).sort()).toEqual([
+      'count',
+      'flag',
+      'heading',
+      'level',
+      'loose',
+      'mix',
+      'size',
+      'tone',
+    ])
     expect(alert.inherited).toBe(2)
   })
 
@@ -148,7 +171,7 @@ describe('describeComponents', () => {
 })
 
 describe('findUsers', () => {
-  it('finds importers through a barrel file and directly, skipping tests and stories', () => {
+  it('finds importers through a barrel file and directly, skipping tests, stories and examples', () => {
     const program = load(sources)
     const found = describeComponents(program, root, files)
     const users = findUsers(program, root, found)
@@ -157,25 +180,6 @@ describe('findUsers', () => {
       'src/modules/events/ui/List.ts',
     ])
     expect(users.get('Field')).toEqual([])
-  })
-})
-
-describe('usersLabel', () => {
-  it('groups users into modules, routes and platform areas', () => {
-    expect(
-      usersLabel([
-        'src/app/(frontend)/events/page.ts',
-        'src/modules/events/ui/List.ts',
-        'src/modules/news/ui/Card.ts',
-        'src/platform/richtext/Thing.ts',
-        'src/platform/ui/Other.ts',
-      ]),
-    ).toEqual({
-      modules: ['events', 'news'],
-      routes: ['/events'],
-      platform: ['platform/richtext', 'platform/ui'],
-      other: [],
-    })
   })
 })
 
@@ -200,37 +204,5 @@ describe('renderComponentPage', () => {
     expect(text).toContain('**Used by**')
     expect(text).toContain('Modules: `events`')
     expect(text).toContain('Routes: `/events`')
-  })
-})
-
-describe('groupComponents', () => {
-  const groups = [
-    { slug: 'a', title: 'A', intro: 'x', components: ['One', 'Two'] },
-    { slug: 'b', title: 'B', intro: 'y', components: ['Three'] },
-  ]
-  const make = (...names) => names.map((name) => ({ name }))
-
-  it('puts each component in its group, in the order the group lists them', () => {
-    const result = groupComponents(groups, make('Three', 'Two', 'One'))
-    expect(result.map((g) => g.components.map((c) => c.name))).toEqual([['One', 'Two'], ['Three']])
-  })
-
-  it('fails on a component in no group, so a new one must choose its page', () => {
-    expect(() => groupComponents(groups, make('One', 'Two', 'Three', 'Four'))).toThrow(/Four/)
-  })
-
-  it('fails on a group that names a component that no longer exists', () => {
-    expect(() => groupComponents(groups, make('One', 'Three'))).toThrow(/Two/)
-  })
-})
-
-describe('renderComponentIndex', () => {
-  it('links every page with its component names', () => {
-    const text = renderComponentIndex([
-      { slug: 'a', title: 'A', intro: 'x', components: [{ name: 'One' }, { name: 'Two' }] },
-    ])
-    expect(text).toContain('Generated by `npm run docs:generate`')
-    expect(text).toContain('[A](a.md)')
-    expect(text).toContain('`One`, `Two`')
   })
 })

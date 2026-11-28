@@ -148,9 +148,9 @@ describe('the cap (#1076)', () => {
     expect(fs.existsSync(p('previews/pr-2'))).toBe(false)
   })
 
-  it('is one in production’s defaults until the server’s limits are measured, defined only in environment.sh', () => {
+  it('is two in production’s defaults, as measured (#1557), defined only in environment.sh', () => {
     const env = fs.readFileSync(new URL('./environment.sh', import.meta.url), 'utf8')
-    expect(env).toContain('PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"')
+    expect(env).toContain('PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-2}"')
     for (const file of [
       'preview-wrapper.sh',
       'preview-caddy.sh',

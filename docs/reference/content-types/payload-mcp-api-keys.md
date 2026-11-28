@@ -4,6 +4,7 @@
 
 - Kind: collection
 - Purpose: API keys control which collections, resources, tools, and prompts MCP clients can access
+- Owner: the plugin `@payloadcms/plugin-mcp`, configured with code from module `agents`
 - Drafts: no
 - Versions: none kept
 
@@ -55,6 +56,8 @@
 | `payload-mcp-tool`                  | group        | no       |                   |                                                                                             |
 | `payload-mcp-tool.submitSuggestion` | checkbox     | no       |                   | default true                                                                                |
 | `payload-mcp-tool.reportItem`       | checkbox     | no       |                   | default true                                                                                |
+| `scopes`                            | select       | yes      | read, suggest     |                                                                                             |
+| `expiresAt`                         | date         | no       |                   |                                                                                             |
 | `updatedAt`                         | date         | no       |                   | hidden; indexed                                                                             |
 | `createdAt`                         | date         | no       |                   | hidden; indexed                                                                             |
 | `enableAPIKey`                      | checkbox     | no       |                   | access create, update: canCreateOrUpdateAPIKey                                              |

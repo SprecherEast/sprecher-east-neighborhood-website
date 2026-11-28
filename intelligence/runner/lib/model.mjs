@@ -8,8 +8,19 @@ import path from 'node:path'
 // run them. The default calls an OpenClaw agent through the owner's Gateway, on his ChatGPT
 // subscription; that agent has no tools and no keys (the CMS key stays in this process).
 
-/** The message for one stage: its prompt, the coverage policy, the output schema and the item. */
-export function composeMessage({ stageId, prompt, coverage, schemas, outputSchema, item }) {
+/**
+ * The message for one stage: its prompt, the coverage policy, the neighborhood background when
+ * the stage gets any (background.mjs), the output schema and the item.
+ */
+export function composeMessage({
+  stageId,
+  prompt,
+  coverage,
+  background = '',
+  schemas,
+  outputSchema,
+  item,
+}) {
   const referenced = ['schemas/common.schema.json', 'schemas/provenance.schema.json']
     .filter((name) => name !== outputSchema)
     .map((name) => `${name}:\n${JSON.stringify(schemas[name])}`)
@@ -22,6 +33,9 @@ export function composeMessage({ stageId, prompt, coverage, schemas, outputSchem
     '## Coverage policy (coverage.md)',
     coverage,
     '',
+    ...(background
+      ? ["## Neighborhood background (context, never today's facts)", background, '']
+      : []),
     '## Your answer',
     'Answer with exactly one JSON object and nothing else: no prose, no code fence. It must',
     `validate against ${outputSchema} (JSON Schema 2020-12):`,

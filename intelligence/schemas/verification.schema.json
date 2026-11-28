@@ -116,8 +116,27 @@
     "flags": {
       "$ref": "common.schema.json#/$defs/flags"
     },
+    "backgroundTopics": {
+      "description": "Id of the one background topic note (pipeline.yaml `background.topics`) whose detail this item turns on. Empty or absent when the summary is enough. Judged by meaning; the next stage is given the note while it fits the budget (one note fits with the summary, two never do).",
+      "type": "array",
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/sourceId" }
+    },
     "safety": {
       "$ref": "common.schema.json#/$defs/safety"
+    },
+    "placement": {
+      "description": "How the runner placed the item, added in code after this stage's answer (runner/lib/place.mjs); never written by the model, and anything it writes here is replaced. `boundary`: the item's street address resolved to a point that was tested against the City's boundary for the area (`inside` says the result). `word-match`: no address resolved, so `coverage` is verify's judgment by the area's words. `unplaced`: the item gives no place at all. `overrode` is true when the boundary replaced verify's tier. Which replacements need a person to look (the `ambiguous-location` flag) is written once, in coverage.md, Review passes, check 2.",
+      "type": "object",
+      "required": ["method", "inside", "reason", "overrode"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "enum": ["boundary", "word-match", "unplaced"] },
+        "inside": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "overrode": { "type": "boolean" }
+      }
     }
   }
 }

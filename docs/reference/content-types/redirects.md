@@ -3,6 +3,7 @@
 # Redirects (`redirects`)
 
 - Kind: collection
+- Owner: the plugin `@payloadcms/plugin-redirects`, configured with code from module `site`
 - Drafts: no
 - Versions: none kept
 

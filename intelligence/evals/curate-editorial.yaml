@@ -54,9 +54,9 @@ cases:
       startsAt: null
       locationText: Door Creek Park, Madison
     given:
-      verification: { coverage: catchment, flags: [unverified-claim] }
+      verification: { coverage: core, flags: [unverified-claim] }
     expected:
-      { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
+      { decision: needs-review, coverage: core, flags: [unverified-claim], route: reportItem }
     graders:
       - check: model
         rubric: >-
@@ -88,7 +88,7 @@ cases:
       sourceText: Madison Parks is installing wayfinding signs and invites volunteers to help on Saturday morning.
       startsAt: 2026-11-07T09:00:00-06:00
       locationText: Door Creek Park, Madison
-    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    expected: { decision: accept, coverage: core, route: submitSuggestion }
     why: The contrast case, with a sourced, constructive item that has a clear way to help; safety items are read on their own terms.
   - id: editorial-resolved-published-incident
     stage: curate

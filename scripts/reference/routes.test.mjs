@@ -1,6 +1,38 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { describeRoute, renderRoutes, routeUrl } from './routes.mjs'
+import { collectRoutes, describeRoute, renderRoutes, routeUrl } from './routes.mjs'
+
+describe('collectRoutes with another base folder (#1461)', () => {
+  it('reads the route handlers of Payload’s own route group, with their methods', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'reference-routes-'))
+    const file = path.join(root, 'src/app/(payload)/api/[...slug]/route.ts')
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(
+      file,
+      'export const GET = handler()\nexport const POST = handler()\nexport const other = 1\n',
+    )
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/layout.tsx'), 'export default () => null\n')
+    // a file that only ends like a page or a route is neither
+    fs.writeFileSync(
+      path.join(root, 'src/app/(payload)/homepage.tsx'),
+      'export default () => null\n',
+    )
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/api/myroute.ts'), 'export const GET = 1\n')
+    for (const name of ['pages.tsx', 'pagextsx', 'page.tsxx']) {
+      fs.writeFileSync(path.join(root, 'src/app/(payload)', name), 'export default () => null\n')
+    }
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/page.tsx'), 'export default () => null\n')
+    const rows = collectRoutes(root, 'src/app/(payload)')
+    fs.rmSync(root, { recursive: true, force: true })
+    expect(rows.map((row) => [row.url, row.kind, row.methods, row.file])).toEqual([
+      ['/api/[...slug]', 'route handler', ['GET', 'POST'], 'api/[...slug]/route.ts'],
+      ['/', 'page', [], 'page.tsx'],
+    ])
+  })
+})
 
 describe('routeUrl', () => {
   it('turns a page file into its URL pattern and drops route groups', () => {
@@ -62,6 +94,21 @@ export default function Page() { return null }
     )
   })
 
+  it('names each source once, sorted, and a metadata object written in the file', () => {
+    const several = `
+import { zebra } from '@/platform/seo/zebra'
+import { alpha } from '@/platform/seo/alpha'
+import { other } from './local'
+export const metadata = { a: zebra, b: alpha, c: alpha, d: other }
+export default function Page() { return null }
+`
+    expect(describeRoute('a/page.tsx', several).metadata).toBe(
+      '`metadata` via `@/platform/seo/alpha`, `@/platform/seo/zebra`',
+    )
+    const own = `export const metadata = { title: 'Own' }\nexport default function Page() { return null }`
+    expect(describeRoute('b/page.tsx', own).metadata).toBe('`metadata` (written in the file)')
+  })
+
   it('reports a forced rendering mode and no metadata', () => {
     const source = `export const dynamic = 'force-dynamic'\nexport default function Page() { return null }`
     const row = describeRoute('x/page.tsx', source)
@@ -114,6 +161,16 @@ describe('renderRoutes', () => {
     expect(lines[1]).toContain('`/events`')
     expect(lines[1]).toContain('`@/modules/events/server`')
     expect(lines[1]).toContain('600')
+  })
+
+  it('links the endpoints page for what is not a screen (#1461)', () => {
+    expect(renderRoutes(rows)).toContain('[endpoints.md](endpoints.md)')
+  })
+
+  it('explains what each row says, and where the other endpoints are (#1461)', () => {
+    expect(renderRoutes(rows)).toContain(
+      'Each row is what the route file itself says, read from its source: a page can still be dynamic through something it imports. `Params` says whether `generateStaticParams` builds the pages ahead of the first visit. Layouts are not listed. The REST and GraphQL APIs, custom endpoints and the AI agent endpoint are in [endpoints.md](endpoints.md).\n',
+    )
   })
 
   it('shows the methods of a handler', () => {

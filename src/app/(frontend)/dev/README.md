@@ -1,0 +1,41 @@
+---
+name: 'Component gallery'
+type: feature
+summary: 'dev-only page.'
+aliases: ['gallery', 'dev gallery']
+relationships: []
+---
+
+# Component gallery
+
+One page, `/dev/gallery`, that draws each shared component, variant and state beside realistic sample data, so a change to the kit can be looked at in one place and at the six test widths. It exists only under `next dev`; a production build, a test run or anything else answers 404, so it never reaches residents or search engines. It is not in the CMS and shows no live content. The published showcase is Storybook ([UI kit](../../../platform/ui/README.md)); this gallery stays until the rest of the kit has stories.
+
+## How the pieces link
+
+- **One list drives it:** `galleryComponents.ts` lists the components shown; `page.tsx` composes the sections (`ActionsGallery`, `BadgeGallery`, `ChartGallery`, `FieldsGallery`, `ProgressGallery`, `SwitchGallery`, `TabsGallery` and the rest), each in its own file, with sample data in `sampleData.ts`, `blocksPostSample.ts` and `sectionTabsSample.ts`.
+- **Actions section:** shows `Button`, `ButtonRow` (both alignments) and `Link` (`ActionsGallery.client.tsx`; `galleryComponents.ts`).
+- **What it shows:** the [UI kit](../../../platform/ui/README.md), the [charts](../../../platform/ui/chart/README.md) and the [rich-text](../../../platform/richtext/README.md) renderers, with the chart fixtures from `src/platform/lib/chart/fixtures.ts`; `docs/ui/component-set.md` and the generated components reference point readers to it.
+
+## Behaviors and events
+
+- **The page is off outside development** and, when it is on, asks search engines not to index it (`isGalleryEnabled.ts`, `page.tsx`).
+
+## Shared pieces it uses
+
+- Every shared component it displays, and `NOT_INDEXED` from `src/platform/seo`.
+
+## Rules and the tests that protect them
+
+- **The gallery never ships:** `isGalleryEnabled` is true only when `NODE_ENV` is `development` (`isGalleryEnabled.ts`; `isGalleryEnabled.test.ts`, `page.test.tsx`).
+
+## Boundaries
+
+- Imports the kit and the renderers; nothing imports it.
+
+## Decisions
+
+Issues #466 (the gallery) and #1424 (Storybook, which replaces it in time).
+
+## Known gaps
+
+- The kit's components are not all in `galleryComponents.ts`; the rest have no story either (#1424).

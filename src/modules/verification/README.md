@@ -1,38 +1,37 @@
+---
+name: 'Verification'
+type: module
+summary: 'email confirmation links, retention.'
+aliases: ['email confirmation']
+relationships: []
+---
+
 # Verification
 
 Checks that an email address belongs to whoever typed it, by a link sent to it. Contact asks for a
 confirmation; this module sends the link, follows it and keeps the result. It is not an
 account system and holds no messages. Sign-up does not use it: an account is verified by Payload's own
-verify, in the [accounts note](../accounts/README.md). Fields, access and the confirm endpoint:
+verify, in the [accounts note](../accounts/README.md). In the CMS: the `email-confirmations` collection, whose token hash and send counters only the server writes; the hourly retention job is in the [jobs reference](../../../docs/reference/jobs.md). Fields, access and the confirm endpoint:
 [email-confirmations content type](../../../docs/reference/content-types/email-confirmations.md); the
 page's URL: [screens](../../../docs/reference/routes.md).
 
-## Links between things
+## How the pieces link
 
-- The link's token is never stored: the record keeps its SHA-256, and a click finds the record again by that hash (`cms/token.ts`, `cms/store.ts`).
+- A click finds its record again by the token's hash (`cms/token.ts`, `cms/store.ts`).
 - Other modules never import this one. They call the service shaped by `src/platform/payload/emailConfirmer.ts`; `src/payload.config.ts` hands it over, with the `onConfirmed` listeners ([contact](../contact/README.md)'s `markSubmissionsConfirmed`, which sends the held emails and marks messages confirmed) and the retention `keepers` (contact's `keepSendersWithMessages`, [accounts](../accounts/README.md)' `keepAccountEmails`), decision 0008. The contract and the shared retention and error helpers are in the [shared Payload note](../../platform/payload/README.md).
-- Retention periods are in `src/platform/lib/retention.ts` (shared with contact); the link's 24 hours is `CONFIRMATION_LINK_LIFETIME_MS` in `src/platform/lib/linkLifetimes.ts`, used by `domain/limits.ts` and by the email's wording (`domain/emails.ts`).
+- Retention periods are in `src/platform/lib/retention.ts` (shared with contact); the link's lifetime is `CONFIRMATION_LINK_LIFETIME_MS` in `src/platform/lib/linkLifetimes.ts`, used by `domain/limits.ts` and by the email's wording (`domain/emails.ts`).
 - The per-address window (`sendCount`, `sendWindowStart`) and `tokenHash` are hidden and written only by the server (`cms/emailConfirmations.ts`, `domain/rules.ts`).
 - `/confirm-email` (`src/app/(frontend)/confirm-email/page.tsx`) joins this module's button with [accounts](../accounts/README.md)' `AccountOffer`, shown after confirming.
 
 ## Behaviors and events
 
-- Opening the link changes nothing: the page only reads where the link stands (`use-cases/getConfirmationLinkStatus.ts`, #391) and hides the Confirm button for a used, expired or unknown link (`ui/ConfirmEmail.client.tsx`).
-- The Confirm button posts the token with the robot check (Turnstile, decision 0003), because mail scanners open links and some run scripts (`cms/confirmEndpoint.ts`, #303). When the check is on (it runs only while the verifier is enabled), nothing is confirmed without a passing one.
-- The first valid click within 24 hours confirms, runs every listener, then sends the welcome email. One failing listener, or a failed welcome, is logged and stops nothing; a later click answers `already-confirmed` (`cms/confirmEmail.ts`, `domain/rules.ts`).
-- Confirming is one conditional write, so two clicks at once confirm once. It also sets `welcomeSentAt` before the send: the welcome goes at most once and is never retried (`cms/store.ts` `markConfirmed`).
-- A request sends a link only within the limits below; a new link replaces the old one, so only the newest works. The record is saved before the email goes out (`cms/requestConfirmation.ts`).
-- An address already confirmed gets no new link; something that isn't one address gets nothing (`cms/requestConfirmation.ts`).
-- The service never throws: an unknown state counts as unconfirmed and a failure is logged, so the message or sign-up that asked is never lost. It works in its own transaction, so a failure can't roll back the caller's (`cms/emailConfirmer.ts`, `cms/ownTransaction.ts`).
-- Payload's email check is stricter than the site's, so an address it refuses gets no record and no link; the asking message stays, unconfirmed (`cms/emailConfirmations.ts`).
-- Retention, hourly (`cms/retention.ts`): an unconfirmed address goes 48 hours after its last link; a confirmed one 12 months after it was confirmed, unless a keeper still needs it. A failing keeper stops the run before anything confirmed is deleted. Deletes re-check their conditions, so a fresh link or confirmation in between survives (`cms/store.ts`).
-- Logs carry only the kind of failure, never an address; the retention log has counts only (`cms/logFailure.ts`, `cms/retention.ts`).
-
-## Limits
-
-- Links: 5 an hour per connection, 3 a day per address, 30 an hour site-wide (`domain/limits.ts`, `domain/rules.ts`). Over any, nothing is sent, the person's answer is the same, and the reason goes to the log (`cms/emailConfirmer.ts`).
-- Confirm clicks: 20 an hour per connection; past that the endpoint answers 429 (`cms/confirmEndpoint.ts`).
-- Counters are in memory (one process). With no client IP the connection limits don't apply; the site-wide one still does.
+- **Asking:** the record is saved before the email goes out, and a new link replaces the old one, so only the newest works. An address already confirmed gets no new link; something that isn't one address gets nothing; Payload's email check is stricter than the site's, so an address it refuses gets no record and no link, and the asking message stays unconfirmed (`cms/requestConfirmation.ts`, `cms/emailConfirmations.ts`).
+- **Opening the link changes nothing:** the page only reads where the link stands and hides the Confirm button for a used, expired or unknown link, because mail scanners open links and some run scripts (`use-cases/getConfirmationLinkStatus.ts`, `ui/ConfirmEmail.client.tsx`, #391).
+- **Clicking Confirm** posts the token with the robot check (Turnstile, decision 0003), confirms in one conditional write, runs every listener, then sends the welcome email; a later click answers `already-confirmed` (`cms/confirmEndpoint.ts`, `cms/confirmEmail.ts`, `domain/rules.ts`, #303).
+- **Failures stop nothing:** a failing listener or welcome is logged and the rest goes on. `welcomeSentAt` is set before the send, so the welcome goes at most once and is never retried (`cms/store.ts` `markConfirmed`).
+- **The service never throws:** an unknown state counts as unconfirmed and a failure is logged, so the message or sign-up that asked is never lost; it runs in its own transaction, so a failure can't roll back the caller's (`cms/emailConfirmer.ts`, `cms/ownTransaction.ts`).
+- **Retention** runs hourly; its periods are under Rules (`cms/retention.ts`, `cms/store.ts`). A failing keeper stops the run before anything confirmed is deleted, and each delete re-checks its conditions, so a fresh link or confirmation in between survives.
+- **Logs** carry only the kind of failure, never an address; the retention log has counts only (`cms/logFailure.ts`, `cms/retention.ts`).
 
 ## Shared pieces it uses
 
@@ -40,13 +39,12 @@ page's URL: [screens](../../../docs/reference/routes.md).
 
 ## Rules and the tests that protect them
 
-- Only the hash is stored; tokens are 43 characters: `cms/token.test.ts`.
-- Link limits and repeat requests: `cms/requestConfirmation.test.ts`, `domain/rules.test.ts`.
-- Confirm once, listeners, welcome, expiry: `cms/confirmEmail.test.ts`; click limit, robot check: `cms/confirmEndpoint.test.ts`.
-- Never throws, own transaction: `cms/emailConfirmer.test.ts`, `cms/ownTransaction.test.ts`.
-- Retention and keepers: `cms/retention.test.ts`; email text and link: `domain/emails.test.ts`.
-- Button, reused links, robot check: `ui/ConfirmEmail.client.test.tsx`; read-only status: `use-cases/getConfirmationLinkStatus.test.ts`.
-- Contact gets the confirmer and its listener: `src/payload.config.confirmation.test.ts`.
+- **Only the hash of a link's token is kept.** Tokens are 32 random bytes (43 characters), so a leaked database cannot be replayed (`cms/token.ts`; `cms/token.test.ts`).
+- **A link is sent only within three limits:** 5 an hour per connection, 3 a day per address, 30 an hour site-wide. Over any, nothing is sent, the person's answer is the same and the reason goes to the log. Counters are in memory (one process), and with no client IP only the site-wide one applies (`domain/limits.ts`, `domain/rules.ts`; `cms/requestConfirmation.test.ts`, `domain/rules.test.ts`).
+- **With the robot check on, nothing confirms without a passing one:** the Confirm click is refused with a 400 and a log line before the token is read; the check runs only while the verifier is enabled (`cms/confirmEndpoint.ts`; `cms/confirmEndpoint.test.ts`).
+- **A link is good for 24 hours,** this module's links only (the sign-up link of [accounts](../accounts/README.md) is Payload's own verify, with its own rule). Confirm clicks are limited to 20 an hour per connection, then a 429 (`cms/confirmEmail.ts`, `cms/confirmEndpoint.ts`; `cms/confirmEmail.test.ts`, `cms/confirmEndpoint.test.ts`).
+- **Retention keeps what is still needed:** an unconfirmed address goes 48 hours after its last link; a confirmed one 12 months after confirmation, unless a keeper (a kept message, an account) still needs it (`cms/retention.ts`; `cms/retention.test.ts`).
+- **Tests of the behaviors above:** asking and addresses `cms/requestConfirmation.test.ts`; opening the link `use-cases/getConfirmationLinkStatus.test.ts`, `ui/ConfirmEmail.client.test.tsx`; the service `cms/emailConfirmer.test.ts`, `cms/ownTransaction.test.ts`; email text and link `domain/emails.test.ts`; contact gets the confirmer and its listener `src/payload.config.confirmation.test.ts`.
 
 ## Boundaries
 
