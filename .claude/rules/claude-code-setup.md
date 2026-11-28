@@ -19,8 +19,8 @@ Claude Code.
   of staff is built (#695 piece one): `.claude/agents/chief-of-staff.md`, run with
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
   Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
-  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
-  the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the standard reviewers stay
+  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer, outsider-reviewer)` as
+  the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the reviewer stays
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
   unattended runs: it can bill to usage credits, and in `-p` runs without asking
@@ -40,10 +40,11 @@ Claude Code.
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
   the key is always used when present, which switches usage from the subscription to API billing
   ([authentication](https://code.claude.com/docs/en/authentication)).
-- **Subagents:** `.claude/agents/` registers each [role guide](/docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. The
-  `worker` agent does each issue; the role agents stay for direct use until #695 moves the guides
-  into skills. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
+- **Subagents:** `.claude/agents/` holds only the chief of staff, the `worker`, the reviewer
+  (`qa-reviewer`) and the outsider reviewer, each pointing at its skill or [role guide](/docs/roles/README.md)
+  (the chief of staff and the outsider reviewer work from their skills); edit that, not the
+  agent file. Other role guides load by name through the brief, not as agents. The `worker` does each
+  issue. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): at session
   start, `session-start.mjs` shows the short process reminder (#1300). Before a Bash command that
   creates an issue (`gh issue create`, or a `gh api` POST to the issues endpoint), the issue rules
@@ -76,3 +77,18 @@ Claude Code.
   `paths` loads at session start. An `@import` inside a rule loads at session start whatever the
   rule's `paths` say, so the generated rules carry the text itself. Symlinked rules work, but git
   on Windows checks symlinks out as plain text unless symlinks are enabled, so they aren't used.
+- **Generated rules are build output, not in git** (#1593): `.claude/rules/generated/` is ignored, so
+  an edit to a guideline or note is one edit and conflicts once. The `session-start.mjs` hook builds
+  the folder with `scripts/agent-context-rules.mjs`, which needs no `npm ci`, for the project
+  directory and for the checkout the session works in (the hook input's `cwd`), so a fresh clone and
+  a worktree have the rules before the first file is read; it rewrites only a file that changed, so a
+  pull refreshes them. `npm run agent-context -- --write` builds them by hand. CI (`Agent context`)
+  builds them in memory, keeps the load maps sound and keeps the session-start budget. What Claude
+  Code resolves in a worktree, from its [worktree](https://code.claude.com/docs/en/worktrees)
+  docs: a subagent with `isolation: worktree` takes the instructions it starts with from the main
+  conversation, and in the default location (`.claude/worktrees/`) it does not load that worktree's
+  own `CLAUDE.md` or `.claude/rules/` as it reads files there, so it uses the rules of the checkout
+  the session started in, which the hook refreshed at session start. Hooks keep
+  `${CLAUDE_PROJECT_DIR}` at the project root, so the hook also builds for the `cwd` it is given. A
+  worktree made by hand (`git worktree add`) is covered when a session starts in it; a worker that
+  makes one mid-session runs `npm run agent-context -- --write` there once.

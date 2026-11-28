@@ -22,6 +22,12 @@ function db(): Client {
 
 const yesterday = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
+/** The ID the seed gave the AI tool it registered (#1501), which the tool is handed. */
+export async function connectionClientId(): Promise<string> {
+  const { rows } = await db().execute('SELECT client_id FROM oauth_clients LIMIT 1')
+  return String(rows[0]?.client_id ?? '')
+}
+
 /** Expires the email-confirmation link sent to an address. */
 export async function expireConfirmationLink(email: string) {
   await db().execute({

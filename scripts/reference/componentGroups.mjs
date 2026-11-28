@@ -10,7 +10,15 @@ export const COMPONENT_GROUPS = [
     title: 'Actions',
     intro:
       'Buttons and links. `Button` is the only thing that draws a button; `Link` only ever looks like text; `SegmentedControl` joins a few options into one picker; `BrandLogo` is the mark on a button for a way to sign in.',
-    components: ['Button', 'Link', 'AppLink', 'LinkButton', 'SegmentedControl', 'BrandLogo'],
+    components: [
+      'Button',
+      'ButtonRow',
+      'Link',
+      'AppLink',
+      'LinkButton',
+      'SegmentedControl',
+      'BrandLogo',
+    ],
   },
   {
     slug: 'form-fields',
@@ -25,6 +33,13 @@ export const COMPONENT_GROUPS = [
       'FieldSelect',
       'FieldCheckbox',
     ],
+  },
+  {
+    slug: 'switches',
+    title: 'Switches',
+    intro:
+      'An on or off switch: `Switch` with its label beside it, `Field.Switch` inside a `Field`, and the track and thumb they share.',
+    components: ['Switch', 'SwitchControl', 'FieldSwitch'],
   },
   {
     slug: 'cards',

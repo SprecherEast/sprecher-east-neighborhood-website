@@ -1,7 +1,14 @@
 import { randomBytes } from 'node:crypto'
 
+import { backgroundNote, newTally } from './background.mjs'
+import { newErrorLog } from './errorLog.mjs'
+import { staleBoundaryProblem } from './boundary.mjs'
+import { withoutSuggestions } from './cms.mjs'
+import { createPlacer } from './place.mjs'
 import { processRun } from './process.mjs'
-import { isoNow } from './time.mjs'
+import { submitItem } from './submit.mjs'
+import { dateIn, isoNow } from './time.mjs'
+import { checkUpcomingEvents, lowEventsWarning } from './upcoming.mjs'
 
 // One run (README.md): scout every pilot source, then take each new or changed item through
 // verify, curate and draft, and submit it; log the run in the CMS at the start and the end.
@@ -18,21 +25,27 @@ export const newRunId = (now) =>
  */
 export async function runPipeline({
   contract,
-  cms,
+  cms: suggestingCms,
   ask,
   state,
   http,
   robots,
+  geocode = null,
   repoCommit,
   agentName = 'Sprecher East intelligence',
   now = () => new Date(),
 }) {
+  // Only submit gets the client that can suggest (gate.mjs); the run's other code gets this one
+  const cms = withoutSuggestions(suggestingCms)
+  // The one function that can suggest: the real client stays in this closure, so no other module
+  // holds it, and it only runs submitItem, where the gate comes first (gate.mjs)
+  const submit = (item, options) => submitItem(item, { ...options, cms: suggestingCms, contract })
   const startedAt = now()
   const { pipeline } = contract
   const budgets = pipeline.budgets ?? {}
   const runId = newRunId(startedAt)
   const counts = Object.fromEntries(COUNTS.map((k) => [k, 0]))
-  const errors = []
+  const { errors, notes, addError, addNote, problemCount } = newErrorLog()
   const cost = { inputTokens: 0, outputTokens: 0, usd: 0 }
   const calls = []
   const log = {
@@ -48,7 +61,9 @@ export async function runPipeline({
     errors,
     cost,
   }
-  const addError = (text) => errors.length < 50 && errors.push(String(text).slice(0, 500))
+  let upcoming = null
+  // What each model call was given of the neighborhood background, for one note at the end
+  const background = newTally()
   const finish = async (status) => {
     log.status = status
     log.finishedAt = isoNow(now())
@@ -62,7 +77,7 @@ export async function runPipeline({
       errors: e,
       cost: k,
     })
-    return { log, calls }
+    return { log, calls, upcoming, notes }
   }
 
   if (pipeline.enabled === false) {
@@ -76,13 +91,24 @@ export async function runPipeline({
   const deferredSources = new Set()
   let stopped = null
   try {
+    const stale = staleBoundaryProblem(contract.boundary, contract.area.boundary, startedAt)
+    if (stale) addError(stale)
+    // Where each item is: by the City's boundary when its address resolves (place.mjs)
+    const place = createPlacer({
+      boundary: contract.boundary,
+      record: contract.area.boundary,
+      geocode,
+      onProblem: addError,
+    })
     stopped = await processRun({
       contract,
       cms,
+      submit,
       ask,
       state,
       http,
       robots,
+      place,
       budgets,
       startedAt,
       runId,
@@ -90,18 +116,35 @@ export async function runPipeline({
       calls,
       addError,
       deferredSources,
+      background,
     })
   } catch (error) {
     // Something no item could cause (the taxonomy can't be read, a bug): log it and stop
     addError(`run failed: ${error.message}`)
     stopped = 'failed'
   }
-  const status = stopped ?? (errors.length > 0 || counts.deferred > 0 ? 'partial' : 'succeeded')
+  try {
+    // Counted after the run, so what it just suggested (unpublished drafts) never counts
+    upcoming = await checkUpcomingEvents({
+      cms,
+      mark: pipeline.lowWater.upcomingEvents,
+      today: dateIn(startedAt),
+    })
+    if (upcoming.error) addError(`upcoming events could not be counted: ${upcoming.error}`)
+  } catch (error) {
+    addError(`upcoming events could not be counted: ${error.message}`)
+  }
+  const status = stopped ?? (problemCount() > 0 || counts.deferred > 0 ? 'partial' : 'succeeded')
+  // A low list and the background note are notes, not errors (errorLog.mjs): kept in the run log's
+  // list, which has no field of its own for them, and out of the status
+  const warning = upcoming ? lowEventsWarning(upcoming) : null
+  if (warning) addNote(warning)
+  addNote(backgroundNote(background, pipeline.background))
   try {
     await finish(status)
   } catch (error) {
     // The run log couldn't be closed; the items handled are still recorded in the state
     console.error(`The run log could not be updated: ${error.message}`)
   }
-  return { log, calls }
+  return { log, calls, upcoming, notes }
 }

@@ -190,6 +190,8 @@ export const PREVIEW_COPY: Readonly<Record<string, PreviewCopyEntry>> = {
   'email-confirmations': excluded('Addresses typed into public forms.'),
   'form-submissions': excluded('Messages and sender emails from neighbors.'),
   'payload-mcp-api-keys': excluded('Agent keys: credentials.'),
+  'oauth-clients': excluded('AI tools registered to sign in to the agent address: credentials.'),
+  'oauth-tokens': excluded('Hashed access and refresh tokens of AI tools: credentials.'),
   'payload-preferences': excluded('Each signed-in user’s admin settings.'),
   'payload-locked-documents': excluded('Who is editing what: account references.'),
   'agent-runs': excluded('Run history of the AI agents.'),

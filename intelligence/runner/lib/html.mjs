@@ -1,7 +1,7 @@
 import { load } from 'cheerio'
 
 import { collapse, toSourceText } from './text.mjs'
-import { addDays, parseClock, zonedIso } from './time.mjs'
+import { addDays, dateIn, parseClock, zonedIso } from './time.mjs'
 
 // Parsers for the sources that publish no feed, only an HTML page (#390). Each reads the page's
 // own list markup, as captured on 2026-10-27, and answers raw items in the same shape as the feed
@@ -68,11 +68,12 @@ export function parseCityArticles(body, { base, from }) {
 }
 
 /**
- * The City's public information meetings: each event has its title link, a start and an end as
+ * The City's event lists: the public information meetings, the Parks events and the regional
+ * planning events share one layout. Each event has its title link, a start and an end as
  * `time[datetime]` (local time with the offset), its venue ("Virtual event" or a named address),
  * and sometimes a tag ("Full", or a cancellation). Meetings that ended before today are left out.
  */
-export function parseCityEvents(body, { base, from }) {
+export function parseCityEvents(body, { base, from, kind = 'meeting' }) {
   const $ = load(body)
   return $('.event-heading')
     .toArray()
@@ -83,12 +84,13 @@ export function parseCityEvents(body, { base, from }) {
       const when = event.find('.field-smart-date--standard')
       const startsAt = when.find('time.start-date').attr('datetime') ?? null
       const endsAt = when.find('time.end-date').attr('datetime') ?? null
-      const title = collapse(link.text()) || 'Public information meeting'
+      const title =
+        collapse(link.text()) || (kind === 'event' ? 'Event' : 'Public information meeting')
       const tag = collapse(event.find('.tag').text())
       const venue = collapse(event.find('.event-venues').text())
       return {
         ownId: url ? `${new URL(url).pathname}@${startsAt ?? ''}` : null,
-        kind: 'meeting',
+        kind,
         title,
         sourceText: toSourceText([tag && `Tag: ${tag}`, venue].filter(Boolean).join('. ')),
         startsAt,
@@ -104,6 +106,54 @@ export function parseCityEvents(body, { base, from }) {
       const last = item.endsAt ?? item.startsAt
       return item.ownId && !(from && last && last.slice(0, 10) < from)
     })
+}
+
+/** The City Parks event list (#995): the same layout, each item an event rather than a meeting. */
+export const parseParksEvents = (body, options) =>
+  parseCityEvents(body, { ...options, kind: 'event' })
+
+/** The winter a date belongs to, "2026-27": the season starts in August. */
+function winterSeason(from) {
+  const [year, month] = (from ?? dateIn(new Date())).split('-').map(Number)
+  const start = month >= 8 ? year : year - 1
+  return `${start}-${String(start + 1).slice(2)}`
+}
+
+/**
+ * The City Parks winter pages (ski trails, ice skating, #995): a list of places, each with its
+ * name, link, address and a status tag ("Closed for Season"). A place closed for the season says
+ * nothing; any other status, or a place with no tag, is an item named for the season, so a rink
+ * opening is a new item and a later status change is an update to it. Which places go on is
+ * scout's rule (`keepItem`): only those the area words name.
+ */
+export function parseParkStatus(body, { base, from }) {
+  const $ = load(body)
+  const season = winterSeason(from)
+  return $('.geolocation-location')
+    .toArray()
+    .map((el) => {
+      const place = $(el)
+      const link = place.find('.location-content a').first()
+      const url = onSite(link.attr('href'), base)
+      const name = collapse(place.find('.location-title').text()) || collapse(link.text())
+      const status = collapse(place.find('.tag').text())
+      if (!url || !name || /closed for (the )?season/i.test(status)) return null
+      const address = collapse(place.find('address').text())
+      return {
+        ownId: `${new URL(url).pathname}@${season}`,
+        kind: 'news',
+        title: `${name}: ${status || 'no status shown'}`,
+        sourceText: toSourceText([`Status: ${status || 'none shown'}`, address].join('. ')),
+        startsAt: null,
+        endsAt: null,
+        allDay: null,
+        locationText: address || null,
+        sourceStatus: 'unknown',
+        url,
+        modified: null,
+      }
+    })
+    .filter(Boolean)
 }
 
 const MONTHS = [

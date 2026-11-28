@@ -25,7 +25,6 @@ export function cmsOperations(callTool) {
     return text
   }
   return {
-    callTool,
     /** Every category, for the draft stage's `taxonomy` (slug, title, parent slug). */
     async taxonomy() {
       const docs = []
@@ -63,6 +62,20 @@ export function cmsOperations(callTool) {
         }
       }
       return null
+    },
+    /**
+     * How many published, uncancelled events are dated `today` or later, counted up to `limit`
+     * (the low-water mark needs no more than that).
+     */
+    async upcomingEvents({ today, limit }) {
+      const where = JSON.stringify({
+        and: [
+          { date: { greater_than_equal: today } },
+          { _status: { equals: 'published' } },
+          { cancelled: { not_equals: true } },
+        ],
+      })
+      return docsIn(await call('findEvents', { where, limit, depth: 0 })).length
     },
     async createRun(run) {
       const [doc] = docsIn(await call('createAgentRuns', run))
@@ -103,6 +116,8 @@ export function dryRunCms(reader) {
     writes,
     taxonomy: () => (reader ? reader.taxonomy() : Promise.resolve([])),
     known: (externalId) => (reader ? reader.known(externalId) : Promise.resolve(null)),
+    // Without a key the site can't be asked: unknown, never zero
+    upcomingEvents: (query) => (reader ? reader.upcomingEvents(query) : Promise.resolve(null)),
     createRun: async (run) => record('createAgentRuns', run, 'dry-run'),
     updateRun: async (id, fields) => record('updateAgentRuns', { id, ...fields }, ''),
     submitSuggestion: async (args) =>
@@ -110,4 +125,27 @@ export function dryRunCms(reader) {
     reportItem: async (args) => record('reportItem', args, ''),
     close: async () => reader?.close?.(),
   }
+}
+
+/** The operations a run uses besides suggesting. */
+const BESIDES_SUGGESTING = [
+  'taxonomy',
+  'known',
+  'upcomingEvents',
+  'createRun',
+  'updateRun',
+  'reportItem',
+  'close',
+]
+
+/**
+ * A client that can read, keep the run log and report, and has no way to suggest: no
+ * `submitSuggestion` and no raw tool caller, under any spelling, because nothing but these
+ * operations is on it. Every module of a run gets this one; only `submitItem` gets the real client
+ * (#1007), where the gate runs first.
+ */
+export function withoutSuggestions(cms) {
+  return Object.freeze(
+    Object.fromEntries(BESIDES_SUGGESTING.map((name) => [name, (...args) => cms[name](...args)])),
+  )
 }

@@ -3,6 +3,7 @@
 # Media (`media`)
 
 - Kind: collection
+- Owner: shared code `platform/payload`, defined in `src/platform/payload/media.ts`
 - Drafts: no
 - Versions: none kept
 

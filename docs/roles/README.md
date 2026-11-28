@@ -8,9 +8,8 @@ depends on a particular tool or model.
 [`docs/architecture/`](../architecture/README.md) win wherever a role guide disagrees with them. If
 you find a disagreement, fix the role guide in the same PR.
 
-Role guides are policy files, as they were when they lived in `.claude/agents/`: the review calls
-out a change to one, and a change the owner didn't ask for waits for him
-([`AGENTS.md`](../../AGENTS.md), step 3).
+Role guides are policy files: the review calls out a change to one, and a change the owner didn't
+ask for waits for him ([`AGENTS.md`](../../AGENTS.md), step 3).
 
 | Role                       | Guide                                     | Use it for                                                               |
 | -------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
@@ -31,47 +30,21 @@ out a change to one, and a change the owner didn't ask for waits for him
 How the agent team uses the guides, who reviews whom and how much scrutiny a change gets is in the
 [agent operating model](../process/agent-operating-model.md).
 
-## Using a role from your tool
+## How a role guide is loaded
 
-- **Claude Code** registers each role as a subagent in `.claude/agents/<role>.md`. Those files only
-  hold Claude Code settings and point here.
-- **Codex** and humans read the guide for the role they're working in
-  ([Tool adapters](../../AGENTS.md#tool-adapters)).
+A role is a guide, not an agent. The only agents are the chief of staff, the worker, the reviewer
+(`qa-reviewer`, which works from its own guide) and the outsider reviewer (which works from its skill). A guide loads by name from this folder:
+`docs/roles/<name>.md`, where `<name>` is the one in the table. The dispatch brief names the guides
+a task needs, because an agent skips instructions it has to choose to open
+([operating model](../process/agent-operating-model.md#3-skills-not-agents)), and the worker reads
+them before it starts. Claude Code, Codex and humans all read the same file; there is no copy in
+`.claude/`. Where a guide says to work with another role, it means the checks of that role's guide,
+not another agent.
 
-## Sprint retrospective (every role)
+## Weekly review (every role)
 
-### Practice
-
-At the end of each sprint, the team holds a retrospective. Everyone working in a role takes part
-by logging observations throughout the sprint.
-
-### What to Track
-
-During every work session, note anything that should be discussed at retro:
-
-- **Issues encountered**: Bugs, broken workflows, tooling problems, unclear requirements
-- **Friction points**: Tasks that took longer than expected and why
-- **Feedback received**: Input from residents, neighbors, or Amine (project lead)
-- **Architectural impacts**: Decisions or events that caused significant rework or pivots
-- **Incomplete work**: Tasks left undone and the reason (blocked, deprioritized, out of scope)
-- **Wins**: Things that went well, patterns worth repeating, tools that helped
-
-### Where to Log
-
-Append observations to the shared sprint retro file: `docs/memory/retro/sprint-{N}.md`
-
-Entry format:
-
-```markdown
-### [Date] — [Role]
-
-- **Observation**: What happened
-- **Impact**: How it affected the work
-- **Recommendation**: What to change or continue
-```
-
-### Cadence
-
-- **Every session**: Log observations to the retro file before ending work
-- **Weekly review**: Amine reviews the retro file at end of week
-- **Biweekly retrospective**: Full team retro — review all observations, decide on changes, update processes
+The team improves through the [weekly review](../process/weekly-review.md), which the chief of
+staff runs from GitHub. So that it has something to read, note friction on the issue you work on,
+in its `### [STEP]` comments: what failed or came back, what took longer than it should, where the
+owner had to step in, and what you would automate. Do not keep notes in loose files; a note that
+is not on GitHub is not seen.

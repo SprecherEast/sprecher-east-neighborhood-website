@@ -3,6 +3,7 @@
 # Resources (`resources`)
 
 - Kind: collection
+- Owner: module `directory`, defined in `src/modules/directory/cms/resources.ts`
 - Drafts: yes (no autosave)
 - Versions: the last 100 of each document
 

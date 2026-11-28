@@ -6,7 +6,8 @@ that builds and deploys a preview ([below](#the-workflow-1075)). Back to the [se
 
 - **DNS.** One wildcard A record, `*.dev`, in the Porkbun zone for `sprechereast.com`, pointing at
   the production server. It needs no API key. Undo: delete the record. `dev.sprechereast.com`
-  itself doesn't resolve.
+  itself has its own A record (added 2026-11-24, #1459) and serves the [developer site](developer-site.md),
+  not a preview.
 - **The import line.** `caddy-previews.sh` adds `import /etc/caddy/previews/*.caddy` (and a comment
   line above it) to the Caddyfile. Before anything reloads, Caddy must accept the new Caddyfile
   together with a sample preview block made from the template, so a broken snippet fails the deploy
@@ -33,7 +34,9 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   opens far more than 50 pull requests a week, so only a pull request that changes how pages look,
   or that carries the label asking for a preview, gets one (owner's decision, 2026-11-19, #1072).
   A redeploy of the same pull request reuses its certificate, and teardown never deletes Caddy's
-  certificate storage, so a reopened pull request is not a new order.
+  certificate storage, so a reopened pull request is not a new order. The developer site's name,
+  `dev.sprechereast.com`, is one more name in the same budget (#1459): one order when its block first loads, and
+  renewals are exempt. A preview's component showcase orders none ([in `developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459)).
 - **Check on the server** (once, after the first deploy with this script; carried to #1075): load
   one sample block by hand, confirm its responses carry `X-Robots-Tag` and no
   `Strict-Transport-Security` and that `/robots.txt` disallows everything, remove it, and confirm
@@ -84,13 +87,13 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   reached by a key that can run only the wrapper's six actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
-  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, the cap, one for now), the disk floor (`PREVIEW_FREE_FLOOR_KB`), the idle limit (`PREVIEW_IDLE_DAYS`) and the number and commit patterns, so no script writes its own.
+  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, the cap, two), the disk floor (`PREVIEW_FREE_FLOOR_KB`), the idle limit (`PREVIEW_IDLE_DAYS`) and the number and commit patterns, so no script writes its own.
 - **The key is in place** (#1385). The public half is committed as `ops/preview-deploy-key.pub`; the private half is the
   `PREVIEW_SSH_KEY` secret of the GitHub environment `preview`, and nowhere else. The production deploy writes the key's
   line only when the host guards and the isolation check pass; its log says which.
 - **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
   preview deploy and fails the deploy (before: nothing starts, and a preview already running under that number is taken down; after: the preview is taken down) when the account can open production's
-  settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin
+  settings, database, media, backups, Umami files, the off-site backup's credential folder and log, PM2 logs or Caddy's storage, or connect to Caddy's admin
   endpoint on localhost. `preview-host-guards.sh` makes that so: production's folders closed to "others",
   the account in `cron.deny` and `at.deny`, and an owner-match firewall rule on the admin port. An upload
   is also limited by what it unpacks to (`PREVIEW_UNPACK_MAX_BYTES`, 3 GiB). Details, the unix socket
@@ -234,6 +237,8 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied).
 
+The component showcase in a pull request's preview is described in [`developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459).
+
 ## Production content in a preview (#1397)
 
 Every preview deploy loads production's published content, so a change is judged on real pages, posts, events and
@@ -245,12 +250,13 @@ the snapshot (2026-11-11, recorded on #1077).
   `deploy-release.sh` builds a fresh SQLite file from the pull request's migrations, imports the content
   (`e2e/previewCopyImport.ts`, the pull request's own code, which reads only the export's file), and then
   `previewSeed.ts` makes the test accounts. Changes made while testing a preview, uploads included, are lost on the next
-  push. A copy that fails changes nothing: the old database and media are replaced only after the root step succeeded. A
+  push. So a change that needs different page content (a new layout, say) shows only after it is applied in the
+  preview's Admin, and again after each push. A copy that fails changes nothing: the old database and media are replaced only after the root step succeeded. A
   deploy that fails after that point leaves the preview's running release on its new, rebuilt database (empty or
   half imported), so redeploy it; the isolation check still holds.
 - **The root step** (`preview-copy.sh`) is `preview-caddy.sh`'s sibling: one sudo rule per script, a number of 1 to 6
   digits, a fixed PATH, bash's privileged mode, no caller environment, the shared Caddy lock (one at a time with
-  production's scripts and every other preview step; the temporary one-preview cap stays). Under the lock it makes a
+  production's scripts and every other preview step; the cap stays). Under the lock it makes a
   snapshot with production's own `ops/backup-db.mjs` (`VACUUM INTO`, a consistent copy while the site runs) into a new
   folder inside `PREVIEW_COPY_TMP` (`/var/lib/sprecher-east-preview-copy`, root-only, mode 700, made by the installer),
   runs the export from **production's current release** (`main`'s code; `payload run e2e/previewCopyExport.ts`, with
@@ -315,7 +321,7 @@ the snapshot (2026-11-11, recorded on #1077).
   wrapper stops the PM2 process, deletes the folder (releases, database, media, data and settings file are all
   inside it, with the linked media and the passwords file) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
   already gone, so a second run succeeds too. The order is the wrapper's (process, folder, block) because
-  `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
+  `preview-caddy.sh` removes a block when the folder is gone (a block that Caddy needs back and that cannot be put back is kept under a name the import does not read, and the warning names it). **Caddy's certificate storage is never touched**,
   so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
   say the preview was removed. A fork's or Dependabot's pull request never had a preview and is skipped. A
   deploy can still put a closed pull request live again, by two routes: a build that started before the close
@@ -324,12 +330,11 @@ the snapshot (2026-11-11, recorded on #1077).
   its pull request is not open.
 - **The cap** is `PREVIEW_MAX_COUNT` in `ops/environment.sh`, defined once. The workflow's check
   (`preview-deploy.sh`), the wrapper (a new folder, under a lock) and the Caddy script (a new block) all read it.
-  It replaces the workflow's temporary one-preview limit and has the same value, **one, until it is measured**:
-  with production and Umami running, one preview's memory at rest and during a short click-through, free
-  memory and swap, and the disk one preview uses (release, database, media), taking #924's figures where they
-  exist. The cap is the number that keeps production's memory headroom, the deploy's 3 GiB free-disk floor and
-  the backup reserve intact; then it is raised in that one line. Those measurements need the server and are not
-  made by this change (recorded on #1076).
+  It replaced the workflow's temporary one-preview limit. It was one until the server was measured, and is **two**
+  since the owner measured it with production and Umami running (decided 2026-11-26, recorded on #1557; the figures
+  go on #1405). The cap is the number that keeps production's memory headroom, the deploy's 3 GiB free-disk floor and
+  the backup reserve intact; a different number is changed in that one line. A third pull request waits for a place:
+  it starts on a later push or re-run once a preview closes.
 - **At the cap: refuse** (decided, #1076). The sticky comment names the cap and the pull requests that hold the
   places, and the preview starts on a later push or re-run once a place is free. Replacing the preview pushed
   least recently was weighed and not chosen: it would take down a preview someone may be reviewing, to give a

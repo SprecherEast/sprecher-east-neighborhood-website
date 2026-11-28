@@ -52,3 +52,56 @@ TAN = "#d9b27c"; YEL = "#f2b632"; GLASS = "#bcd9e8"; BROWN = "#a8714f"
 
 # Skin tones for people, lightest first. A crowd mixes the lighter and the darker ones about evenly.
 SKIN_LIGHTEST = "#f0d6b0"; SKIN_LIGHT = "#d09a73"; SKIN_MID = "#b9825c"; SKIN_DARK = "#a8714f"; SKIN_DARKEST = "#8d5a3b"
+
+# Rules the build checks by itself (checks.py). Parts register what they draw (parts.place), and
+# these named values decide what fails. Change one here, never in a scene.
+#
+# Real size each kind of part stands for, in metres, as a (smallest, largest) range of the one
+# dimension the part measures (people and trees their height, cars and trucks their length, and so
+# on). A scene has one scale if some pixels-per-metre fits every part in it at once.
+REAL_SIZE_M = {
+    "person": (1.5, 1.95), "child": (1.0, 1.5), "car": (4.0, 5.3), "cart": (0.95, 1.2),
+    "bike": (1.5, 2.0), "tree": (3, 22), "building": (3, 14), "bin": (1.0, 2.6), "bed": (0.3, 0.8),
+}
+# The safe area: nothing registered comes closer to an edge than this, and nothing runs behind the panel.
+SAFE_MARGIN = 40
+# Largest empty band across the safe area, as a share of its width or height. Beyond it the
+# content is not balanced in its frame.
+DEAD_BAND_MAX = 0.20
+# Kinds that do not fill a frame: a calendar page floating in empty sky is a label, not content.
+# Bleeding surfaces count toward balance only when their kind is a building (a facade rising out of
+# the frame is the scene); the road and the ground never do.
+LABEL_KINDS = ("calendar",)
+FILLING_BLEED_KINDS = ("building",)
+# The focal subject is at least this share of the safe area and of its height, and is never a person
+# or a tree. A subject that lies low under open sky, or is a small thing in a big frame, fails.
+FOCAL_MIN_SHARE = 0.25
+FOCAL_MIN_HEIGHT = 0.30
+# A focal group (a moment made of several parts) qualifies by its largest part, which is itself at least
+# this share of the safe area, not by the box around all of them.
+FOCAL_LEAD_SHARE = 0.10
+# Layouts count as repeated at this overlap (0 to 1) of what sits where, on a 6 by 4 grid.
+LAYOUT_REPEAT_MAX = 0.5
+# Scenes of one real place that may share a layout, as tuples of scene names.
+SAME_PLACE = ()
+# Pictures drawn before these rules. The checks skip them until one is redrawn, then its name leaves
+# this list. `build --audit` shows what each would fail.
+PRE_RULES_SCENES = (
+    "school", "signal", "siren", "police", "trash", "leaves", "winter", "parking", "marimba",
+    "workshop", "thanksgiving", "dropoff", "youth",
+)
+
+# Text inside a part (calendar page, sign board): its ink is centred in the area meant for it within
+# this share of the area's width and height, and keeps at least TEXT_MIN_PAD of the area's shorter
+# side clear of every edge of that area.
+TEXT_CENTER_TOL = 0.03
+TEXT_MIN_PAD = 0.08
+
+# Lettering that is part of a place (a building's sign, a notice on its door) must stay readable on a
+# phone: the picture is shown PHONE_WIDTH pixels wide there, and a line's capitals must then be at
+# least MIN_LETTERING_PHONE_PX tall.
+PHONE_WIDTH = 360
+MIN_LETTERING_PHONE_PX = 7
+# Decorative overlays that sit on top of a scene (the calendar page). One may not overlap a building
+# or the focal subject: a floating object over a real facade looks like a mistake.
+OVERLAY_KINDS = ("calendar",)

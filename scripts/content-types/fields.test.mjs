@@ -128,4 +128,23 @@ describe('describeFields', () => {
     ])
     expect(row.detail).toBe('← agent-review-items.run')
   })
+
+  it('gives what a relationship, upload or join points at, and the keys, as data (#1462)', () => {
+    const rows = describeFields([
+      { name: 'categories', type: 'relationship', relationTo: ['posts', 'pages'], hasMany: true },
+      { name: 'image', type: 'upload', relationTo: 'media' },
+      { name: 'items', type: 'join', collection: 'agent-review-items', on: 'run' },
+      { name: 'files', type: 'join', collection: ['a', 'b'], on: 'folder' },
+      { name: 'slug', type: 'text', unique: true, index: true },
+      { name: 'title', type: 'text' },
+    ])
+    expect(rows.map((r) => [r.path, r.link, r.unique, r.indexed])).toEqual([
+      ['categories', { to: ['posts', 'pages'], many: true }, false, false],
+      ['image', { to: ['media'], many: false }, false, false],
+      ['items', { collections: ['agent-review-items'], on: 'run' }, false, false],
+      ['files', { collections: ['a', 'b'], on: 'folder' }, false, false],
+      ['slug', null, true, true],
+      ['title', null, false, false],
+    ])
+  })
 })

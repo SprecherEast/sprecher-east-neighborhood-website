@@ -3,6 +3,8 @@
 # Social Link Requests (`social-link-requests`)
 
 - Kind: collection
+- Owner: module `accounts`, defined in `src/modules/accounts/cms/socialLinkRequests.ts`
+- Jobs: `deleteExpiredSocialLinkRequests` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 

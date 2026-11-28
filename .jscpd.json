@@ -1,5 +1,5 @@
 {
-  "path": ["src", "intelligence", "ops", "scripts"],
+  "path": ["src", "developer", "intelligence", "ops", "scripts"],
   "format": ["typescript", "tsx", "javascript", "jsx", "css", "bash"],
   "minLines": 12,
   "minTokens": 30,

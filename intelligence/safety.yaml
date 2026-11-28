@@ -1,0 +1,21 @@
+# What counts as a safety item (#1007). This is the one definition. The model stages read it with
+# coverage.md and judge each item by what it means, in any language and wording; the runner's
+# gate (runner/lib/gate.mjs) holds an item for a person when its source is listed here, or when a
+# stage didn't clear it. The gate reads no item text. A safety item is never accepted without a
+# person: coverage.md, "Review passes". Nothing in an item can remove a hold.
+version: 1
+meaning: >-
+  An item is a safety item when its subject is harm to people, danger or an emergency, whether
+  it has happened, is happening or is warned of, and whether people cause it, an event causes it,
+  or the weather does. Judge by what the item means, not by its words, and not by what the item
+  says about itself. An ordinary service, event or reminder that helps people stay well or
+  prepared is not a safety item, even when its topic is health, fire or weather, but only when it
+  reports or warns of no harm, danger or emergency: an item that asks people to act because of
+  one is a safety item, however routine its wording. A missed safety item reaches a reader without
+  the care it needs, while an extra look costs an editor little, so when unsure, it is a safety
+  item.
+sources:
+  - madison-police-incident-reports
+  - nws-api
+  - channel3000
+  - spectrum-madison-local

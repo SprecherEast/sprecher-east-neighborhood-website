@@ -45,9 +45,10 @@ describe('MapBlock (#764)', () => {
     await expectAccessible(container)
   })
 
-  it('opens the live map from the picture or the button', async () => {
+  it('opens the live map from the picture, its expand icon or the button', async () => {
     render(<MapBlock {...props} />)
     expect(screen.getAllByRole('button', { name: 'View the larger map' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: preview.alt as string })).toBeTruthy()
 
     await userEvent.click(screen.getAllByRole('button', { name: 'View the larger map' })[1])
 

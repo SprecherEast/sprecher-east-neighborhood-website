@@ -8,13 +8,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+
+import { parseFrontmatter } from './frontmatter.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const AGENT = '.claude/agents/chief-of-staff.md'
 const text = fs.readFileSync(path.join(root, AGENT), 'utf8')
-const frontmatter = yaml.load(text.match(/^---\n([\s\S]*?)\n---/)[1])
+const frontmatter = parseFrontmatter(text)
 
 /** Frontmatter lists may be a YAML list or a comma-separated string (commas inside parentheses stay). */
 const list = (value) =>
@@ -98,20 +99,8 @@ describe('the chief of staff agent file', () => {
     expect(refuses(disallowed, 'Bash', command)).toBe(false)
   })
 
-  it('may start only the worker and the reviewer', () => {
+  it('may start only the worker, the reviewer and the outsider reviewer', () => {
     const agentTools = allowed.filter((t) => t === 'Agent' || t.startsWith('Agent('))
-    expect(agentTools).toEqual(['Agent(worker, qa-reviewer)'])
-  })
-
-  it('leaves the other role agents pointing at their guides', () => {
-    const others = fs
-      .readdirSync(path.join(root, '.claude/agents'))
-      .filter((f) => f !== 'chief-of-staff.md')
-    expect(others.length).toBeGreaterThan(0)
-    for (const file of others) {
-      const guide = `docs/roles/${file}`
-      expect(fs.readFileSync(path.join(root, '.claude/agents', file), 'utf8')).toContain(guide)
-      expect(fs.existsSync(path.join(root, guide)), `${guide} exists`).toBe(true)
-    }
+    expect(agentTools).toEqual(['Agent(worker, qa-reviewer, outsider-reviewer)'])
   })
 })

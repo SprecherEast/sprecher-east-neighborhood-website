@@ -20,6 +20,10 @@ export function describeContentType(entry, kind, { locate = noFiles, root = '' }
     access: describeAccess(entry.access, locate),
     hooks: describeHooks(entry.hooks, locate),
     endpoints: describeEndpoints(entry.endpoints, locate),
+    // The routes Payload adds too (count, versions, login and the rest), for the endpoints page
+    allEndpoints: describeEndpoints(entry.endpoints, locate, { builtIn: true }),
+    // GraphQL is on for a type unless it says `graphQL: false`
+    graphQL: entry.graphQL !== false,
     fields: describeFields(entry.fields ?? [], { locate }),
     auth: describeSettings(entry.auth, { root }),
     upload: describeSettings(entry.upload, { root }),

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import { cn } from '@/platform/lib/cn'
-import { Poppins } from 'next/font/google'
 import React from 'react'
 
 import { AdminBar } from '@/platform/ui/AdminBar.client'
@@ -9,6 +8,7 @@ import { ThemeDecoration } from '@/platform/theme/ThemeDecoration'
 import { JsonLd } from '@/platform/ui/JsonLd'
 import { SiteFooter, SiteHeader } from '@/modules/site/server'
 import { AccountMenu, AccountProvider } from '@/modules/accounts/server'
+import { poppins, poppinsLatinExt } from '@/platform/theme/fonts'
 import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
@@ -23,21 +23,13 @@ import './globals.css'
 import { getServerSideURL } from '@/platform/lib/getURL'
 import { Button } from '@/platform/ui'
 
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-poppins',
-  display: 'swap',
-})
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
 
   return (
     // data-scroll-behavior: Next keeps page changes instant while in-page jumps glide (#574)
     <html
-      className={cn(poppins.variable)}
+      className={cn(poppins.variable, poppinsLatinExt.variable)}
       data-scroll-behavior="smooth"
       lang="en"
       suppressHydrationWarning
