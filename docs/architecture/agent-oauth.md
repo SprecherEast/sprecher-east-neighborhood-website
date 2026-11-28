@@ -20,9 +20,9 @@ scope="read suggest", resource_metadata="https://<site>/.well-known/oauth-protec
    through the rewrites in `next.config.js`. A document answers only for the resource whose path it is fetched with (RFC 9728), so only `/.well-known/oauth-protected-resource/api/mcp` is served; it and the authorization-server document say the redirect carries `iss` (RFC 9207).
 4. It sends the admin's browser to `/oauth/authorize` with the client ID, redirect address, PKCE
    challenge, state, `resource` and, if it wants more than `read`, `scope`. This visit comes from the tool's own site
-   (`Sec-Fetch-Site: cross-site`), and the page reads no session at all, so it shows no account
-   (`getViewer` ignores the session on any request from another site, by `isFromAnotherSite`; from
-   Payload 3.94 Payload's own check would accept the cookie on such a visit): it checks the request (below),
+   (`Sec-Fetch-Site: cross-site`). This page reads no session, so it shows no account; the approval
+   ignores one on a request from another site (`getViewer`, `isFromAnotherSite`; from Payload 3.94
+   Payload's own check would accept the cookie on such a visit): it checks the request (below),
    says who is asking and where it returns to, and offers **Continue to approval**.
    That link goes to `/oauth/approve` on this site, carrying the checked request and nothing
    secret, so the browser sends the session and the page checks everything again. There a signed-in

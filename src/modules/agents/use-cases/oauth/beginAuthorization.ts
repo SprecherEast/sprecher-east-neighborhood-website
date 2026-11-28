@@ -36,11 +36,10 @@ export type Beginning =
   | { kind: 'consent'; view: ConsentView }
 
 /**
- * The first page of a connection (#1501), reached from the AI tool's own site. The browser
- * withholds the session on such a visit (Payload ignores the sign-in cookie on a cross-site
- * navigation, as its CSRF protection means it to), so this page reads none and shows nothing about
- * any account: only who is asking, and a link that carries the checked request to the next page,
- * which is opened from this site and can see who is signed in.
+ * The first page of a connection (#1501), reached from the AI tool's own site. This page reads no
+ * session and shows nothing about any account: only who is asking, and a link that carries the
+ * checked request to the next page, opened from this site. That approval ignores a session from
+ * another site (`isFromAnotherSite`), so only there is the signed-in admin seen.
  */
 export async function continueAuthorization(
   params: RawParams,
