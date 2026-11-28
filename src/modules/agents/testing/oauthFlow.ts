@@ -138,7 +138,7 @@ export async function signIn(
   payload: Payload,
   admin: Account,
   clientId: string,
-  scope = 'read suggest',
+  scope: string = SCOPES.join(' '),
 ) {
   const { verifier, challenge } = pkce()
   const decided = await approve(authorizeParams(clientId, challenge, { scope }), admin)

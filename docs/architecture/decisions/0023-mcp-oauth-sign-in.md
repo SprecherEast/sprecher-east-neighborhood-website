@@ -65,7 +65,7 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
    narrows what the plugin's boxes and the agent account's access already allow. A token's effective
    scopes are its client's record now, overlapped with what the token was given.
 10. Scope choices: `suggest` includes the agent's run log because both of its tools need a run; the
-    discovery documents list only `read`, and a request gets `read` when it names none; a request for more
+    discovery documents and the `401` list every scope so a standard client can ask for what it needs (recorded on #1499, 2026-11-28), a request gets `read` when it names none, and the client's record caps any token; a request for more
     than the record allows is narrowed before either page (the approval lists only what is granted), and refused only when
     nothing is left; one agent account per client is recommended in Admin, not enforced, since a key that
     already shares an account would then be impossible to edit or revoke.

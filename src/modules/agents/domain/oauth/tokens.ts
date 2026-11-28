@@ -38,7 +38,7 @@ export function checkToken(
   if (token.kind !== expect.kind) return 'wrong-kind'
   if (token.usedAt) return 'used'
   if (token.revokedAt) return 'revoked'
-  if (token.expiresAt.getTime() <= expect.now.getTime()) return 'expired'
+  if (isExpired(token.expiresAt, expect.now)) return 'expired'
   if (!resourceMatches(token.resource, expect.resource)) return 'wrong-audience'
   if (!token.client.enabled) return 'client-disabled'
   // A client moved to another agent account no longer vouches for what the old one was given

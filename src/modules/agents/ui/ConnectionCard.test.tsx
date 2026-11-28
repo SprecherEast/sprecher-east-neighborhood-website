@@ -40,6 +40,8 @@ describe('ConnectionCard', () => {
     expect(screen.getByText('It can')).toBeTruthy()
     expect(screen.getByText('Read posts')).toBeTruthy()
     expect(screen.getByText('Suggest')).toBeTruthy()
+    // a screen reader hears them as a list of two
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
     cleanup()
     render(
       <ConnectionCard client={client} agentName="Scout">

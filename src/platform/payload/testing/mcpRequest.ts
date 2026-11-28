@@ -1,6 +1,8 @@
 import { REST_POST } from '@payloadcms/next/routes'
 import type { Payload, SanitizedConfig, TypedUser } from 'payload'
 
+import type { PayloadMcpApiKey } from '@/payload-types'
+
 /**
  * Sends MCP JSON-RPC requests to Payload's `/api/mcp` with an API key or an OAuth access token (or
  * none, with `null`), as an agent runtime does,
@@ -69,7 +71,7 @@ export const createMcpKey = (
   admin: TypedUser,
   owner: number,
   apiKey: string,
-  extra: { scopes?: ('read' | 'suggest')[]; expiresAt?: string } = {},
+  extra: { scopes?: PayloadMcpApiKey['scopes']; expiresAt?: string } = {},
 ) =>
   payload.create({
     collection: 'payload-mcp-api-keys',
@@ -79,6 +81,8 @@ export const createMcpKey = (
       enableAPIKey: true,
       apiKey,
       ...ALL_TOOLS,
+      // Every scope, as a key had before scopes existed. `platform/` cannot import the agents
+      // module's `SCOPES`, so the list is named here; callers that need another set pass `scopes`
       scopes: ['read', 'suggest'],
       ...extra,
     },

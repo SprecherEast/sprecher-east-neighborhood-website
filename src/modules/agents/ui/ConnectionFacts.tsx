@@ -55,13 +55,16 @@ export function ConnectionFacts({
               {
                 label: 'It can',
                 value: (
-                  <div className="space-y-1">
-                    {abilities.map((ability) => (
-                      <Text key={ability} variant="lead" as="p">
-                        {ability}
-                      </Text>
-                    ))}
-                  </div>
+                  <MetaList
+                    className="gap-1"
+                    items={abilities.map((ability) => ({
+                      value: (
+                        <Text variant="lead" as="p">
+                          {ability}
+                        </Text>
+                      ),
+                    }))}
+                  />
                 ),
               },
             ]),

@@ -37,6 +37,8 @@ describe('checkToken', () => {
   it('refuses an expired token, also at the exact moment it expires', () => {
     expect(check(token({ expiresAt: minutes(-1) }))).toBe('expired')
     expect(check(token({ expiresAt: NOW }))).toBe('expired')
+    // a date that cannot be read counts as past, never as no expiry
+    expect(check(token({ expiresAt: new Date('nonsense') }))).toBe('expired')
   })
 
   it('refuses a revoked token', () => {

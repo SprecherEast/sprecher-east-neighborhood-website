@@ -13,7 +13,7 @@ resource indicator.
    optional expiry and its redirect addresses. Saving makes the client
    ID. The tool is given the ID and no secret (every client is public; PKCE protects the code).
 2. The tool calls `/api/mcp` with no token. It gets `401` and `WWW-Authenticate: Bearer
-resource_metadata="https://<site>/.well-known/oauth-protected-resource/api/mcp"`.
+scope="read suggest", resource_metadata="https://<site>/.well-known/oauth-protected-resource/api/mcp"`.
 3. It reads that document (`resource` is the MCP address; `authorization_servers` is this site), then
    `/.well-known/oauth-authorization-server` (RFC 8414): the two addresses below, `S256` as the only
    method, no registration address. Both are served by routes under `/oauth/discovery/`, reached
@@ -71,7 +71,8 @@ them in `overrideAuth`, after the credential is known.
   key's own boxes (or, for OAuth, the address's options). The agent account's collection access is still
   the final word, and no scope allows a write to events, posts or categories.
 - **A request gets the minimal scope.** With no `scope` it gets `read`; the metadata and the `401`
-  advertise only `read`. A request names scopes from our list or is refused (`invalid_scope`); what the
+  advertise every scope, so a standard client can ask for what it needs; the client's record caps
+  what any token gets, and a new client's record holds `read` only. A request names scopes from our list or is refused (`invalid_scope`); what the
   client's record does not allow is dropped before either page (the approval lists only what is
   granted), and the request is refused only if nothing is left.
 - **A token has at most what the record allows now and what was approved.** The record is read at every

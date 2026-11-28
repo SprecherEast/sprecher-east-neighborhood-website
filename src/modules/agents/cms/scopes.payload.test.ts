@@ -9,6 +9,7 @@ import {
 import { mcpClient } from '@/platform/payload/testing/mcpRequest'
 
 import { bearerChallenge, insufficientScopeChallenge } from '../domain/oauth/metadata'
+import type { Scope } from '../domain/scopes'
 import { exchange, onlyDoc, registerClient, RESOURCE, signIn } from '../testing/oauthFlow'
 
 /**
@@ -53,7 +54,7 @@ const suggestion = (n: number) => ({
 })
 
 type Client = { agent: Account; clientId: string; token: string; refresh: string }
-const connect = async (name: string, scopes: ('read' | 'suggest')[], asked?: string) => {
+const connect = async (name: string, scopes: Scope[], asked?: string) => {
   const agent = await createAccount(payload, 'agent', name)
   await payload.create({
     collection: 'agent-runs',
