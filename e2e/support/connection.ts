@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 import { E2E } from './settings.mjs'
 
@@ -45,3 +45,15 @@ export async function routeTheTool(page: Page, authorizeUrl: string) {
     }),
   )
 }
+
+/**
+ * Waits until React has taken over the server-rendered element: it then holds its props. A press
+ * before that is a form post by the browser itself (which works, and has its own tests), and the
+ * stand-in site of `routeTheTool` can't serve the redirect it ends in.
+ */
+export const hydrated = (element: Locator) =>
+  expect
+    .poll(() =>
+      element.evaluate((node) => Object.keys(node).some((k) => k.startsWith('__reactProps'))),
+    )
+    .toBe(true)

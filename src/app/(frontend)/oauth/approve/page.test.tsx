@@ -94,6 +94,7 @@ describe('/oauth/approve', () => {
 
   it('keeps the page out of search and its address out of referrers', () => {
     expect(metadata.robots).toMatchObject({ index: false })
-    expect(metadata.referrer).toBe('no-referrer')
+    // A form posted before hydration carries `Origin: null` under no-referrer, which Next refuses
+    expect(metadata.referrer).toBe('same-origin')
   })
 })

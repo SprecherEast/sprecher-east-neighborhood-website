@@ -1,17 +1,17 @@
 import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
+import type { ClientFacts } from '../domain/oauth/types'
+
 /**
  * What both pages of a connection say about the request (#1501): which AI tool, and where it
  * returns to; the approval adds the agent account the tool would act as.
  */
 export function ConnectionFacts({
-  clientName,
-  redirectHost,
+  client: { clientName, redirectHost },
   agentName,
 }: {
-  clientName: string
-  redirectHost: string
+  client: ClientFacts
   /** Only the approval names it: the first page shows nothing about any account */
   agentName?: string
 }) {

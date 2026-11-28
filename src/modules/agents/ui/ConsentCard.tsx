@@ -1,8 +1,7 @@
-import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import type { ConsentView } from '../use-cases/oauth/beginAuthorization'
-import { ConnectionFacts } from './ConnectionFacts'
+import { ConnectionCard } from './ConnectionCard'
 import { ConsentButtons } from './ConsentButtons.client'
 
 /**
@@ -11,17 +10,12 @@ import { ConsentButtons } from './ConsentButtons.client'
  */
 export function ConsentCard({ view }: { view: ConsentView }) {
   return (
-    <Card variant="elevated" padding="lg" className="space-y-6">
-      <ConnectionFacts
-        clientName={view.clientName}
-        redirectHost={view.redirectHost}
-        agentName={view.agentName ?? 'The agent account'}
-      />
+    <ConnectionCard client={view} agentName={view.agentName ?? 'The agent account'}>
       <Text variant="small">
         It can read published events and posts and suggest drafts for us to review. It can’t
         publish. Remove it any time in Admin.
       </Text>
       <ConsentButtons view={view} />
-    </Card>
+    </ConnectionCard>
   )
 }

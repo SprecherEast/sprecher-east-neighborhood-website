@@ -16,7 +16,13 @@ import { privateAddressMetadata } from '@/platform/seo/privateAddress'
 
 const TITLE = 'Approve an AI Tool'
 
-export const metadata: Metadata = privateAddressMetadata(TITLE, CONNECTION_DESCRIPTION)
+// Private like the first page, but with the one difference its buttons need: with `no-referrer` a
+// browser sends `Origin: null` on a form posted before the page has hydrated, and Next refuses
+// that. `same-origin` sends our own origin to us and still sends nothing to any other site.
+export const metadata: Metadata = {
+  ...privateAddressMetadata(TITLE, CONNECTION_DESCRIPTION),
+  referrer: 'same-origin',
+}
 
 // The answer depends on the signed-in account and on the request, never on a cached page
 export const dynamic = 'force-dynamic'

@@ -1,54 +1,43 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useActionState } from 'react'
 
 import { Alert } from '@/platform/ui/Alert'
 import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Button } from '@/platform/ui'
 
 import type { ConsentView } from '../use-cases/oauth/beginAuthorization'
-import { decideConnection } from '../actions'
+import { decideConnectionForm } from '../actions'
 
 /**
- * Approve or not. Each button is a server action carrying the request and its ticket; the browser
- * then leaves for the AI tool, so a refusal is the only answer shown here.
+ * Approve or not. A form whose server action carries the request and its ticket, and each button
+ * its choice, so a press before the page has hydrated still works. The browser then leaves for the
+ * AI tool, so a refusal is the only answer shown here.
  */
 export function ConsentButtons({ view }: { view: Pick<ConsentView, 'request' | 'ticket'> }) {
-  const [pending, start] = useTransition()
-  const [refusal, setRefusal] = useState<string | null>(null)
-
-  const decide = (decision: 'approve' | 'deny') =>
-    start(async () => {
-      const answer = await decideConnection({
-        request: view.request,
-        ticket: view.ticket,
-        decision,
-      })
-      setRefusal(answer.message)
-    })
+  const [refusal, decide, pending] = useActionState(
+    decideConnectionForm.bind(null, { request: view.request, ticket: view.ticket }),
+    null,
+  )
 
   return (
-    <div className="space-y-4">
-      {refusal && <Alert tone="error">{refusal}</Alert>}
+    <form action={decide} className="space-y-4">
+      {refusal && <Alert tone="error">{refusal.message}</Alert>}
       <ButtonRow>
-        <Button
-          type="button"
-          loading={pending}
-          fullWidth="mobile"
-          onClick={() => decide('approve')}
-        >
+        <Button type="submit" name="decision" value="approve" loading={pending} fullWidth="mobile">
           Allow this connection
         </Button>
         <Button
-          type="button"
+          type="submit"
+          name="decision"
+          value="deny"
           variant="secondary"
           disabled={pending}
           fullWidth="mobile"
-          onClick={() => decide('deny')}
         >
           Don’t allow
         </Button>
       </ButtonRow>
-    </div>
+    </form>
   )
 }

@@ -3,8 +3,8 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ decideConnection: vi.fn() }))
-vi.mock('../actions', () => ({ decideConnection: mocks.decideConnection }))
+const mocks = vi.hoisted(() => ({ decideConnectionForm: vi.fn() }))
+vi.mock('../actions', () => ({ decideConnectionForm: mocks.decideConnectionForm }))
 
 import { ConsentButtons } from './ConsentButtons.client'
 
@@ -20,16 +20,31 @@ const view = {
   ticket: '123.abc',
 }
 
-beforeEach(() => mocks.decideConnection.mockReset().mockResolvedValue({ message: 'Refused.' }))
+beforeEach(() => mocks.decideConnectionForm.mockReset().mockResolvedValue({ message: 'Refused.' }))
 afterEach(cleanup)
 
+/** What the action received: the bound input, the earlier answer and the form's fields */
+const lastCall = () => {
+  const [input, , form] = mocks.decideConnectionForm.mock.lastCall ?? []
+  return { input, choice: (form as FormData).get('decision') }
+}
+
 describe('ConsentButtons', () => {
-  it('sends the request, its ticket and the choice, for each button', async () => {
+  it('sends the request and its ticket with the choice of the pressed button', async () => {
     render(<ConsentButtons view={view} />)
     await userEvent.click(screen.getByRole('button', { name: 'Allow this connection' }))
-    expect(mocks.decideConnection).toHaveBeenLastCalledWith({ ...view, decision: 'approve' })
+    expect(lastCall()).toEqual({ input: view, choice: 'approve' })
     await userEvent.click(screen.getByRole('button', { name: 'Don’t allow' }))
-    expect(mocks.decideConnection).toHaveBeenLastCalledWith({ ...view, decision: 'deny' })
+    expect(lastCall()).toEqual({ input: view, choice: 'deny' })
+  })
+
+  it('is a form that submits each button, so it needs no script to work', () => {
+    render(<ConsentButtons view={view} />)
+    for (const name of ['Allow this connection', 'Don’t allow']) {
+      const button = screen.getByRole('button', { name })
+      expect(button.getAttribute('type')).toBe('submit')
+      expect(button.closest('form')).not.toBeNull()
+    }
   })
 
   it('shows a refusal where the buttons are', async () => {

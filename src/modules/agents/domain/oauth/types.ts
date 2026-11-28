@@ -33,6 +33,13 @@ export type Credential = {
   codeChallenge: string | null
 }
 
+/** What both pages of a connection show of who is asking: the tool, and where it returns to. */
+export type ClientFacts = {
+  clientName: string
+  /** Host and port of the address the sign-in returns to, shown so the admin can recognise it */
+  redirectHost: string
+}
+
 /** The "user" the OAuth library carries from approval to token: who it acts as, and for what. */
 export type Grantee = {
   agentId: number

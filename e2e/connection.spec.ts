@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 
 import { connectionClientId } from './support/db'
-import { CONNECT, connectionRequest, routeTheTool } from './support/connection'
+import { CONNECT, connectionRequest, hydrated, routeTheTool } from './support/connection'
 import { logIn } from './support/account'
 import { expect, expectAccessible, test } from './support/test'
 
@@ -40,6 +40,7 @@ test.describe('connecting an AI tool', () => {
     await expect(page.getByText('claude.example')).toBeVisible()
     await expect(allow(page)).toHaveCount(0)
     await expect(page.getByText(CONNECT.agentName)).toHaveCount(0)
+    await expect(page).toHaveTitle(/Connect an AI Tool/)
     await expectAccessible(page)
 
     // Continuing opens the approval from this site, where the admin is recognised
@@ -50,8 +51,12 @@ test.describe('connecting an AI tool', () => {
     expect((await approving).headers()['content-security-policy']).toBe(NO_FRAMING)
     await expect(allow(page)).toBeVisible()
     await expect(page.getByText(CONNECT.agentName)).toBeVisible()
+    // Continuing is a client-side navigation: the new page's title replaces the old one a moment
+    // after its content, and a check in that gap would find none
+    await expect(page).toHaveTitle(/Approve an AI Tool/)
     await expectAccessible(page)
 
+    await hydrated(allow(page))
     await allow(page).click()
     await page.waitForURL(/^https:\/\/claude\.example\/cb\?/)
     const back = new URL(page.url())
@@ -65,6 +70,7 @@ test.describe('connecting an AI tool', () => {
     await expect(page).toHaveURL(/\/account/)
     await startFromTheTool(page, 'state-deny')
     await page.getByRole('link', { name: 'Continue to approval' }).click()
+    await hydrated(page.getByRole('button', { name: 'Don’t allow' }))
     await page.getByRole('button', { name: 'Don’t allow' }).click()
     await page.waitForURL(/^https:\/\/claude\.example\/cb\?/)
     const back = new URL(page.url())
@@ -72,6 +78,32 @@ test.describe('connecting an AI tool', () => {
     expect(back.searchParams.get('code')).toBeNull()
     expect(back.searchParams.get('state')).toBe('state-deny')
   })
+
+  // A tap before the page has hydrated must not be lost. Scripts are held back, so the buttons are
+  // only what the server rendered: a form. The answer is the redirect back to the tool, which the
+  // stand-in site can't serve to a form post, so the redirect itself is what is read.
+  for (const [button, expected] of [
+    ['Allow this connection', /^https:\/\/claude\.example\/cb\?code=sec_/],
+    ['Don’t allow', /^https:\/\/claude\.example\/cb\?error=access_denied/],
+  ] as const) {
+    test(`pressing "${button}" before the page has loaded its scripts still answers the tool`, async ({
+      page,
+    }) => {
+      await logIn(page, CONNECT.adminEmail, CONNECT.password)
+      await expect(page).toHaveURL(/\/account/)
+      await routeTheTool(page, connectionRequest(await connectionClientId(), 'state-early'))
+      await page.goto('https://claude.example/')
+      await page.route('**/_next/static/**/*.js', (route) => route.abort())
+      await page.getByRole('link', { name: 'Connect' }).click()
+      await page.getByRole('link', { name: 'Continue to approval' }).click()
+      const posted = page.waitForResponse((response) => response.request().method() === 'POST')
+      await page.getByRole('button', { name: button }).click()
+      const answer = await posted
+      expect(answer.status()).toBe(303)
+      expect(answer.headers().location).toMatch(expected)
+      expect(answer.headers().location).toContain('state=state-early')
+    })
+  }
 
   test('a visitor who is signed out logs in and comes back to the same request', async ({
     page,

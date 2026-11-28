@@ -24,3 +24,18 @@ export async function decideConnection(input: unknown): Promise<{ message: strin
   if (decided.kind === 'redirect') redirect(decided.url)
   return { message: decided.message }
 }
+
+/**
+ * The same approval as a form's action, so the buttons work before the page has hydrated: React
+ * runs a form's server action from the server-rendered page. The request and ticket arrive bound
+ * to the action, the choice as the pressed button's value, and all three go through the same
+ * checks as above (the input is still untrusted). It answers `null` to nothing: the first answer
+ * is the refusal, and a success leaves for the AI tool.
+ */
+export async function decideConnectionForm(
+  input: unknown,
+  _previous: { message: string } | null,
+  form: FormData,
+): Promise<{ message: string }> {
+  return decideConnection({ ...Object(input), decision: form.get('decision') })
+}

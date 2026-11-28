@@ -1,3 +1,4 @@
+import OAuth2Server from '@node-oauth/oauth2-server'
 import type { Payload } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
@@ -159,5 +160,26 @@ describe('the token address', () => {
     expect(answers.at(-1)?.status).toBe(429)
     expect(answers.at(-1)?.body).toMatchObject({ error_description: TOO_MANY_REQUESTS })
     expect(answers.slice(0, 30).every((a) => a.status === 400)).toBe(true)
+  })
+})
+
+describe('an error the OAuth library raises while it makes tokens', () => {
+  const failWith = async (error: Error) => {
+    vi.spyOn(OAuth2Server.prototype, 'token').mockRejectedValueOnce(error)
+    return exchange({ grant_type: 'refresh_token', client_id: clientId, refresh_token: 'ser_x' })
+  }
+
+  it('is answered as a server error, never under the library name or with its text', async () => {
+    const answer = await failWith(new OAuth2Server.InvalidArgumentError('internal detail'))
+    expect(answer.status).toBe(500)
+    expect(answer.body.error).toBe('server_error')
+    expect(JSON.stringify(answer.body)).not.toMatch(/invalid_argument|internal detail/)
+  })
+
+  it('keeps its status and standard name when the name is one a token request may answer with', async () => {
+    const answer = await failWith(new OAuth2Server.InvalidGrantError('internal detail'))
+    expect(answer.status).toBe(400)
+    expect(answer.body.error).toBe('invalid_grant')
+    expect(JSON.stringify(answer.body)).not.toContain('internal detail')
   })
 })

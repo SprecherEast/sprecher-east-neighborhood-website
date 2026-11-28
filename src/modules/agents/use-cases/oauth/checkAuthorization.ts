@@ -8,6 +8,7 @@ import {
 import { CONNECTION_REFUSED } from '../../domain/oauth/constants'
 import type { ConsentRequest } from '../../domain/oauth/consent'
 import { redirectError } from '../../domain/oauth/redirects'
+import type { ClientFacts } from '../../domain/oauth/types'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
@@ -22,13 +23,11 @@ export type Checked =
   /** The request is understood but wrong: tell the client */
   | { kind: 'redirect'; url: string }
   | { kind: 'too-many' }
-  | {
+  | ({
       kind: 'ok'
       request: ConsentRequest
-      clientName: string
       agentId: number
-      redirectHost: string
-    }
+    } & ClientFacts)
 
 /**
  * What both pages of the connection do first (#1501), in this order, so nothing is sent anywhere

@@ -43,6 +43,9 @@ describe('refreshing', () => {
     expect(renewed.body.access_token).toMatch(/^sea_/)
     expect(renewed.body.access_token).not.toBe(first.access_token)
     expect(renewed.body.refresh_token).not.toBe(first.refresh_token)
+    // The one scope is carried through a renewal, as it is through the first sign-in
+    expect(renewed.body.scope).toBe('mcp')
+    expect(first.scope).toBe('mcp')
 
     const again = await exchange({
       grant_type: 'refresh_token',

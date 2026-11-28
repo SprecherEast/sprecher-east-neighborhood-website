@@ -1802,7 +1802,7 @@
       "inheritedProps": 277,
       "parts": [],
       "usedBy": {
-        "count": 27,
+        "count": 26,
         "files": [
           "src/app/(frontend)/account/page.tsx",
           "src/app/(frontend)/dev/gallery/DisplayGallery.tsx",
@@ -1811,8 +1811,7 @@
           "src/modules/accounts/ui/ConnectGoogle.tsx",
           "src/modules/accounts/ui/PasskeyOffer.client.tsx",
           "src/modules/accounts/ui/PasskeysCard.tsx",
-          "src/modules/agents/ui/ConsentCard.tsx",
-          "src/modules/agents/ui/ContinueCard.tsx",
+          "src/modules/agents/ui/ConnectionCard.tsx",
           "src/modules/contact/ui/FormBlock.client.tsx",
           "src/modules/directory/ui/ResourceCard.tsx",
           "src/modules/events/ui/EventCard.tsx",

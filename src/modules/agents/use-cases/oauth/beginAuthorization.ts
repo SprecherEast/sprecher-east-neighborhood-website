@@ -3,27 +3,18 @@ import 'server-only'
 import type { RawParams } from '../../domain/oauth/authorizeRequest'
 import { approvePath } from '../../domain/oauth/approveLink'
 import { signConsent, type ConsentRequest } from '../../domain/oauth/consent'
-import type { Viewer } from '../../domain/oauth/types'
+import type { ClientFacts, Viewer } from '../../domain/oauth/types'
 import { findAccountName, getOAuthContext } from '../../data/oauth/context'
 import { checkAuthorization, type Checked } from './checkAuthorization'
 
-export type ConsentView = {
-  clientName: string
-  /** Host and port of the address the sign-in returns to, shown so the admin can recognise it */
-  redirectHost: string
+export type ConsentView = ClientFacts & {
   agentName: string | null
   request: ConsentRequest
   ticket: string
 }
 
-/** What both pages show of who is asking, from a checked request */
-const clientFacts = ({
-  clientName,
-  redirectHost,
-}: {
-  clientName: string
-  redirectHost: string
-}) => ({
+/** Only the two facts of a checked request leave for a page, never the account or the request */
+const clientFacts = ({ clientName, redirectHost }: ClientFacts): ClientFacts => ({
   clientName,
   redirectHost,
 })
@@ -32,13 +23,11 @@ type Refusal = Exclude<Checked, { kind: 'ok' }>
 
 export type Continuing =
   | Refusal
-  | {
+  | ({
       kind: 'continue'
-      clientName: string
-      redirectHost: string
       /** The approval page, on this site, for exactly this request */
       next: string
-    }
+    } & ClientFacts)
 
 export type Beginning =
   | Refusal

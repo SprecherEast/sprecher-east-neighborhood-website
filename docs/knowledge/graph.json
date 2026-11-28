@@ -1031,7 +1031,7 @@
       "id": "business-rule:src/modules/agents/README.md#8",
       "type": "business-rule",
       "name": "**An AI tool signs in with OAuth, and only an admin can allow it:**…",
-      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which, like `/oauth/authorize`, sends `frame-ancestors 'none'` (`NO_FRAMING_PATHS`), so no site can frame it, a sibling subdomain included. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from this site, so Payload reads the session (it does so for a same-origin or same-site request); a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection. A request or approval that can't be trusted gets one wording on the site, and an error that goes back to the tool keeps its name only when it is a standard OAuth one (`OAUTH_ERROR_NAMES`); any other is answered as `server_error` (`domain/oauth/constants.ts`).",
+      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which, like `/oauth/authorize`, sends `frame-ancestors 'none'` (`NO_FRAMING_PATHS`), so no site can frame it, a sibling subdomain included. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from this site, so Payload reads the session (it does so for a same-origin or same-site request); a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection. The Allow and Don't allow buttons are a form whose server action (`decideConnectionForm` in `actions.ts`) carries the request and ticket, each button submitting its own choice, so a press before the page has hydrated still works (the approval page's referrer policy is `same-origin`, because a form posted before hydration under `no-referrer` carries `Origin: null`, which Next refuses); the first page's way on is a plain link, which does too (`ui/ConsentButtons.client.tsx`, `ui/ConnectionCard.tsx`; `src/modules/agents/actions.test.ts`). A request or approval that can't be trusted gets one wording on the site, and an error that goes back to the tool keeps its name only when it is a standard OAuth one (`OAUTH_ERROR_NAMES`); any other is answered as `server_error` (`domain/oauth/constants.ts`).",
       "path": "src/app/(frontend)/oauth/connection.payload.test.tsx",
       "module": "module:agents",
       "aliases": [],
@@ -1040,7 +1040,8 @@
       "watchOuts": [],
       "links": [
         "src/app/(frontend)/oauth/connection.payload.test.tsx",
-        "src/app/apiHeaders.test.ts"
+        "src/app/apiHeaders.test.ts",
+        "src/modules/agents/actions.test.ts"
       ]
     },
     {
@@ -8957,6 +8958,19 @@
       "id": "endpoint:action:src/modules/agents/actions.ts#decideConnection",
       "type": "endpoint",
       "name": "decideConnection",
+      "summary": "A server action: a POST endpoint the browser calls by itself.",
+      "path": "src/modules/agents/actions.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Kind", "value": "server action" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "endpoint:action:src/modules/agents/actions.ts#decideConnectionForm",
+      "type": "endpoint",
+      "name": "decideConnectionForm",
       "summary": "A server action: a POST endpoint the browser calls by itself.",
       "path": "src/modules/agents/actions.ts",
       "module": "module:agents",
@@ -25392,6 +25406,14 @@
     },
     {
       "from": "module:agents",
+      "to": "endpoint:action:src/modules/agents/actions.ts#decideConnectionForm",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "endpoint:mcp:/api/mcp",
       "type": "contains",
       "layer": "structure",
@@ -25491,7 +25513,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 2,
+      "count": 3,
       "via": []
     },
     {
@@ -25619,7 +25641,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 14,
+      "count": 13,
       "via": []
     },
     {
@@ -25651,7 +25673,7 @@
       "to": "shared-component:Card",
       "type": "uses",
       "layer": "ui",
-      "count": 2,
+      "count": 1,
       "via": []
     },
     {

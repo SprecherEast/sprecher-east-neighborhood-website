@@ -7,6 +7,7 @@ describe('OAUTH_ERROR_NAMES', () => {
     'invalid_request',
     'invalid_grant',
     'unsupported_grant_type',
+    'unsupported_response_type',
     'invalid_scope',
     'invalid_target',
     'access_denied',
