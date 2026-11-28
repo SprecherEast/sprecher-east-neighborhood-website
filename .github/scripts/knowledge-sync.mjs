@@ -1,7 +1,8 @@
 /**
  * The knowledge sync rule (decision 0019, section 6; #716, #770): a pull request that changes
- * anything that can alter behavior, anywhere in the repository, must change a note, a reference or
- * a doc, or declare `Behavior change: none` with a reason. What can alter behavior is decided by
+ * anything that can alter behavior, anywhere in the repository, must change a note or a doc, or
+ * declare `Behavior change: none` with a reason. The generated reference is built, not committed
+ * (#1594), so it is never in a diff and never counts. What can alter behavior is decided by
  * the classifier in `scripts/behavior-change.mjs` (tests, comment-only and formatting-only diffs,
  * docs and lockfile patches don't). Where `docs/knowledge/map.json` names a note for a changed
  * path, that note itself must change. Run by the `PR Policy` workflow.
@@ -133,7 +134,7 @@ export function knowledgeProblems({ mapJson, files, noteExists, body }) {
   const uncovered = behavior.map((file) => file.filename).filter((path) => !covered.has(path))
   if (uncovered.length > 0 && docs.length === 0) {
     problems.push(
-      `This PR changes ${shown(uncovered)}, which can change behavior, and no note, reference or doc changed with it. Update the one that describes it (a note, a guideline in \`docs/guidelines/\`, \`docs/project.md\`, the generated \`docs/reference/\`). ${howToFix(declared)}`,
+      `This PR changes ${shown(uncovered)}, which can change behavior, and no note or doc changed with it. Update the one that describes it (a note, a guideline in \`docs/guidelines/\`, \`docs/project.md\`). ${howToFix(declared)}`,
     )
   }
   return problems

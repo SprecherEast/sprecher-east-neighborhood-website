@@ -8,7 +8,7 @@ relationships: []
 
 # Roadmap
 
-The public plan page: milestones (missions), then epics (projects), then issues, read from GitHub on a schedule. There is no collection and nothing in the CMS: GitHub is the only source, so nothing can drift. The pages are static and refresh hourly; the screens are in the [screens reference](../../../docs/reference/routes.md).
+The public plan page: milestones (missions), then epics (projects), then issues, read from GitHub on a schedule. There is no collection and nothing in the CMS: GitHub is the only source, so nothing can drift. The pages are static and refresh hourly; the screens are in the [screens reference](../../../docs/reference/routes.md) (build it with `npm run docs:generate`).
 
 ## Screens
 

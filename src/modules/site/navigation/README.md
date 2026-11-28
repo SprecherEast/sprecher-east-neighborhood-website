@@ -10,7 +10,7 @@ relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }
 
 The header navigation, the footer, the forum link and the redirects editors set: where their links
 come from, when they refresh, and how a redirect is followed without showing a draft. Fields, access
-and hooks: [header](../../../../docs/reference/content-types/header.md), [footer](../../../../docs/reference/content-types/footer.md),
+and hooks: [header](../../../../docs/reference/content-types/header.md) (build it with `npm run docs:generate`), [footer](../../../../docs/reference/content-types/footer.md),
 [redirects](../../../../docs/reference/content-types/redirects.md); kit pieces:
 [navigation](../../../../docs/reference/components/navigation.md). Pages and blocks are in the [site note](../README.md).
 

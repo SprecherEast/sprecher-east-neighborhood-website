@@ -27,6 +27,27 @@ describe('listFiles', () => {
     expect(listFiles(root)).not.toContain('src/modules/demo/domain/rule.ts')
   })
 
+  // The reference is built, not committed (#1594): git ignores it, but the notes link into it and the
+  // checks that read the file list must find it where it was built
+  it('lists the built reference and the showcase import map though git ignores them', () => {
+    const root = fixture()
+    fs.writeFileSync(
+      path.join(root, '.gitignore'),
+      '/docs/reference/\n/src/platform/ui/showcaseRegistry.ts\n',
+    )
+    fs.mkdirSync(path.join(root, 'docs/reference/components'), { recursive: true })
+    fs.writeFileSync(path.join(root, 'docs/reference/routes.md'), 'x')
+    fs.writeFileSync(path.join(root, 'docs/reference/components/media.md'), 'x')
+    fs.mkdirSync(path.join(root, 'src/platform/ui'), { recursive: true })
+    fs.writeFileSync(path.join(root, 'src/platform/ui/showcaseRegistry.ts'), 'x')
+    execFileSync('git', ['add', '-A'], { cwd: root })
+    const files = listFiles(root)
+    expect(files).toContain('src/platform/ui/showcaseRegistry.ts')
+    expect(files).toContain('docs/reference/routes.md')
+    expect(files).toContain('docs/reference/components/media.md')
+    expect(new Set(files).size).toBe(files.length)
+  })
+
   it('lists a repository whose file list is longer than a megabyte', () => {
     const root = fixture()
     const before = listFiles(root).length

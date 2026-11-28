@@ -48,7 +48,7 @@ architecture, test-driven development and similar bounds.
    don't follow the process. If a rule seems to block the task, stop, say which rule and why, and
    ask. A breach found after merge is fixed first, in its own PR, before other work.
 9. **Documentation follows behavior, anywhere in the repository.** A change in what a visitor, an
-   editor or an agent gets changes the note, guideline or generated reference that describes it,
+   editor or an agent gets changes the note or guideline that describes it,
    in the same PR; where `docs/knowledge/map.json` names a note for the code, that note. A PR that
    truly changes nothing (tests, comments, formatting, docs, lockfile patches are exempt by
    themselves) declares `Behavior change: none` with a reason of 20+ characters, and when the

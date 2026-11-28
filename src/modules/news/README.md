@@ -8,7 +8,7 @@ relationships: []
 
 # News
 
-News posts and everything around them: the `posts` collection, the `categories` tree shared with events, the search index, the "top issues" block and the archive block's posts. Not events or the page builder. Fields, access and hooks: [posts](../../../docs/reference/content-types/posts.md), [categories](../../../docs/reference/content-types/categories.md), [search](../../../docs/reference/content-types/search.md); routes (`/posts`, its numbered pages, `/posts/[slug]`, `/search`): [routes](../../../docs/reference/routes.md).
+News posts and everything around them: the `posts` collection, the `categories` tree shared with events, the search index, the "top issues" block and the archive block's posts. Not events or the page builder. Fields, access and hooks: [posts](../../../docs/reference/content-types/posts.md) (build it with `npm run docs:generate`), [categories](../../../docs/reference/content-types/categories.md), [search](../../../docs/reference/content-types/search.md); routes (`/posts`, its numbered pages, `/posts/[slug]`, `/search`): [routes](../../../docs/reference/routes.md).
 
 ## Screens
 

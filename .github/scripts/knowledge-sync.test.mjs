@@ -220,6 +220,22 @@ describe('knowledgeProblems: the whole repository (#770)', () => {
     expect(check({ changed: ['ops/deploy.sh', 'ops/README.md'] })).toEqual([])
   })
 
+  // The reference is built, not committed (#1594): it never appears in a diff, so it can't stand in for a note
+  it('asks for a note or a declaration when only code and the reference pages changed', () => {
+    const changed = ['src/payload.config.ts', 'docs/reference/content-types/pages.md']
+    const problems = check({ changed })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain('src/payload.config.ts')
+    expect(problems[0]).toContain('Behavior change: none')
+    expect(check({ changed, body: NONE })).toEqual([])
+  })
+
+  it('does not send authors to a generated reference to satisfy the check', () => {
+    const [problem] = check({ changed: ['scripts/deploy.mjs'] })
+    expect(problem).not.toContain('docs/reference')
+    expect(problem).not.toContain('generated')
+  })
+
   it('passes with a declared "none" and a reason of 20 characters', () => {
     expect(check({ changed: ['scripts/deploy.mjs'], body: NONE })).toEqual([])
   })

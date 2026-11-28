@@ -8,7 +8,7 @@ relationships: []
 
 # Site: pages and the page builder
 
-How CMS pages are drawn: the hero, each page-builder block, and what a save refreshes. In the CMS: the `pages` collection (drafts, scheduled publish, a `backdrop` photo and an optional hero) and its blocks; the `header`, `footer` and redirects have their own note, [navigation](navigation/README.md). Not in the CMS: the block drawing, the hero geometry and the choice of which module's block fills a slot. Fields, access and hooks: [pages content type](../../../docs/reference/content-types/pages.md); the routes `/` and `/[slug]`: [screens](../../../docs/reference/routes.md); the kit pieces: [sections](../../../docs/reference/components/sections.md).
+How CMS pages are drawn: the hero, each page-builder block, and what a save refreshes. In the CMS: the `pages` collection (drafts, scheduled publish, a `backdrop` photo and an optional hero) and its blocks; the `header`, `footer` and redirects have their own note, [navigation](navigation/README.md). Not in the CMS: the block drawing, the hero geometry and the choice of which module's block fills a slot. Fields, access and hooks: [pages content type](../../../docs/reference/content-types/pages.md) (build it with `npm run docs:generate`); the routes `/` and `/[slug]`: [screens](../../../docs/reference/routes.md); the kit pieces: [sections](../../../docs/reference/components/sections.md).
 
 ## Screens
 

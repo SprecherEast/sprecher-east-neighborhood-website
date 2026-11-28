@@ -26,7 +26,7 @@ const FILES = FOLDERS.flatMap((folder) =>
     .map((file) => `${folder}/${file}`),
 ).sort()
 
-// The same safe list the generator reads an examples file with, so this test and `docs:check` agree
+// The same safe list the generator reads an examples file with, so this test and the reference build agree
 const KIT_FILES = safeKitFilesIn(ROOT) as Set<string>
 const POLICY = { isKitFile: (file: string) => KIT_FILES.has(file) }
 

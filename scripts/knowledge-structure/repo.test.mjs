@@ -1,21 +1,12 @@
-import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { checkKnowledge } from './check.mjs'
+import { listFiles } from './cli.mjs'
 import { realSchema as schema } from './testkit.mjs'
 
 describe('this repository', () => {
-  const files = execFileSync(
-    'git',
-    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-    {
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-    },
-  )
-    .split('\0')
-    .filter((file) => file && fs.existsSync(file))
+  const files = listFiles('.')
   const found = checkKnowledge({
     schema,
     mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),

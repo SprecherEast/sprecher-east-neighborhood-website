@@ -8,7 +8,7 @@ relationships: []
 
 # Payload routes
 
-The routes Payload generates and serves under `src/app/(payload)/`: the admin panel at `/admin`, the REST and GraphQL APIs under `/api`, and the GraphQL playground. They are Payload's own files (marked as generated, never edited here); what the site changes is in `src/payload.config.ts` ([the app shell](../README.md)). What each content type allows over these routes: the [content types](../../../docs/reference/content-types/README.md); every address: the [endpoints reference](../../../docs/reference/endpoints.md).
+The routes Payload generates and serves under `src/app/(payload)/`: the admin panel at `/admin`, the REST and GraphQL APIs under `/api`, and the GraphQL playground. They are Payload's own files (marked as generated, never edited here); what the site changes is in `src/payload.config.ts` ([the app shell](../README.md)). What each content type allows over these routes: the [content types](../../../docs/reference/content-types/README.md) (build it with `npm run docs:generate`); every address: the [endpoints reference](../../../docs/reference/endpoints.md).
 
 ## How the pieces link
 

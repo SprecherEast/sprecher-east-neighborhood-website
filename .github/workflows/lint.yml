@@ -93,6 +93,11 @@ jobs:
         if: steps.filter.outputs.code == 'true'
         run: npm ci
 
+      # The reference and the showcase's import map are build output, not in git (#1594); a test imports the map
+      - name: Build the reference
+        if: steps.filter.outputs.code == 'true'
+        run: node scripts/ensure-reference.mjs
+
       - name: Run ESLint
         if: steps.filter.outputs.code == 'true'
         run: npx eslint . --max-warnings=10

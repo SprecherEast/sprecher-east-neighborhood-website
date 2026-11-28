@@ -28,7 +28,7 @@ Notes load when the work touches their files ([0019](../architecture/decisions/0
 - [Component gallery](<../../src/app/(frontend)/dev/README.md>): dev-only page.
 - [Seed](../../src/endpoints/seed/README.md): demo content, preview accounts.
 
-## Reference (generated)
+## Reference (`npm run docs:generate`)
 
 - [Content types](../reference/content-types/README.md): fields, access, hooks.
 - [Screens](../reference/routes.md): pages and routes.

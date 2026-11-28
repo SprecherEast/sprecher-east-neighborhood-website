@@ -8,7 +8,7 @@ relationships: [{ 'type': 'depends-on', 'target': 'src/platform/theme/README.md'
 
 # Charts and data displays
 
-How the kit draws a chart and the data displays built the same way: the chart registry and its adapters, breakdowns, the numbers table, legends, the area chart, heat map, share strip and share bill. Not in the CMS itself: an editor places a chart block and an agent writes a `<Chart>` tag, and both pass the one gate in [shared helpers](../../lib/README.md). Props, variants and where each is used: [shared components reference](../../../../docs/reference/components/README.md); the rest of the kit: [UI kit](../README.md).
+How the kit draws a chart and the data displays built the same way: the chart registry and its adapters, breakdowns, the numbers table, legends, the area chart, heat map, share strip and share bill. Not in the CMS itself: an editor places a chart block and an agent writes a `<Chart>` tag, and both pass the one gate in [shared helpers](../../lib/README.md). Props, variants and where each is used: [shared components reference](../../../../docs/reference/components/README.md) (build it with `npm run docs:generate`); the rest of the kit: [UI kit](../README.md).
 
 ## How the pieces link
 

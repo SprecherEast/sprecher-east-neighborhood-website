@@ -46,12 +46,12 @@ jobs:
         run: npm ci
 
       # `next typegen` writes the route types in .next/types (page, layout and route handler props),
-      # which tsconfig.json includes, so `tsc` checks them too (#248)
+      # which tsconfig.json includes, so `tsc` checks them too (#248). The reference and the showcase's
+      # import map are build output, not in git: this command builds them first (#1594), and the unit
+      # tests and the build find them there.
       - name: Type-check
         if: steps.filter.outputs.code == 'true'
-        run: |
-          npx next typegen
-          npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Unit tests
         if: steps.filter.outputs.code == 'true'
@@ -137,6 +137,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The showcase's import map is build output, not in git (#1594), and knip follows the imports of its test
+      - name: Build the reference
+        run: node scripts/ensure-reference.mjs
+
       - name: Knip
         run: npm run knip
 
@@ -161,9 +165,9 @@ jobs:
       - name: jscpd
         run: npm run duplication
 
-  # The generated reference pages match the code (#714, decision 0019 §6): the content-type pages in
-  # docs/reference/content-types/ are regenerated from the Payload config and the job fails on any
-  # difference, so a content type can't change without its page. It loads the config only: no
+  # The generated reference builds from the code (#714, decision 0019 §6; not committed, #1594): the
+  # job builds every page from the Payload config, the routes and the components, and fails when the
+  # build fails (a content type without an owner, a page over its limit). It loads the config only: no
   # database, no server. The run time goes to the job summary. Required on `main` once #716 merges.
   # It also runs the structure check of the notes (#1460) and the check of the system map's data (#1462).
   knowledge-sync:
@@ -181,11 +185,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check the generated content-type pages
+      - name: Build the reference
         run: |
           start=$(date +%s)
-          npm run docs:check
-          echo "docs:check took $(( $(date +%s) - start )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+          npm run docs:generate
+          echo "docs:generate took $(( $(date +%s) - start )) s" | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Every note follows docs/knowledge/note-schema.json (#1460, decision 0022). Rules the schema
       # marks `block` fail the job; the others are counted as warnings in the job summary.

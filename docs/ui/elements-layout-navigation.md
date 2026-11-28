@@ -4,7 +4,7 @@ Part of the [UI inventory](inventory.md) (#170). Columns and IDs are explained
 [there](inventory.md#how-to-read-the-element-tables). Paths start at the repo root; the
 `(frontend)` route folders are `src/app/(frontend)/…`.
 
-> A dated snapshot of the code at `e887427` (2026-10-21), not refreshed. Current screens and components are generated in [`docs/reference/`](../reference/components/README.md) ([routes](../reference/routes.md)).
+> A dated snapshot of the code at `e887427` (2026-10-21), not refreshed. Current screens and components are generated in [`docs/reference/`](../reference/components/README.md) (build it with `npm run docs:generate`) ([routes](../reference/routes.md)).
 
 ## Layout and chrome (L)
 

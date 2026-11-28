@@ -10,7 +10,7 @@ relationships: []
 
 The FAQ page and the neighborhood resources page, and the collections behind them (`faq`, `resources`),
 plus a `team-members` collection no page reads yet. Fields, access and hooks:
-[faq](../../../docs/reference/content-types/faq.md),
+[faq](../../../docs/reference/content-types/faq.md) (build it with `npm run docs:generate`),
 [resources](../../../docs/reference/content-types/resources.md),
 [team-members](../../../docs/reference/content-types/team-members.md); routes:
 [screens](../../../docs/reference/routes.md).
