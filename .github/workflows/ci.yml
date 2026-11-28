@@ -35,10 +35,11 @@ jobs:
               - '!.env.local.example'
               - '!LICENSE'
 
+      # Node 22: the type-check builds the reference, which loads the Payload config (#1594)
       - uses: actions/setup-node@v7
         if: steps.filter.outputs.code == 'true'
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies

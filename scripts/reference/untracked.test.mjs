@@ -106,6 +106,23 @@ describe('the checks that resolve imports build it first', () => {
   })
 })
 
+describe('the jobs that build it run a Node the build supports', () => {
+  // Loading the Payload config needs Node 22 (the build fails on 20): the other jobs that load it
+  // already use it, and so does the server the release is built for
+  const lint = yaml.load(read('.github/workflows/lint.yml'))
+  const nodeOf = (job) =>
+    job.steps.find((step) => step.uses?.startsWith('actions/setup-node'))?.with['node-version']
+
+  it.each([
+    ['Type-check & Build', ci.jobs.build],
+    ['ESLint', lint.jobs.eslint],
+    ['Unused code (knip)', ci.jobs.knip],
+    ['Knowledge sync', ci.jobs['knowledge-sync']],
+  ])('%s uses Node 22', (_name, job) => {
+    expect(nodeOf(job)).toBe(22)
+  })
+})
+
 describe('every note that links into the reference says how to build it', () => {
   const linksIntoReference = /\]\([^)]*(?:docs\/reference|\.\.\/reference)\//
 
